@@ -1,0 +1,1 @@
+ALTER TABLE exams ADD COLUMN exam_location VARCHAR(255);

@@ -1,0 +1,2 @@
+ALTER TABLE exams DROP COLUMN IF EXISTS room_number;
+ALTER TABLE registrations ADD COLUMN IF NOT EXISTS room_number VARCHAR(50);
