@@ -3,7 +3,7 @@ name: Build and Push to GHCR (No Auto-Deploy)
 on:
   push:
     branches:
-      - master # Run automatically when a PR is merged into master or pushed directly
+      - master
 
 permissions:
   packages: write
@@ -16,6 +16,12 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+
+      # New Step: Convert the repository name to lowercase and save it
+      - name: Lowercase Repository Name
+        id: string
+        run: |
+          echo "REPO_LOWER=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -34,8 +40,8 @@ jobs:
           context: ./backend
           file: ./backend/Dockerfile
           push: true
-          # Tags it as: ghcr.io/your-username/your-repo-name/backend:latest
-          tags: ghcr.io/${{ github.repository }}/backend:latest
+          # Uses the lowercase repository name environment variable
+          tags: ghcr.io/${{ env.REPO_LOWER }}/backend:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -46,7 +52,7 @@ jobs:
           context: ./frontend
           file: ./frontend/Dockerfile
           push: true
-          # Tags it as: ghcr.io/your-username/your-repo-name/frontend:latest
-          tags: ghcr.io/${{ github.repository }}/frontend:latest
+          # Uses the lowercase repository name environment variable
+          tags: ghcr.io/${{ env.REPO_LOWER }}/frontend:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
