@@ -1,0 +1,52 @@
+name: Build and Push to GHCR (No Auto-Deploy)
+
+on:
+  push:
+    branches:
+      - master # Run automatically when a PR is merged into master or pushed directly
+
+permissions:
+  packages: write
+  contents: read
+
+jobs:
+  build-and-push:
+    name: Build & Push Service Images
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # 1. Build and Push Backend Service
+      - name: Build and Push Backend Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          # Tags it as: ghcr.io/your-username/your-repo-name/backend:latest
+          tags: ghcr.io/${{ github.repository }}/backend:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # 2. Build and Push Frontend Service (Vite App)
+      - name: Build and Push Frontend Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: true
+          # Tags it as: ghcr.io/your-username/your-repo-name/frontend:latest
+          tags: ghcr.io/${{ github.repository }}/frontend:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
