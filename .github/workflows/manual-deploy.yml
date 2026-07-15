@@ -1,0 +1,25 @@
+name: Manual Deploy to Kamatera
+
+on:
+  # This triggers the "Run workflow" button in the GitHub UI
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Execute Remote SSH Manual Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH and Update VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: 22
+          script: |
+            cd /var/app
+            echo "${{ secrets.VPS_GHCR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            docker compose pull
+            docker compose up -d
+            docker image prune -f
+            docker logout ghcr.io
