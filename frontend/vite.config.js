@@ -10,7 +10,9 @@ export default defineConfig({
       '/ws': { target: 'ws://localhost:4000', ws: true },
     },
     allowedHosts: [
-      'livex.hedefbalaken.com'
+      'livex.hedefbalaken.com',
+      'http://livex.hedefbalaken.com',
+      'https://livex.hedefbalaken.com',
     ]
   },
 });
