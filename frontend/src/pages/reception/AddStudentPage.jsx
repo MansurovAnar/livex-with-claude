@@ -45,14 +45,14 @@ export default function AddStudentPage() {
       <form onSubmit={handleSubmit} style={{ background: '#fff', padding: '1.5rem', borderRadius: 8, border: '1px solid #e2e8f0' }}>
 
         {[
-          { name: 'student_number', label: 'Student Number', type: 'text', required: true },
+          { name: 'student_number', label: 'Student Number', type: 'text', required: true, maxLength: 7 },
           { name: 'full_name', label: 'Full Name', type: 'text', required: true },
           { name: 'email', label: 'Email', type: 'email', required: true },
         ].map(f => (
           <div key={f.name} style={{ marginBottom: '1rem' }}>
             <label style={labelStyle}>{f.label}<span style={{ color: '#dc2626' }}> *</span></label>
             <input type={f.type} name={f.name} value={form[f.name]} onChange={handleChange} required
-              style={inputStyle} />
+              maxLength={f.maxLength} style={inputStyle} />
           </div>
         ))}
 

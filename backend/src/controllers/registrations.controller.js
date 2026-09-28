@@ -48,20 +48,28 @@ exports.updatePayment = async (req, res, next) => {
     if (!existing[0]) return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Registration not found' } });
 
     const { bonus_awarded, exam_cost, commission_amount, partner_id } = existing[0];
-    const shouldAward = !bonus_awarded && partner_id && amount_paid >= Number(exam_cost);
+    const nowFull = amount_paid >= Number(exam_cost);
+    const shouldAward = !bonus_awarded && partner_id && nowFull;
+    const shouldRevoke = bonus_awarded && partner_id && !nowFull;
 
     await client.query('BEGIN');
 
     const { rows } = await client.query(
       `UPDATE registrations
-       SET amount_paid = $1, bonus_awarded = CASE WHEN $2 THEN true ELSE bonus_awarded END
-       WHERE id = $3 RETURNING *`,
-      [amount_paid, shouldAward, req.params.id]
+       SET amount_paid = $1,
+           bonus_awarded = CASE WHEN $2 THEN true WHEN $3 THEN false ELSE bonus_awarded END
+       WHERE id = $4 RETURNING *`,
+      [amount_paid, shouldAward, shouldRevoke, req.params.id]
     );
 
     if (shouldAward) {
       await client.query(
         `UPDATE partner_profiles SET bonus_balance = bonus_balance + $1, updated_at = NOW() WHERE user_id = $2`,
+        [Number(commission_amount), partner_id]
+      );
+    } else if (shouldRevoke) {
+      await client.query(
+        `UPDATE partner_profiles SET bonus_balance = GREATEST(0, bonus_balance - $1), updated_at = NOW() WHERE user_id = $2`,
         [Number(commission_amount), partner_id]
       );
     }

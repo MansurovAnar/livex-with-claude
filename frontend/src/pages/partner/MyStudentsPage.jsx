@@ -78,7 +78,7 @@ export default function MyStudentsPage() {
               {/* Student Number */}
               <div>
                 <label style={labelStyle}>Student Number <span style={{ color: '#dc2626' }}>*</span></label>
-                <input type="text" name="student_number" value={form.student_number} onChange={handleChange} required style={inputStyle} />
+                <input type="text" name="student_number" value={form.student_number} onChange={handleChange} required maxLength={7} style={inputStyle} />
               </div>
               {/* Full Name */}
               <div>

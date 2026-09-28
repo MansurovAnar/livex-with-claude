@@ -77,7 +77,24 @@ exports.update = async (req, res, next) => {
 
 exports.remove = async (req, res, next) => {
   try {
-    const { rows } = await pool.query('UPDATE students SET is_active = false, updated_at = NOW() WHERE id = $1 RETURNING id', [req.params.id]);
+    const { rows } = await pool.query(
+      `UPDATE students SET
+         is_active      = false,
+         full_name      = 'deleted_student',
+         email          = 'deleted_' || id || '@deleted.local',
+         student_number = 'DELETED_' || id,
+         mobile_number  = '--',
+         photo_url      = NULL,
+         class_level    = NULL,
+         sector         = '--',
+         language       = '--',
+         partner_id     = NULL,
+         deleted_at     = NOW(),
+         updated_at     = NOW()
+       WHERE id = $1 AND is_active = true
+       RETURNING id`,
+      [req.params.id]
+    );
     if (!rows[0]) return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Student not found' } });
     res.json({ success: true });
   } catch (err) { next(err); }
