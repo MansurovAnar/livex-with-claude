@@ -8,6 +8,8 @@ const emptyForm = { full_name: '', email: '', password: '', role: 'security', sc
 export default function UsersPage() {
   const [users, setUsers] = useState([]);
   const [form, setForm] = useState(emptyForm);
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [schools, setSchools] = useState([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
@@ -35,9 +37,14 @@ export default function UsersPage() {
 
   const handleCreate = async (e) => {
     e.preventDefault(); setError('');
+    if (form.password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
     try {
       await apiClient.post('/users', form);
       setForm(emptyForm);
+      setConfirmPassword('');
       load();
     } catch (err) {
       setError(err.response?.data?.error?.message || 'Failed to create user');
@@ -95,9 +102,26 @@ export default function UsersPage() {
           {[['full_name', 'Full Name', 'text'], ['email', 'Email', 'email'], ['password', 'Password', 'password']].map(([name, label, type]) => (
             <div key={name} style={{ marginBottom: '0.75rem' }}>
               <label style={labelStyle}>{label}</label>
-              <input type={type} name={name} value={form[name]} onChange={handleChange} required style={inputStyle} />
+              {type === 'password' ? (
+                <div style={{ position: 'relative' }}>
+                  <input type={showPassword ? 'text' : 'password'} name={name} value={form[name]} onChange={handleChange} required style={{ ...inputStyle, paddingRight: '2.2rem' }} />
+                  <button type="button" onClick={() => setShowPassword(s => !s)} title={showPassword ? 'Hide password' : 'Show password'} aria-label={showPassword ? 'Hide password' : 'Show password'} style={eyeButton}>
+                    <EyeIcon off={showPassword} />
+                  </button>
+                </div>
+              ) : (
+                <input type={type} name={name} value={form[name]} onChange={handleChange} required style={inputStyle} />
+              )}
             </div>
           ))}
+
+          <div style={{ marginBottom: '0.75rem' }}>
+            <label style={labelStyle}>Confirm Password</label>
+            <input type={showPassword ? 'text' : 'password'} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required style={inputStyle} />
+            {confirmPassword && form.password !== confirmPassword && (
+              <div style={{ color: '#dc2626', fontSize: '0.75rem', marginTop: '0.2rem' }}>Passwords do not match</div>
+            )}
+          </div>
 
           <div style={{ marginBottom: '0.75rem' }}>
             <label style={labelStyle}>Role</label>
@@ -139,6 +163,16 @@ export default function UsersPage() {
   );
 }
 
+function EyeIcon({ off }) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+      <circle cx="12" cy="12" r="3" />
+      {off && <line x1="3" y1="3" x2="21" y2="21" />}
+    </svg>
+  );
+}
+
 function roleColor(role) {
   return { admin: '#dc2626', security: '#0369a1', viewer: '#64748b', reception: '#7e22ce', partner: '#059669' }[role] || '#475569';
 }
@@ -146,4 +180,5 @@ function roleColor(role) {
 const th = { padding: '0.75rem', textAlign: 'left', fontSize: '0.875rem', fontWeight: 600 };
 const td = { padding: '0.75rem', fontSize: '0.875rem' };
 const inputStyle = { width: '100%', padding: '0.4rem', border: '1px solid #cbd5e1', borderRadius: 4, fontSize: '0.875rem', boxSizing: 'border-box' };
+const eyeButton = { position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: 2, display: 'flex' };
 const labelStyle = { display: 'block', fontSize: '0.85rem', marginBottom: '0.2rem' };
