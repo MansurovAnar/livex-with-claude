@@ -80,6 +80,10 @@ function EditStudentModal({ student, onClose, onSaved }) {
   const handleSubmit = async e => {
     e.preventDefault();
     setError('');
+    if (!/^\d{1,7}$/.test(form.student_number)) {
+      setError('Student number must be 1-7 digits');
+      return;
+    }
     setSaving(true);
     try {
       await updateStudent(student.id, {
@@ -115,7 +119,7 @@ function EditStudentModal({ student, onClose, onSaved }) {
         <form onSubmit={handleSubmit}>
           <div style={fieldStyle}>
             <label style={labelStyle}>Student Number <span style={{ color: '#dc2626' }}>*</span></label>
-            <input name="student_number" value={form.student_number} onChange={handleChange} required maxLength={7} style={inputStyle} />
+            <input name="student_number" value={form.student_number} onChange={handleChange} required maxLength={7} inputMode="numeric" pattern="\d{1,7}" title="1-7 digits" style={inputStyle} />
           </div>
           <div style={fieldStyle}>
             <label style={labelStyle}>Full Name <span style={{ color: '#dc2626' }}>*</span></label>

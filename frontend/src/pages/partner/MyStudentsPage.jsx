@@ -5,7 +5,7 @@ const PREFIXES = ['010', '050', '051', '055', '070', '077', '099'];
 const CLASSES = Array.from({ length: 11 }, (_, i) => i + 1);
 const LANGUAGES = ['English', 'Russian', 'German', 'French'];
 const emptyForm = {
-  student_number: '', full_name: '', email: '',
+  full_name: '', email: '',
   mobile_prefix: '050', mobile_number: '',
   class_level: '', sector: '', language: '',
 };
@@ -19,6 +19,7 @@ export default function MyStudentsPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [nextNumber, setNextNumber] = useState('');
 
   const load = (q = '') => {
     setLoading(true);
@@ -27,7 +28,15 @@ export default function MyStudentsPage() {
       .finally(() => setLoading(false));
   };
 
+  // Preview only — the server assigns the actual number on save
+  const loadNextNumber = () => {
+    apiClient.get('/partner/students/next-number')
+      .then(res => setNextNumber(res.data.data.student_number))
+      .catch(err => { setNextNumber(''); setError(err.response?.data?.error?.message || 'Failed to load next student number'); });
+  };
+
   useEffect(() => { load(); }, []);
+  useEffect(() => { if (showForm) loadNextNumber(); }, [showForm]);
 
   const handleSearch = (e) => { e.preventDefault(); load(search); };
   const handleChange = e => setForm(f => ({ ...f, [e.target.name]: e.target.value }));
@@ -38,7 +47,6 @@ export default function MyStudentsPage() {
     try {
       const mobile = form.mobile_number ? `${form.mobile_prefix}${form.mobile_number}` : undefined;
       const res = await apiClient.post('/partner/students', {
-        student_number: form.student_number,
         full_name: form.full_name,
         email: form.email,
         ...(mobile && { mobile_number: mobile }),
@@ -46,11 +54,13 @@ export default function MyStudentsPage() {
         ...(form.sector && { sector: form.sector }),
         ...(form.language && { language: form.language }),
       });
-      setSuccess(`${res.data.data.full_name} added successfully.`);
+      setSuccess(`${res.data.data.full_name} added successfully with number ${res.data.data.student_number}.`);
       setForm(emptyForm);
       load(search);
+      loadNextNumber();
     } catch (err) {
       setError(err.response?.data?.error?.message || 'Failed to add student');
+      loadNextNumber();
     } finally {
       setSaving(false);
     }
@@ -75,10 +85,11 @@ export default function MyStudentsPage() {
           {success && <div style={{ background: '#f0fdf4', color: '#16a34a', padding: '0.6rem 0.75rem', borderRadius: 6, marginBottom: '0.75rem', fontSize: '0.875rem' }}>{success}</div>}
           <form onSubmit={handleAddStudent}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '0.75rem' }}>
-              {/* Student Number */}
+              {/* Student Number — assigned automatically by the server */}
               <div>
-                <label style={labelStyle}>Student Number <span style={{ color: '#dc2626' }}>*</span></label>
-                <input type="text" name="student_number" value={form.student_number} onChange={handleChange} required maxLength={7} style={inputStyle} />
+                <label style={labelStyle}>Student Number</label>
+                <input type="text" value={nextNumber} readOnly placeholder="Loading..." title="Assigned automatically"
+                  style={{ ...inputStyle, background: '#f1f5f9', color: '#475569', cursor: 'not-allowed' }} />
               </div>
               {/* Full Name */}
               <div>

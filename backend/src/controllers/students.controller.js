@@ -72,7 +72,13 @@ exports.update = async (req, res, next) => {
     );
     if (!rows[0]) return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Student not found' } });
     res.json({ success: true, data: rows[0] });
-  } catch (err) { next(err); }
+  } catch (err) {
+    if (err.code === '23505' && String(err.constraint).includes('student_number')) {
+      return res.status(409).json({ success: false, error: { code: 'DUPLICATE', message: 'Student number already in use' } });
+    }
+    if (err.code === '23505') return res.status(409).json({ success: false, error: { code: 'DUPLICATE', message: 'Email already in use' } });
+    next(err);
+  }
 };
 
 exports.remove = async (req, res, next) => {
