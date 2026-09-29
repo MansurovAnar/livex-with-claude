@@ -10,7 +10,7 @@ router.get('/', async (req, res, next) => {
   try {
     const { rows } = await pool.query(`
       SELECT u.id, u.full_name, u.email, u.is_active, u.created_at,
-             pp.school, pp.school_address, pp.number_of_students
+             pp.school, pp.school_address, pp.number_of_students, pp.initial_student_number
       FROM users u
       JOIN partner_profiles pp ON pp.user_id = u.id
       WHERE u.role = 'partner'

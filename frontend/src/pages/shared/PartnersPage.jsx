@@ -11,6 +11,8 @@ export default function PartnersPage() {
   const { user } = useAuth();
 
   const basePath = user?.role === 'reception' ? '/reception/partners' : '/admin/partners';
+  const isAdmin = user?.role === 'admin';
+  const headers = ['#', 'Full Name', 'Email', 'School', 'School Address', 'Students', ...(isAdmin ? ['init-student-number'] : []), 'Status', 'Since'];
 
   useEffect(() => {
     apiClient.get('/partners')
@@ -56,7 +58,7 @@ export default function PartnersPage() {
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
-              {['#', 'Full Name', 'Email', 'School', 'School Address', 'Students', 'Status', 'Since'].map(h => (
+              {headers.map(h => (
                 <th key={h} style={th}>{h}</th>
               ))}
             </tr>
@@ -64,7 +66,7 @@ export default function PartnersPage() {
           <tbody>
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={8} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>
+                <td colSpan={headers.length} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>
                   {search ? 'No partners match your search.' : 'No partners found.'}
                 </td>
               </tr>
@@ -86,6 +88,7 @@ export default function PartnersPage() {
                     {p.number_of_students}
                   </span>
                 </td>
+                {isAdmin && <td style={{ ...td, fontFamily: 'monospace' }}>{p.initial_student_number}</td>}
                 <td style={td}>
                   {p.is_active
                     ? <span style={{ color: '#16a34a', fontWeight: 600, fontSize: '0.8rem' }}>Active</span>

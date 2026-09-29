@@ -3,7 +3,8 @@ import apiClient from '../../api/apiClient';
 
 const ROLES = ['admin', 'security', 'viewer', 'reception', 'partner'];
 
-const emptyForm = { full_name: '', email: '', password: '', role: 'security', school: '', school_address: '', number_of_students: '' };
+const emptyForm = { full_name: '', email: '', password: '', role: 'security', school: '', school_address: '', number_of_students: '', initial_student_number: '' };
+const STUDENT_NUMBER_RE = /^\d{1,7}$/;
 
 export default function UsersPage() {
   const [users, setUsers] = useState([]);
@@ -13,6 +14,7 @@ export default function UsersPage() {
   const [schools, setSchools] = useState([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [editingPartner, setEditingPartner] = useState(null);
 
   const load = () => apiClient.get('/users').then(res => setUsers(res.data.data)).finally(() => setLoading(false));
   useEffect(() => { load(); }, []);
@@ -39,6 +41,10 @@ export default function UsersPage() {
     e.preventDefault(); setError('');
     if (form.password !== confirmPassword) {
       setError('Passwords do not match');
+      return;
+    }
+    if (form.role === 'partner' && !STUDENT_NUMBER_RE.test(form.initial_student_number)) {
+      setError('Starting student number must be 1-7 digits');
       return;
     }
     try {
@@ -78,13 +84,18 @@ export default function UsersPage() {
                 </td>
                 <td style={td}>
                   {u.school ? (
-                    <span title={`${u.school_address} • ${u.number_of_students} students`} style={{ fontSize: '0.8rem', color: '#475569' }}>
+                    <span title={`${u.school_address} • ${u.number_of_students} students • starts at ${u.initial_student_number}`} style={{ fontSize: '0.8rem', color: '#475569' }}>
                       {u.school}
                     </span>
                   ) : <span style={{ color: '#cbd5e1' }}>—</span>}
                 </td>
                 <td style={td}>{u.is_active ? <span style={{ color: '#16a34a' }}>Active</span> : <span style={{ color: '#dc2626' }}>Inactive</span>}</td>
-                <td style={td}>
+                <td style={{ ...td, whiteSpace: 'nowrap' }}>
+                  {u.role === 'partner' && (
+                    <button onClick={() => setEditingPartner(u)} style={{ background: '#475569', color: '#fff', border: 'none', borderRadius: 4, padding: '0.2rem 0.5rem', cursor: 'pointer', fontSize: '0.75rem', marginRight: '0.25rem' }}>
+                      Edit
+                    </button>
+                  )}
                   <button onClick={() => handleToggle(u.id, u.is_active)} style={{ background: u.is_active ? '#dc2626' : '#16a34a', color: '#fff', border: 'none', borderRadius: 4, padding: '0.2rem 0.5rem', cursor: 'pointer', fontSize: '0.75rem' }}>
                     {u.is_active ? 'Deactivate' : 'Activate'}
                   </button>
@@ -147,9 +158,13 @@ export default function UsersPage() {
                 <label style={labelStyle}>School Address <span style={{ color: '#dc2626' }}>*</span></label>
                 <input type="text" name="school_address" value={form.school_address} onChange={handleChange} required={isPartner} placeholder="Full address" style={inputStyle} />
               </div>
-              <div>
+              <div style={{ marginBottom: '0.6rem' }}>
                 <label style={labelStyle}>Number of Students <span style={{ color: '#dc2626' }}>*</span></label>
                 <input type="number" name="number_of_students" value={form.number_of_students} onChange={handleChange} required={isPartner} min="0" placeholder="0" style={inputStyle} />
+              </div>
+              <div>
+                <label style={labelStyle}>Starting Student Number <span style={{ color: '#dc2626' }}>*</span></label>
+                <input type="text" inputMode="numeric" name="initial_student_number" value={form.initial_student_number} onChange={handleChange} required={isPartner} maxLength={7} pattern="\d{1,7}" title="1-7 digits" placeholder="e.g. 1000" style={inputStyle} />
               </div>
             </div>
           )}
@@ -157,6 +172,83 @@ export default function UsersPage() {
           <button type="submit" style={{ width: '100%', padding: '0.5rem', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer' }}>
             Create
           </button>
+        </form>
+      </div>
+
+      {editingPartner && (
+        <EditPartnerModal
+          partner={editingPartner}
+          onClose={() => setEditingPartner(null)}
+          onSaved={() => { setEditingPartner(null); load(); }}
+        />
+      )}
+    </div>
+  );
+}
+
+function EditPartnerModal({ partner, onClose, onSaved }) {
+  const [form, setForm] = useState({
+    full_name: partner.full_name,
+    email: partner.email,
+    initial_student_number: partner.initial_student_number || '',
+  });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleChange = e => setForm(f => ({ ...f, [e.target.name]: e.target.value }));
+
+  const handleSubmit = async e => {
+    e.preventDefault(); setError('');
+    if (!STUDENT_NUMBER_RE.test(form.initial_student_number)) {
+      setError('Starting student number must be 1-7 digits');
+      return;
+    }
+    setSaving(true);
+    try {
+      await apiClient.put(`/users/${partner.id}`, form);
+      onSaved();
+    } catch (err) {
+      setError(err.response?.data?.error?.message || 'Failed to save changes');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}
+      onClick={e => e.target === e.currentTarget && onClose()}>
+      <div style={{ background: '#fff', borderRadius: 12, padding: '1.5rem', width: '100%', maxWidth: 400, boxShadow: '0 8px 32px rgba(0,0,0,0.18)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <h3 style={{ margin: 0 }}>Edit Partner</h3>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '1.25rem', cursor: 'pointer', color: '#64748b', lineHeight: 1 }}>✕</button>
+        </div>
+        {error && <div style={{ color: '#dc2626', marginBottom: '0.5rem', fontSize: '0.875rem' }}>{error}</div>}
+        <form onSubmit={handleSubmit}>
+          <div style={{ marginBottom: '0.75rem' }}>
+            <label style={labelStyle}>Full Name</label>
+            <input type="text" name="full_name" value={form.full_name} onChange={handleChange} required style={inputStyle} />
+          </div>
+          <div style={{ marginBottom: '0.75rem' }}>
+            <label style={labelStyle}>Email</label>
+            <input type="email" name="email" value={form.email} onChange={handleChange} required style={inputStyle} />
+          </div>
+          <div style={{ background: '#f5f3ff', border: '1px solid #ddd6fe', borderRadius: 6, padding: '0.75rem', marginBottom: '0.75rem' }}>
+            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#7c3aed', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>
+              Partner Details
+            </div>
+            <div style={{ fontSize: '0.8rem', color: '#475569', marginBottom: '0.6rem' }}>{partner.school}</div>
+            <label style={labelStyle}>Starting Student Number <span style={{ color: '#dc2626' }}>*</span></label>
+            <input type="text" inputMode="numeric" name="initial_student_number" value={form.initial_student_number} onChange={handleChange} required maxLength={7} pattern="\d{1,7}" title="1-7 digits" style={inputStyle} />
+            <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.3rem' }}>
+              Used only while the partner has no students; otherwise the next number is the highest existing one + 1.
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+            <button type="button" onClick={onClose} style={{ padding: '0.45rem 1rem', background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: 4, cursor: 'pointer' }}>Cancel</button>
+            <button type="submit" disabled={saving} style={{ padding: '0.45rem 1rem', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 4, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1 }}>
+              {saving ? 'Saving...' : 'Save'}
+            </button>
+          </div>
         </form>
       </div>
     </div>

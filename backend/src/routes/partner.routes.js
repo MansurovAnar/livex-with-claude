@@ -2,6 +2,7 @@ const router = require('express').Router();
 const pool = require('../config/database');
 const authenticate = require('../middleware/authenticate');
 const authorize = require('../middleware/authorize');
+const { getNextStudentNumber } = require('../services/studentNumber.service');
 
 router.use(authenticate, authorize('partner'));
 
@@ -27,22 +28,43 @@ router.get('/students', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-router.post('/students', async (req, res, next) => {
+// Preview of the number the next added student will get
+router.get('/students/next-number', async (req, res, next) => {
   try {
-    const { student_number, full_name, email, mobile_number, class_level, sector, language } = req.body;
-    if (!student_number || !full_name || !email) {
-      return res.status(400).json({ success: false, error: { code: 'VALIDATION', message: 'student_number, full_name and email are required' } });
-    }
-    const { rows } = await pool.query(
+    const student_number = await getNextStudentNumber(pool, req.user.id);
+    res.json({ success: true, data: { student_number } });
+  } catch (err) { next(err); }
+});
+
+// student_number is assigned by the server; any client-sent value is ignored
+router.post('/students', async (req, res, next) => {
+  const { full_name, email, mobile_number, class_level, sector, language } = req.body;
+  if (!full_name || !email) {
+    return res.status(400).json({ success: false, error: { code: 'VALIDATION', message: 'full_name and email are required' } });
+  }
+  const client = await pool.connect();
+  let student_number;
+  try {
+    await client.query('BEGIN');
+    // lock the partner row so concurrent adds get sequential numbers
+    student_number = await getNextStudentNumber(client, req.user.id, { lock: true });
+    const { rows } = await client.query(
       `INSERT INTO students (student_number, full_name, email, mobile_number, class_level, sector, language, partner_id)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
        RETURNING id, student_number, full_name, email, mobile_number, class_level, sector, language, created_at`,
       [student_number, full_name, email, mobile_number || null, class_level || null, sector || null, language || null, req.user.id]
     );
+    await client.query('COMMIT');
     res.status(201).json({ success: true, data: rows[0] });
   } catch (err) {
-    if (err.code === '23505') return res.status(409).json({ success: false, error: { code: 'DUPLICATE', message: 'Student number or email already exists' } });
+    await client.query('ROLLBACK');
+    if (err.code === '23505' && String(err.constraint).includes('student_number')) {
+      return res.status(409).json({ success: false, error: { code: 'DUPLICATE', message: `Student number ${student_number} is already used by another student. Ask admin to change your starting number.` } });
+    }
+    if (err.code === '23505') return res.status(409).json({ success: false, error: { code: 'DUPLICATE', message: 'Email already exists' } });
     next(err);
+  } finally {
+    client.release();
   }
 });
 

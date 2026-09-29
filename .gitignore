@@ -5,3 +5,5 @@ build/
 *.log
 .DS_Store
 docker-compose.prod.yml
+# Task planning files
+tasks-*.md
