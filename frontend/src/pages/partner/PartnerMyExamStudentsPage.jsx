@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import apiClient from '../../api/apiClient';
+import StudentTicket from '../../components/shared/StudentTicket';
 
 export default function PartnerMyExamStudentsPage() {
   const { examId } = useParams();
@@ -9,6 +10,7 @@ export default function PartnerMyExamStudentsPage() {
   const [examInfo, setExamInfo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [ticketReg, setTicketReg] = useState(null);
 
   useEffect(() => {
     apiClient.get(`/partner/exams/${examId}/students`)
@@ -93,7 +95,12 @@ export default function PartnerMyExamStudentsPage() {
                     onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'}
                     onMouseLeave={e => e.currentTarget.style.background = '#fff'}>
                     <td style={tdStyle}>{i + 1}</td>
-                    <td style={{ ...tdStyle, fontWeight: 500 }}>{r.full_name}</td>
+                    <td style={tdStyle}>
+                      <button onClick={() => setTicketReg(r)}
+                        style={{ background: 'none', border: 'none', color: '#7e22ce', fontWeight: 600, cursor: 'pointer', padding: 0, fontSize: '0.9rem', textDecoration: 'underline', textAlign: 'left' }}>
+                        {r.full_name}
+                      </button>
+                    </td>
                     <td style={tdStyle}>{r.student_number}</td>
                     <td style={tdStyle}>{r.class_level ?? '—'}</td>
                     <td style={tdStyle}>{r.sector ?? '—'}</td>
@@ -107,6 +114,21 @@ export default function PartnerMyExamStudentsPage() {
             </tbody>
           </table>
         </div>
+      )}
+
+      {ticketReg && examInfo && (
+        <StudentTicket
+          data={{
+            studentName: ticketReg.full_name,
+            studentNumber: ticketReg.student_number,
+            examTitle: examInfo.title,
+            examDate: examInfo.scheduled_at,
+            examLocation: examInfo.exam_location,
+            roomNumber: ticketReg.room_number,
+            seatNumber: ticketReg.seat_number,
+          }}
+          onClose={() => setTicketReg(null)}
+        />
       )}
     </div>
   );
