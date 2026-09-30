@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { listStudents, updateStudent, deleteStudent } from '../../api/students.api';
 import { useAuth } from '../../contexts/AuthContext';
+import { PageSizeSelect, PaginationBar } from '../../components/shared/Pagination';
 
 export default function StudentsPage() {
   const { user } = useAuth();
@@ -8,38 +9,58 @@ export default function StudentsPage() {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [editingStudent, setEditingStudent] = useState(null);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [total, setTotal] = useState(0);
 
-  const load = (q = '') => {
+  const load = (q = '', p = 1, l = limit) => {
     setLoading(true);
-    listStudents(q ? { search: q } : {}).then(res => setStudents(res.data.data)).finally(() => setLoading(false));
+    const params = { page: p, limit: l };
+    if (q) params.search = q;
+    return listStudents(params)
+      .then(res => {
+        const { data, meta } = res.data;
+        const lastPage = Math.max(1, Math.ceil(meta.total / l));
+        // Current page became empty (e.g. last item removed) — step back
+        if (p > lastPage) return load(q, lastPage, l);
+        setStudents(data); setTotal(meta.total); setPage(p);
+      })
+      .finally(() => setLoading(false));
   };
   useEffect(() => { load(); }, []);
 
   const handleDelete = async (id) => {
     if (!confirm('Remove this student?')) return;
     await deleteStudent(id);
-    load(search);
+    load(search, page);
   };
+
+  const handleLimitChange = (l) => { setLimit(l); load(search, 1, l); };
 
   return (
     <div>
       <h2>Students</h2>
-      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+      <div className="toolbar" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
         <input value={search} onChange={e => setSearch(e.target.value)} onKeyDown={e => e.key === 'Enter' && load(search)}
           placeholder="Search..." style={{ flex: 1, padding: '0.5rem', border: '1px solid #cbd5e1', borderRadius: 4 }} />
         <button onClick={() => load(search)} style={{ padding: '0.5rem 1rem', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer' }}>Search</button>
       </div>
+      <div className="pagination-top" style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.5rem' }}>
+        <PageSizeSelect limit={limit} onLimitChange={handleLimitChange} />
+      </div>
       {loading ? <p>Loading...</p> : (
+        <>
+        <div className="table-scroll">
         <table style={{ width: '100%', borderCollapse: 'collapse', background: '#fff', borderRadius: 8, overflow: 'hidden' }}>
           <thead style={{ background: '#f1f5f9' }}>
-            <tr>{['Number', 'Name', 'Email', 'Mobile', ''].map(h => <th key={h} style={th}>{h}</th>)}</tr>
+            <tr>{['Number', 'Name', 'Email', 'Mobile', ''].map(h => <th key={h} className={h === 'Email' ? 'hide-mobile' : undefined} style={th}>{h}</th>)}</tr>
           </thead>
           <tbody>
             {students.map(s => (
               <tr key={s.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
                 <td style={td}>{s.student_number}</td>
                 <td style={td}>{s.full_name}</td>
-                <td style={td}>{s.email}</td>
+                <td className="hide-mobile" style={td}>{s.email}</td>
                 <td style={td}>{s.mobile_number || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
                 <td style={{ ...td, whiteSpace: 'nowrap' }}>
                   {user?.role === 'admin' && (
@@ -51,13 +72,16 @@ export default function StudentsPage() {
             ))}
           </tbody>
         </table>
+        </div>
+        <PaginationBar page={page} limit={limit} total={total} onPageChange={p => load(search, p)} />
+        </>
       )}
 
       {editingStudent && (
         <EditStudentModal
           student={editingStudent}
           onClose={() => setEditingStudent(null)}
-          onSaved={() => { setEditingStudent(null); load(search); }}
+          onSaved={() => { setEditingStudent(null); load(search, page); }}
         />
       )}
     </div>
