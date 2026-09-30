@@ -1,10 +1,12 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { toBlob } from 'html-to-image';
 
 /**
  * Printable exam entry ticket (1/3 A4 = 210mm × 99mm).
  * data: { studentName, studentNumber, examTitle, examDate, examLocation, roomNumber, seatNumber }
  */
 export default function StudentTicket({ data, onClose }) {
+  const [sharing, setSharing] = useState(false);
   useEffect(() => {
     const style = document.createElement('style');
     style.id = 'ticket-print-style';
@@ -27,6 +29,32 @@ export default function StudentTicket({ data, onClose }) {
     document.head.appendChild(style);
     return () => document.getElementById('ticket-print-style')?.remove();
   }, []);
+
+  // Renders the ticket to a PNG and shares it (native share sheet on supporting
+  // devices); otherwise downloads the image.
+  const handleShare = async () => {
+    const node = document.getElementById('ticket-printable');
+    if (!node) return;
+    setSharing(true);
+    try {
+      const blob = await toBlob(node, { pixelRatio: 2, backgroundColor: '#ffffff' });
+      const fileName = `ticket-${data.studentNumber || 'student'}.png`;
+      const file = new File([blob], fileName, { type: 'image/png' });
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file], title: `${data.examTitle} — exam ticket` });
+      } else {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = fileName;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+    } catch (err) {
+      if (err?.name !== 'AbortError') alert('Could not share the ticket. Please try Print instead.');
+    } finally {
+      setSharing(false);
+    }
+  };
 
   const dateStr = data.examDate
     ? new Date(data.examDate).toLocaleString('en-GB', {
@@ -128,6 +156,18 @@ export default function StudentTicket({ data, onClose }) {
           🖨 Print
         </button>
         <button
+          onClick={handleShare}
+          disabled={sharing}
+          aria-label="Share ticket"
+          title="Share ticket"
+          style={{
+            padding: '0.6rem 0.9rem', background: '#00bcd4', color: '#fff',
+            border: 'none', borderRadius: 6, cursor: sharing ? 'wait' : 'pointer',
+            opacity: sharing ? 0.7 : 1, display: 'flex', alignItems: 'center',
+          }}>
+          <ShareIcon size={18} />
+        </button>
+        <button
           onClick={onClose}
           style={{
             padding: '0.6rem 1.25rem', background: '#f1f5f9',
@@ -150,6 +190,18 @@ function Field({ label, value }) {
         {value || '—'}
       </div>
     </div>
+  );
+}
+
+function ShareIcon({ size = 16 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="18" cy="5" r="3" />
+      <circle cx="6" cy="12" r="3" />
+      <circle cx="18" cy="19" r="3" />
+      <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+      <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+    </svg>
   );
 }
 

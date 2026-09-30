@@ -29,11 +29,12 @@ exports.examMonitor = async (req, res, next) => {
     );
 
     const { rows: recentLogs } = await pool.query(
-      `SELECT el.event_type, el.logged_at, el.notes, el.seat_number,
+      `SELECT el.event_type, el.logged_at, el.notes, r.seat_number, r.room_number,
               s.full_name AS student_name, s.student_number,
               u.full_name AS checked_by_name
        FROM entry_logs el
        JOIN students s ON s.id = el.student_id
+       JOIN registrations r ON r.id = el.registration_id
        JOIN users u ON u.id = el.checked_by
        WHERE el.exam_id = $1
        ORDER BY el.logged_at DESC LIMIT 50`,
@@ -55,7 +56,7 @@ exports.examMonitor = async (req, res, next) => {
 exports.todayDashboard = async (req, res, next) => {
   try {
     const { rows } = await pool.query(
-      `SELECT id, title, status, scheduled_at, room_number, exam_location,
+      `SELECT id, title, status, scheduled_at, exam_location,
               (SELECT COUNT(*) FROM registrations WHERE exam_id = e.id) AS registered_count
        FROM exams e
        WHERE e.scheduled_at::date = CURRENT_DATE AND e.is_active = true

@@ -1,0 +1,47 @@
+*, *::before, *::after { box-sizing: border-box; }
+html, body { max-width: 100%; overflow-x: hidden; }
+img, video, canvas { max-width: 100%; height: auto; }
+.table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%; }
+.wrap-text { overflow-wrap: anywhere; word-break: break-word; }
+
+@media (max-width: 768px) {
+  /* Layout (sidebar → top bar + drawer) */
+  .app-shell    { flex-direction: column !important; }
+  .app-sidebar  { position: fixed !important; top: 0; left: 0; bottom: 0; width: min(280px, 85vw) !important;
+                  transform: translateX(-100%); transition: transform .2s ease; z-index: 1100; overflow-y: auto; }
+  .app-sidebar.open { transform: translateX(0); }
+  .app-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 1050; }
+  .app-topbar   { display: flex !important; }
+  .app-main     { width: 100% !important; margin-left: 0 !important; padding: 12px !important; min-width: 0; }
+
+  /* Grids / rows / toolbars */
+  .form-grid, .stat-grid, .card-grid { grid-template-columns: 1fr !important; }
+  .stack-mobile { flex-direction: column !important; align-items: stretch !important; }
+  .wrap-mobile  { flex-wrap: wrap !important; }
+  .toolbar      { flex-direction: column !important; align-items: stretch !important; gap: 8px !important; }
+  .toolbar > *  { width: 100% !important; max-width: 100% !important; }
+
+  /* Tables */
+  .hide-mobile  { display: none !important; }
+  .table-scroll { overflow-x: auto !important; }
+
+  /* Modals */
+  .modal-card   { width: min(var(--modal-w, 520px), calc(100vw - 24px)) !important; max-width: calc(100vw - 24px) !important;
+                  max-height: 90vh !important; overflow-y: auto !important; padding: 1rem !important; }
+
+  /* Forms: >=16px font stops iOS zoom-on-focus; >=44px touch targets */
+  .app-main input:not([type="radio"]):not([type="checkbox"]), .app-main select, .app-main textarea,
+  .modal-card input:not([type="radio"]):not([type="checkbox"]), .modal-card select, .modal-card textarea { width: 100% !important; font-size: 16px !important; min-height: 44px; }
+  .app-main button, .modal-card button, .btn-block { min-height: 44px; }
+  .btn-block    { width: 100% !important; }
+  .full-mobile  { width: 100% !important; max-width: 100% !important; min-width: 0 !important; }
+
+  /* Header row: title + action button */
+  .page-header  { flex-wrap: wrap !important; gap: 8px !important; }
+  /* Prefix select + number input side by side; selectors are more specific than the global form rules */
+  .app-main .mobile-row { display: flex !important; flex-wrap: nowrap !important; width: 100%; min-width: 0; }
+  .app-main .mobile-row select.mobile-prefix { width: 96px !important; flex: none !important; }
+  .app-main .mobile-row input { width: auto !important; flex: 1 1 0 !important; min-width: 0 !important; }
+  .radio-row    { flex-wrap: wrap !important; gap: 0.75rem 1.5rem !important; }
+  .radio-row label { min-height: 44px; }
+}

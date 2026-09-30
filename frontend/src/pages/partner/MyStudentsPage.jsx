@@ -68,7 +68,7 @@ export default function MyStudentsPage() {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
         <h2 style={{ margin: 0 }}>My Students</h2>
         <button
           onClick={() => { setShowForm(f => !f); setError(''); setSuccess(''); }}
@@ -84,7 +84,7 @@ export default function MyStudentsPage() {
           {error && <div style={{ background: '#fef2f2', color: '#dc2626', padding: '0.6rem 0.75rem', borderRadius: 6, marginBottom: '0.75rem', fontSize: '0.875rem' }}>{error}</div>}
           {success && <div style={{ background: '#f0fdf4', color: '#16a34a', padding: '0.6rem 0.75rem', borderRadius: 6, marginBottom: '0.75rem', fontSize: '0.875rem' }}>{success}</div>}
           <form onSubmit={handleAddStudent}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '0.75rem' }}>
+            <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '0.75rem' }}>
               {/* Student Number — assigned automatically by the server */}
               <div>
                 <label style={labelStyle}>Student Number</label>
@@ -104,8 +104,8 @@ export default function MyStudentsPage() {
               {/* Mobile */}
               <div>
                 <label style={labelStyle}>Mobile Number</label>
-                <div style={{ display: 'flex', gap: '0.4rem' }}>
-                  <select name="mobile_prefix" value={form.mobile_prefix} onChange={handleChange} style={{ ...inputStyle, width: 80, flex: 'none' }}>
+                <div className="mobile-row" style={{ display: 'flex', gap: '0.4rem' }}>
+                  <select name="mobile_prefix" value={form.mobile_prefix} onChange={handleChange} className="mobile-prefix" style={{ ...inputStyle, width: 80, flex: 'none' }}>
                     {PREFIXES.map(p => <option key={p} value={p}>{p}</option>)}
                   </select>
                   <input type="tel" name="mobile_number" value={form.mobile_number} onChange={handleChange} placeholder="XXXXXXX" maxLength={7} style={inputStyle} />
@@ -131,7 +131,7 @@ export default function MyStudentsPage() {
             {/* Sector — radio buttons full width */}
             <div style={{ marginBottom: '1rem' }}>
               <label style={labelStyle}>Sector</label>
-              <div style={{ display: 'flex', gap: '1.5rem', marginTop: '0.3rem' }}>
+              <div className="radio-row" style={{ display: 'flex', gap: '1.5rem', marginTop: '0.3rem' }}>
                 {['Azerbaijan', 'Rus'].map(s => (
                   <label key={s} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 500, color: '#374151' }}>
                     <input
@@ -153,7 +153,7 @@ export default function MyStudentsPage() {
                 )}
               </div>
             </div>
-            <button type="submit" disabled={saving}
+            <button type="submit" disabled={saving} className="btn-block"
               style={{ background: '#059669', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.5rem', cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1, fontWeight: 600 }}>
               {saving ? 'Adding...' : 'Add Student'}
             </button>
@@ -162,7 +162,7 @@ export default function MyStudentsPage() {
       )}
 
       {/* Search */}
-      <form onSubmit={handleSearch} style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+      <form onSubmit={handleSearch} className="toolbar" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
         <input type="text" value={search} onChange={e => setSearch(e.target.value)}
           placeholder="Search by name, number, email or mobile..."
           style={{ flex: 1, padding: '0.5rem 0.75rem', border: '1px solid #cbd5e1', borderRadius: 6, fontSize: '0.95rem' }} />
@@ -181,29 +181,29 @@ export default function MyStudentsPage() {
           <div style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '0.75rem' }}>
             {students.length} student{students.length !== 1 ? 's' : ''}
           </div>
-          <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, overflow: 'hidden' }}>
+          <div className="table-scroll" style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, overflow: 'hidden' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
                   {['#', 'Full Name', 'Number', 'Email', 'Mobile', 'Class', 'Sector', 'Language', 'Added'].map(h => (
-                    <th key={h} style={th}>{h}</th>
+                    <th key={h} className={HIDE_MOBILE.includes(h) ? 'hide-mobile' : undefined} style={th}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {students.length === 0 ? (
-                  <tr><td colSpan={9} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>No students found.</td></tr>
+                  <tr><td colSpan={9} className="empty-cell" style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>No students found.</td></tr>
                 ) : students.map((s, i) => (
                   <tr key={s.id} style={{ borderBottom: '1px solid #f1f5f9', background: i % 2 === 0 ? '#fff' : '#fafafa' }}>
-                    <td style={{ ...td, color: '#94a3b8' }}>{i + 1}</td>
-                    <td style={{ ...td, fontWeight: 600 }}>{s.full_name}</td>
+                    <td className="hide-mobile" style={{ ...td, color: '#94a3b8' }}>{i + 1}</td>
+                    <td className="wrap-text" style={{ ...td, fontWeight: 600 }}>{s.full_name}</td>
                     <td style={td}>{s.student_number}</td>
-                    <td style={td}>{s.email}</td>
+                    <td className="wrap-text" style={td}>{s.email}</td>
                     <td style={td}>{s.mobile_number || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
                     <td style={{ ...td, textAlign: 'center' }}>{s.class_level || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
                     <td style={td}>{s.sector || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
                     <td style={td}>{s.language || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
-                    <td style={td}>{new Date(s.created_at).toLocaleDateString()}</td>
+                    <td className="hide-mobile" style={td}>{new Date(s.created_at).toLocaleDateString()}</td>
                   </tr>
                 ))}
               </tbody>
@@ -215,6 +215,7 @@ export default function MyStudentsPage() {
   );
 }
 
+const HIDE_MOBILE = ['#', 'Added'];
 const th = { padding: '0.65rem 1rem', textAlign: 'left', fontSize: '0.78rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.03em', whiteSpace: 'nowrap' };
 const td = { padding: '0.65rem 1rem', fontSize: '0.875rem', color: '#1e293b' };
 const inputStyle = { width: '100%', padding: '0.45rem 0.6rem', border: '1px solid #cbd5e1', borderRadius: 6, fontSize: '0.875rem', boxSizing: 'border-box' };
