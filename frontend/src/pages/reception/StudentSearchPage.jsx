@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { listStudents } from '../../api/students.api';
+import { PageSizeSelect, PaginationBar } from '../../components/shared/Pagination';
 
 export default function StudentSearchPage() {
   const navigate = useNavigate();
@@ -8,21 +9,27 @@ export default function StudentSearchPage() {
   const [students, setStudents] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
 
-  const load = (q = '') => {
+  const load = (q = '', p = 1, l = limit) => {
     setLoading(true);
-    listStudents(q ? { search: q } : {})
-      .then(res => { setStudents(res.data.data); setTotal(res.data.meta.total); })
+    const params = { page: p, limit: l };
+    if (q) params.search = q;
+    return listStudents(params)
+      .then(res => { setStudents(res.data.data); setTotal(res.data.meta.total); setPage(p); })
       .finally(() => setLoading(false));
   };
 
-  // Load all students on mount
+  // Load first page on mount
   useEffect(() => { load(); }, []);
 
   const handleSearch = (e) => {
     e.preventDefault();
     load(search);
   };
+
+  const handleLimitChange = (l) => { setLimit(l); load(search, 1, l); };
 
   return (
     <div>
@@ -42,7 +49,7 @@ export default function StudentSearchPage() {
         </div>
       </div>
 
-      <form onSubmit={handleSearch} style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.25rem' }}>
+      <form onSubmit={handleSearch} className="toolbar" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.25rem' }}>
         <input
           type="text"
           value={search}
@@ -62,22 +69,23 @@ export default function StudentSearchPage() {
         )}
       </form>
 
+      <div className="pagination-top" style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.5rem' }}>
+        <PageSizeSelect limit={limit} onLimitChange={handleLimitChange} />
+      </div>
+
       {loading ? (
         <p style={{ color: '#94a3b8' }}>Loading...</p>
       ) : (
         <>
-          <div style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '0.75rem' }}>
-            {total} student{total !== 1 ? 's' : ''} found
-          </div>
-          <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, overflow: 'hidden' }}>
+          <div className="table-scroll" style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8 }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
                   <th style={th}>Full Name</th>
                   <th style={th}>Student Number</th>
-                  <th style={th}>Email</th>
+                  <th className="hide-mobile" style={th}>Email</th>
                   <th style={th}>Mobile</th>
-                  <th style={th}>Registered</th>
+                  <th className="hide-mobile" style={th}>Registered</th>
                 </tr>
               </thead>
               <tbody>
@@ -98,15 +106,16 @@ export default function StudentSearchPage() {
                         </button>
                       </td>
                       <td style={td}>{s.student_number}</td>
-                      <td style={td}>{s.email}</td>
+                      <td className="hide-mobile" style={td}>{s.email}</td>
                       <td style={td}>{s.mobile_number || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
-                      <td style={td}>{new Date(s.created_at).toLocaleDateString()}</td>
+                      <td className="hide-mobile" style={td}>{new Date(s.created_at).toLocaleDateString()}</td>
                     </tr>
                   ))
                 )}
               </tbody>
             </table>
           </div>
+          <PaginationBar page={page} limit={limit} total={total} onPageChange={p => load(search, p)} />
         </>
       )}
     </div>

@@ -1,11 +1,15 @@
 const pool = require('../config/database');
-const parsePagination = require('../utils/pagination');
 
+const ALLOWED_PAGE_SIZES = [10, 25, 50];
+const DEFAULT_PAGE_SIZE = 10;
 const STUDENT_COLS = 'id, student_number, full_name, email, mobile_number, photo_url, created_at';
 
 exports.list = async (req, res, next) => {
   try {
-    const { page, limit, offset } = parsePagination(req.query);
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const requestedLimit = parseInt(req.query.limit, 10);
+    const limit = ALLOWED_PAGE_SIZES.includes(requestedLimit) ? requestedLimit : DEFAULT_PAGE_SIZE;
+    const offset = (page - 1) * limit;
     const search = req.query.search ? `%${req.query.search}%` : null;
 
     const whereClause = search

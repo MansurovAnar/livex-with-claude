@@ -36,6 +36,14 @@ img, video, canvas { max-width: 100%; height: auto; }
   .btn-block    { width: 100% !important; }
   .full-mobile  { width: 100% !important; max-width: 100% !important; min-width: 0 !important; }
 
+  /* Pagination */
+  .pagination-bar  { flex-direction: column !important; align-items: stretch !important; }
+  .pagination-bar > div { width: 100%; }
+  .pagination-bar > div button { flex: 1; min-height: 44px; }
+  .pagination-top  { justify-content: stretch !important; }
+  .pagination-size { width: 100%; justify-content: space-between; }
+  .app-main .pagination-size select.page-size-select { width: auto !important; min-width: 88px; }
+
   /* Header row: title + action button */
   .page-header  { flex-wrap: wrap !important; gap: 8px !important; }
   /* Prefix select + number input side by side; selectors are more specific than the global form rules */
