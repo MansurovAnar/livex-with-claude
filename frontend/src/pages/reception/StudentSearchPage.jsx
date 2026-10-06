@@ -85,13 +85,16 @@ export default function StudentSearchPage() {
                   <th style={th}>Student Number</th>
                   <th className="hide-mobile" style={th}>Email</th>
                   <th style={th}>Mobile</th>
+                  <th style={th}>Class</th>
+                  <th className="hide-mobile" style={th}>Sector</th>
+                  <th className="hide-mobile" style={th}>Language</th>
                   <th className="hide-mobile" style={th}>Registered</th>
                 </tr>
               </thead>
               <tbody>
                 {students.length === 0 ? (
                   <tr>
-                    <td colSpan={5} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>
+                    <td colSpan={8}style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>
                       No students found.
                     </td>
                   </tr>
@@ -108,6 +111,9 @@ export default function StudentSearchPage() {
                       <td style={td}>{s.student_number}</td>
                       <td className="hide-mobile" style={td}>{s.email}</td>
                       <td style={td}>{s.mobile_number || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
+                      <td style={td}>{s.class_level ?? <span style={{ color: '#cbd5e1' }}>—</span>}</td>
+                      <td className="hide-mobile" style={td}>{s.sector || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
+                      <td className="hide-mobile" style={td}>{s.language || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
                       <td className="hide-mobile" style={td}>{new Date(s.created_at).toLocaleDateString()}</td>
                     </tr>
                   ))

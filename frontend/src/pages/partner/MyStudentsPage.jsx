@@ -4,6 +4,7 @@ import apiClient from '../../api/apiClient';
 const PREFIXES = ['010', '050', '051', '055', '070', '077', '099'];
 const CLASSES = Array.from({ length: 11 }, (_, i) => i + 1);
 const LANGUAGES = ['English', 'Russian', 'German', 'French'];
+const EMAIL_DOMAIN = '@livex.hedef';
 const emptyForm = {
   full_name: '', email: '',
   mobile_prefix: '050', mobile_number: '',
@@ -48,7 +49,7 @@ export default function MyStudentsPage() {
       const mobile = form.mobile_number ? `${form.mobile_prefix}${form.mobile_number}` : undefined;
       const res = await apiClient.post('/partner/students', {
         full_name: form.full_name,
-        email: form.email,
+        email: `${form.email}${EMAIL_DOMAIN}`,
         ...(mobile && { mobile_number: mobile }),
         ...(form.class_level && { class_level: Number(form.class_level) }),
         ...(form.sector && { sector: form.sector }),
@@ -99,7 +100,12 @@ export default function MyStudentsPage() {
               {/* Email */}
               <div>
                 <label style={labelStyle}>Email <span style={{ color: '#dc2626' }}>*</span></label>
-                <input type="email" name="email" value={form.email} onChange={handleChange} required style={inputStyle} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <input type="text" name="email" value={form.email}
+                    onChange={e => setForm(f => ({ ...f, email: e.target.value.replace(/[@\s]/g, '') }))}
+                    required placeholder="namesurname" style={{ ...inputStyle, minWidth: 0 }} />
+                  <span style={{ color: '#475569', fontSize: '0.9rem', whiteSpace: 'nowrap' }}>{EMAIL_DOMAIN}</span>
+                </div>
               </div>
               {/* Mobile */}
               <div>
