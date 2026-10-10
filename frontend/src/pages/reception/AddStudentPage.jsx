@@ -2,9 +2,14 @@ import React, { useState } from 'react';
 import { createStudent } from '../../api/students.api';
 
 const PREFIXES = ['010', '050', '051', '055', '070', '077', '099'];
+const CLASSES = Array.from({ length: 11 }, (_, i) => i + 1);
+const SECTORS = ['Azerbaijan', 'Rus'];
+const LANGUAGES = ['English', 'Russian', 'German', 'French'];
+const EMAIL_DOMAIN = '@livex.hedef';
+const emptyForm = { student_number: '', full_name: '', email: '', mobile_prefix: '050', mobile_number: '', class_level: '', sector: '', language: '' };
 
 export default function AddStudentPage() {
-  const [form, setForm] = useState({ student_number: '', full_name: '', email: '', mobile_prefix: '050', mobile_number: '' });
+  const [form, setForm] = useState(emptyForm);
   const [success, setSuccess] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -19,12 +24,15 @@ export default function AddStudentPage() {
       const payload = {
         student_number: form.student_number,
         full_name: form.full_name,
-        email: form.email,
+        email: `${form.email}${EMAIL_DOMAIN}`,
         ...(fullMobile && { mobile_number: fullMobile }),
+        ...(form.class_level && { class_level: Number(form.class_level) }),
+        ...(form.sector && { sector: form.sector }),
+        ...(form.language && { language: form.language }),
       };
       const res = await createStudent(payload);
       setSuccess(res.data.data);
-      setForm({ student_number: '', full_name: '', email: '', mobile_prefix: '050', mobile_number: '' });
+      setForm(emptyForm);
     } catch (err) {
       setError(err.response?.data?.error?.message || 'Failed to add student');
     } finally {
@@ -47,7 +55,6 @@ export default function AddStudentPage() {
         {[
           { name: 'student_number', label: 'Student Number', type: 'text', required: true, maxLength: 7 },
           { name: 'full_name', label: 'Full Name', type: 'text', required: true },
-          { name: 'email', label: 'Email', type: 'email', required: true },
         ].map(f => (
           <div key={f.name} style={{ marginBottom: '1rem' }}>
             <label style={labelStyle}>{f.label}<span style={{ color: '#dc2626' }}> *</span></label>
@@ -55,6 +62,17 @@ export default function AddStudentPage() {
               maxLength={f.maxLength} style={inputStyle} />
           </div>
         ))}
+
+        {/* Email — fixed @livex.hedef domain */}
+        <div style={{ marginBottom: '1rem' }}>
+          <label style={labelStyle}>Email<span style={{ color: '#dc2626' }}> *</span></label>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <input type="text" name="email" value={form.email}
+              onChange={e => setForm(f => ({ ...f, email: e.target.value.replace(/[@\s]/g, '') }))}
+              required placeholder="namesurname" style={{ ...inputStyle, minWidth: 0 }} />
+            <span style={{ color: '#475569', fontSize: '0.9rem', whiteSpace: 'nowrap' }}>{EMAIL_DOMAIN}</span>
+          </div>
+        </div>
 
         {/* Mobile with prefix */}
         <div style={{ marginBottom: '1.25rem' }}>
@@ -77,6 +95,40 @@ export default function AddStudentPage() {
               maxLength={7}
               style={inputStyle}
             />
+          </div>
+        </div>
+
+        <div style={{ marginBottom: '1rem' }}>
+          <label style={labelStyle}>Class</label>
+          <select name="class_level" value={form.class_level} onChange={handleChange} style={inputStyle}>
+            <option value="">Select class...</option>
+            {CLASSES.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+        </div>
+
+        <div style={{ marginBottom: '1rem' }}>
+          <label style={labelStyle}>Language</label>
+          <select name="language" value={form.language} onChange={handleChange} style={inputStyle}>
+            <option value="">Select language...</option>
+            {LANGUAGES.map(l => <option key={l} value={l}>{l}</option>)}
+          </select>
+        </div>
+
+        <div style={{ marginBottom: '1.25rem' }}>
+          <label style={labelStyle}>Sector</label>
+          <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+            {SECTORS.map(s => (
+              <label key={s} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 500, color: '#374151' }}>
+                <input type="radio" name="sector" value={s} checked={form.sector === s} onChange={handleChange} style={{ width: 16, height: 16 }} />
+                {s}
+              </label>
+            ))}
+            {form.sector && (
+              <button type="button" onClick={() => setForm(f => ({ ...f, sector: '' }))}
+                style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '0.8rem' }}>
+                Clear
+              </button>
+            )}
           </div>
         </div>
 

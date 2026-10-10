@@ -3,6 +3,10 @@ import { listStudents, updateStudent, deleteStudent } from '../../api/students.a
 import { useAuth } from '../../contexts/AuthContext';
 import { PageSizeSelect, PaginationBar } from '../../components/shared/Pagination';
 
+const CLASSES = Array.from({ length: 11 }, (_, i) => i + 1);
+const SECTORS = ['Azerbaijan', 'Rus'];
+const LANGUAGES = ['English', 'Russian', 'German', 'French'];
+
 export default function StudentsPage() {
   const { user } = useAuth();
   const [students, setStudents] = useState([]);
@@ -53,7 +57,7 @@ export default function StudentsPage() {
         <div className="table-scroll">
         <table style={{ width: '100%', borderCollapse: 'collapse', background: '#fff', borderRadius: 8, overflow: 'hidden' }}>
           <thead style={{ background: '#f1f5f9' }}>
-            <tr>{['Number', 'Name', 'Email', 'Mobile', ''].map(h => <th key={h} className={h === 'Email' ? 'hide-mobile' : undefined} style={th}>{h}</th>)}</tr>
+            <tr>{['Number', 'Name', 'Email', 'Mobile', 'Class', 'Sector', 'Language', ''].map(h => <th key={h} className={['Email', 'Sector', 'Language'].includes(h) ? 'hide-mobile' : undefined} style={th}>{h}</th>)}</tr>
           </thead>
           <tbody>
             {students.map(s => (
@@ -62,6 +66,9 @@ export default function StudentsPage() {
                 <td style={td}>{s.full_name}</td>
                 <td className="hide-mobile" style={td}>{s.email}</td>
                 <td style={td}>{s.mobile_number || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
+                <td style={td}>{s.class_level ?? <span style={{ color: '#cbd5e1' }}>—</span>}</td>
+                <td className="hide-mobile" style={td}>{s.sector || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
+                <td className="hide-mobile" style={td}>{s.language || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
                 <td style={{ ...td, whiteSpace: 'nowrap' }}>
                   {user?.role === 'admin' && (
                     <button onClick={() => setEditingStudent(s)} style={actionBtn('#475569')}>Edit</button>
@@ -94,6 +101,9 @@ function EditStudentModal({ student, onClose, onSaved }) {
     full_name: student.full_name,
     email: student.email,
     mobile_number: student.mobile_number || '',
+    class_level: student.class_level ?? '',
+    sector: student.sector || '',
+    language: student.language || '',
     photo_url: student.photo_url || '',
   });
   const [saving, setSaving] = useState(false);
@@ -115,6 +125,9 @@ function EditStudentModal({ student, onClose, onSaved }) {
         full_name: form.full_name,
         email: form.email,
         mobile_number: form.mobile_number || null,
+        class_level: form.class_level ? Number(form.class_level) : null,
+        sector: form.sector || null,
+        language: form.language || null,
         photo_url: form.photo_url || null,
       });
       onSaved();
@@ -128,7 +141,7 @@ function EditStudentModal({ student, onClose, onSaved }) {
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}
       onClick={e => e.target === e.currentTarget && onClose()}>
-      <div style={{ background: '#fff', borderRadius: 12, padding: '2rem', width: '100%', maxWidth: 480, boxShadow: '0 8px 32px rgba(0,0,0,0.18)' }}>
+      <div style={{ background: '#fff', borderRadius: 12, padding: '2rem', width: '100%', maxWidth: 480, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 8px 32px rgba(0,0,0,0.18)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
           <h2 style={{ margin: 0, fontSize: '1.1rem' }}>Edit Student</h2>
           <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '1.25rem', cursor: 'pointer', color: '#64748b', lineHeight: 1 }}>✕</button>
@@ -156,6 +169,37 @@ function EditStudentModal({ student, onClose, onSaved }) {
           <div style={fieldStyle}>
             <label style={labelStyle}>Mobile Number</label>
             <input name="mobile_number" value={form.mobile_number} onChange={handleChange} maxLength={10} style={inputStyle} />
+          </div>
+          <div style={fieldStyle}>
+            <label style={labelStyle}>Class</label>
+            <select name="class_level" value={form.class_level} onChange={handleChange} style={inputStyle}>
+              <option value="">Select class...</option>
+              {CLASSES.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+          <div style={fieldStyle}>
+            <label style={labelStyle}>Sector</label>
+            <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+              {SECTORS.map(s => (
+                <label key={s} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 500, color: '#374151' }}>
+                  <input type="radio" name="sector" value={s} checked={form.sector === s} onChange={handleChange} style={{ width: 16, height: 16 }} />
+                  {s}
+                </label>
+              ))}
+              {form.sector && (
+                <button type="button" onClick={() => setForm(f => ({ ...f, sector: '' }))}
+                  style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '0.8rem' }}>
+                  Clear
+                </button>
+              )}
+            </div>
+          </div>
+          <div style={fieldStyle}>
+            <label style={labelStyle}>Language</label>
+            <select name="language" value={form.language} onChange={handleChange} style={inputStyle}>
+              <option value="">Select language...</option>
+              {LANGUAGES.map(l => <option key={l} value={l}>{l}</option>)}
+            </select>
           </div>
           <div style={fieldStyle}>
             <label style={labelStyle}>Photo URL</label>

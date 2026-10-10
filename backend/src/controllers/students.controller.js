@@ -2,7 +2,7 @@ const pool = require('../config/database');
 
 const ALLOWED_PAGE_SIZES = [10, 25, 50];
 const DEFAULT_PAGE_SIZE = 10;
-const STUDENT_COLS = 'id, student_number, full_name, email, mobile_number, photo_url, created_at';
+const STUDENT_COLS = 'id, student_number, full_name, email, mobile_number, class_level, sector, language, photo_url, created_at';
 
 exports.list = async (req, res, next) => {
   try {
@@ -45,11 +45,11 @@ exports.get = async (req, res, next) => {
 
 exports.create = async (req, res, next) => {
   try {
-    const { student_number, full_name, email, mobile_number, photo_url } = req.body;
+    const { student_number, full_name, email, mobile_number, class_level, sector, language, photo_url } = req.body;
     const { rows } = await pool.query(
-      `INSERT INTO students (student_number, full_name, email, mobile_number, photo_url)
-       VALUES ($1, $2, $3, $4, $5) RETURNING ${STUDENT_COLS}`,
-      [student_number, full_name, email, mobile_number || null, photo_url || null]
+      `INSERT INTO students (student_number, full_name, email, mobile_number, class_level, sector, language, photo_url)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING ${STUDENT_COLS}`,
+      [student_number, full_name, email, mobile_number || null, class_level || null, sector || null, language || null, photo_url || null]
     );
     res.status(201).json({ success: true, data: rows[0] });
   } catch (err) {
@@ -60,7 +60,7 @@ exports.create = async (req, res, next) => {
 
 exports.update = async (req, res, next) => {
   try {
-    const allowed = ['student_number', 'full_name', 'email', 'mobile_number', 'photo_url'];
+    const allowed = ['student_number', 'full_name', 'email', 'mobile_number', 'class_level', 'sector', 'language', 'photo_url'];
     const fields = [];
     const values = [];
     let i = 1;
