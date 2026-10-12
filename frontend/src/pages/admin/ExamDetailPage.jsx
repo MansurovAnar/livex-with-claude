@@ -49,9 +49,10 @@ export default function ExamDetailPage() {
         {exam.exam_location} &bull; {new Date(exam.scheduled_at).toLocaleString()} &bull; {exam.duration_mins} min
       </div>
 
-      <div style={{ display: 'flex', gap: '2rem' }}>
-        <div style={{ flex: 1 }}>
+      <div className="stack-mobile" style={{ display: 'flex', gap: '2rem' }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
           <h3>Registered Students ({registrations.length} / {exam.capacity})</h3>
+          <div className="table-scroll">
           <table style={{ width: '100%', borderCollapse: 'collapse', background: '#fff', borderRadius: 8, overflow: 'hidden' }}>
             <thead style={{ background: '#f1f5f9' }}>
               <tr><th style={th}>Student</th><th style={th}>Number</th><th style={th}>Seat</th><th style={th}></th></tr>
@@ -67,9 +68,10 @@ export default function ExamDetailPage() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
 
-        <div style={{ width: 300 }}>
+        <div className="full-mobile" style={{ width: 300 }}>
           <h3>Add Student</h3>
           <input value={studentSearch} onChange={e => setStudentSearch(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSearch()}
             placeholder="Search student..." style={inputStyle} />

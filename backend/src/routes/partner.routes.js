@@ -3,6 +3,7 @@ const pool = require('../config/database');
 const authenticate = require('../middleware/authenticate');
 const authorize = require('../middleware/authorize');
 const { getNextStudentNumber } = require('../services/studentNumber.service');
+const { resolveExtraDetail } = require('../services/examExtraDetail.service');
 
 router.use(authenticate, authorize('partner'));
 
@@ -73,8 +74,10 @@ router.post('/students', async (req, res, next) => {
 router.get('/exams', async (req, res, next) => {
   try {
     const { rows } = await pool.query(
-      `SELECT e.* FROM exams e
+      `SELECT e.*, et.name AS exam_type_name, et.extra_details AS exam_type_extra_details
+       FROM exams e
        JOIN partner_profiles pp ON pp.user_id = $1
+       LEFT JOIN exam_types et ON et.id = e.exam_type_id
        WHERE e.status IN ('scheduled','ongoing')
          AND (e.exam_location = pp.school OR e.exam_location = 'General')
        ORDER BY e.scheduled_at`,
@@ -88,7 +91,7 @@ router.get('/exams', async (req, res, next) => {
 
 router.post('/exams/:examId/register', async (req, res, next) => {
   try {
-    const { student_id, seat_number, room_number } = req.body;
+    const { student_id, seat_number, room_number, extra_detail } = req.body;
     // Verify student belongs to this partner
     const { rows: owned } = await pool.query(
       'SELECT id FROM students WHERE id = $1 AND partner_id = $2 AND is_active = true',
@@ -97,11 +100,15 @@ router.post('/exams/:examId/register', async (req, res, next) => {
     if (!owned.length) {
       return res.status(403).json({ success: false, error: { code: 'FORBIDDEN', message: 'Student does not belong to your school' } });
     }
+    const extra = await resolveExtraDetail(pool, req.params.examId, extra_detail);
+    if (extra.error) {
+      return res.status(extra.status).json({ success: false, error: { code: extra.status === 404 ? 'NOT_FOUND' : 'VALIDATION', message: extra.error } });
+    }
     const { rows } = await pool.query(
-      `INSERT INTO registrations (exam_id, student_id, seat_number, room_number, registered_by)
-       VALUES ($1,$2,$3,$4,$5)
+      `INSERT INTO registrations (exam_id, student_id, seat_number, room_number, extra_detail, registered_by)
+       VALUES ($1,$2,$3,$4,$5,$6)
        RETURNING *`,
-      [req.params.examId, student_id, seat_number || null, room_number || null, req.user.id]
+      [req.params.examId, student_id, seat_number || null, room_number || null, extra.value, req.user.id]
     );
     res.status(201).json({ success: true, data: rows[0] });
   } catch (err) {
@@ -115,12 +122,14 @@ router.post('/exams/:examId/register', async (req, res, next) => {
 router.get('/exams/:examId/students', async (req, res, next) => {
   try {
     const { rows } = await pool.query(`
-      SELECT r.id, r.seat_number, r.room_number, r.registered_at,
+      SELECT r.id, r.seat_number, r.room_number, r.registered_at, r.extra_detail,
              s.full_name, s.student_number, s.class_level, s.sector, s.language,
-             e.title AS exam_title, e.scheduled_at, e.exam_location
+             e.title AS exam_title, e.scheduled_at, e.exam_location,
+             et.extra_details AS exam_type_extra_details
       FROM registrations r
       JOIN students s ON s.id = r.student_id
       JOIN exams e ON e.id = r.exam_id
+      LEFT JOIN exam_types et ON et.id = e.exam_type_id
       WHERE s.partner_id = $1 AND r.exam_id = $2
       ORDER BY s.full_name
     `, [req.user.id, req.params.examId]);

@@ -12,6 +12,7 @@ export default function PartnerRegisterPage() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [seat, setSeat] = useState('');
   const [roomNumber, setRoomNumber] = useState('');
+  const [extraDetail, setExtraDetail] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [ticket, setTicket] = useState(null);
   const [error, setError] = useState('');
@@ -42,28 +43,33 @@ export default function PartnerRegisterPage() {
     searchRef.current?.focus();
   };
 
+  const extraDetailOptions = exams.find(ex => ex.id === selectedExam)?.exam_type_extra_details || [];
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!selectedStudent) { setError('Please select a student.'); return; }
     if (!selectedExam) { setError('Please select an exam.'); return; }
+    if (extraDetailOptions.length > 0 && !extraDetail) { setError('Please select an extra detail.'); return; }
     setError(''); setSubmitting(true);
     try {
       await apiClient.post(`/partner/exams/${selectedExam}/register`, {
         student_id: selectedStudent.id,
         seat_number: seat || undefined,
         room_number: roomNumber || undefined,
+        extra_detail: extraDetailOptions.length ? extraDetail : undefined,
       });
       const exam = exams.find(ex => ex.id === selectedExam);
       setTicket({
         studentName: selectedStudent.full_name,
         studentNumber: selectedStudent.student_number,
+        extraDetail: extraDetailOptions.length ? extraDetail : null,
         examTitle: exam?.title,
         examDate: exam?.scheduled_at,
         examLocation: exam?.exam_location,
         roomNumber: roomNumber || null,
         seatNumber: seat || null,
       });
-      setSeat(''); setRoomNumber(''); setSelectedStudent(null); setStudentQuery(''); setSelectedExam('');
+      setSeat(''); setRoomNumber(''); setExtraDetail(''); setSelectedStudent(null); setStudentQuery(''); setSelectedExam('');
     } catch (err) {
       setError(err.response?.data?.error?.message || 'Registration failed');
     } finally {
@@ -135,7 +141,7 @@ export default function PartnerRegisterPage() {
         {/* Exam */}
         <div style={{ marginBottom: '1.25rem' }}>
           <label style={labelStyle}>Exam <span style={{ color: '#dc2626' }}>*</span></label>
-          <select value={selectedExam} onChange={e => setSelectedExam(e.target.value)} required style={inputStyle}>
+          <select value={selectedExam} onChange={e => { setSelectedExam(e.target.value); setExtraDetail(''); }} required style={inputStyle}>
             <option value="">Select exam...</option>
             {exams.map(ex => (
               <option key={ex.id} value={ex.id}>
@@ -154,6 +160,17 @@ export default function PartnerRegisterPage() {
             ) : null;
           })()}
         </div>
+
+        {/* Extra detail (required when the exam's type defines extra details) */}
+        {extraDetailOptions.length > 0 && (
+          <div style={{ marginBottom: '1.25rem' }}>
+            <label style={labelStyle}>Extra Detail <span style={{ color: '#dc2626' }}>*</span></label>
+            <select value={extraDetail} onChange={e => setExtraDetail(e.target.value)} required style={inputStyle}>
+              <option value="">Select extra detail...</option>
+              {extraDetailOptions.map(d => <option key={d} value={d}>{d}</option>)}
+            </select>
+          </div>
+        )}
 
         {/* Room + Seat */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
@@ -178,7 +195,7 @@ export default function PartnerRegisterPage() {
       {exams.length === 0 ? (
         <p style={{ color: '#94a3b8', fontSize: '0.9rem' }}>No scheduled or ongoing exams.</p>
       ) : (
-        <div style={{ overflowX: 'auto', borderRadius: 10, border: '1px solid #e2e8f0' }}>
+        <div className="table-scroll" style={{ overflowX: 'auto', borderRadius: 10, border: '1px solid #e2e8f0' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', background: '#fff', fontSize: '0.9rem' }}>
             <thead>
               <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>

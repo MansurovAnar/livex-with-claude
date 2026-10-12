@@ -1,0 +1,2 @@
+ALTER TABLE exam_types
+  ADD COLUMN IF NOT EXISTS extra_details TEXT[] NOT NULL DEFAULT '{}';

@@ -37,16 +37,22 @@ export default function ExamsPage() {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1.25rem' }}>
         <h2 style={{ margin: 0 }}>Exams</h2>
-        <button onClick={() => navigate('/admin/exams/new')}
-          style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.25rem', cursor: 'pointer', fontWeight: 500 }}>
-          + New Exam
-        </button>
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          <button onClick={() => navigate('/admin/exams/types')}
+            style={{ background: '#fff', color: '#475569', border: '1px solid #cbd5e1', borderRadius: 6, padding: '0.5rem 1.25rem', cursor: 'pointer', fontWeight: 500 }}>
+            Exam Types
+          </button>
+          <button onClick={() => navigate('/admin/exams/new')}
+            style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.25rem', cursor: 'pointer', fontWeight: 500 }}>
+            + New Exam
+          </button>
+        </div>
       </div>
 
       {loading ? <p style={{ color: '#94a3b8' }}>Loading...</p> : (
-        <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, overflow: 'hidden' }}>
+        <div className="table-scroll" style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, overflow: 'hidden' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
@@ -96,6 +102,7 @@ export default function ExamsPage() {
           </table>
         </div>
       )}
+
 
       {editingExam && (
         <EditExamModal
@@ -165,7 +172,7 @@ function EditExamModal({ exam, onClose, onSaved }) {
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}
       onClick={e => e.target === e.currentTarget && onClose()}>
-      <div style={{ background: '#fff', borderRadius: 12, padding: '2rem', width: '100%', maxWidth: 680, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 8px 32px rgba(0,0,0,0.18)' }}>
+      <div className="modal-card" style={{ '--modal-w': '680px', background: '#fff', borderRadius: 12, padding: '2rem', width: '100%', maxWidth: 680, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 8px 32px rgba(0,0,0,0.18)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
           <h2 style={{ margin: 0, fontSize: '1.15rem' }}>Edit Exam</h2>
           <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '1.25rem', cursor: 'pointer', color: '#64748b', lineHeight: 1 }}>✕</button>
@@ -191,7 +198,7 @@ function EditExamModal({ exam, onClose, onSaved }) {
           </div>
 
           {/* Location + Cost + Commission */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: '1rem', marginBottom: '1.25rem' }}>
+          <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: '1rem', marginBottom: '1.25rem' }}>
             <div>
               <label style={labelStyle}>Exam Location <span style={{ color: '#dc2626' }}>*</span></label>
               <select name="exam_location" value={form.exam_location} onChange={handleChange} required style={inputStyle}>
@@ -219,7 +226,7 @@ function EditExamModal({ exam, onClose, onSaved }) {
           </div>
 
           {/* Date + Duration */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '1rem', marginBottom: '1.25rem' }}>
+          <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '1rem', marginBottom: '1.25rem' }}>
             <div>
               <label style={labelStyle}>Exam Date &amp; Time <span style={{ color: '#dc2626' }}>*</span></label>
               <input type="datetime-local" name="scheduled_at" value={form.scheduled_at} onChange={handleChange} required style={inputStyle} />
@@ -232,7 +239,7 @@ function EditExamModal({ exam, onClose, onSaved }) {
           </div>
 
           {/* Entry Window */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.25rem' }}>
+          <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.25rem' }}>
             <div>
               <label style={labelStyle}>Gate Opens <span style={{ color: '#dc2626' }}>*</span></label>
               <input type="datetime-local" name="entry_opens_at" value={form.entry_opens_at} onChange={handleChange} required style={inputStyle} />

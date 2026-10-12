@@ -3,10 +3,22 @@ import { toBlob } from 'html-to-image';
 
 /**
  * Printable exam entry ticket (1/3 A4 = 210mm × 99mm).
- * data: { studentName, studentNumber, examTitle, examDate, examLocation, roomNumber, seatNumber }
+ * data: { studentName, studentNumber, extraDetail, examTitle, examDate, examLocation, roomNumber, seatNumber }
  */
+// Ticket width in CSS px (210mm at 96dpi); used to shrink it to fit narrow screens
+const TICKET_W = 794;
+const TICKET_H = 374;
+
 export default function StudentTicket({ data, onClose }) {
   const [sharing, setSharing] = useState(false);
+  // On screens narrower than the ticket, zoom it out to fit (print/share keep full size)
+  const [scale, setScale] = useState(1);
+  useEffect(() => {
+    const fit = () => setScale(Math.min(1, (window.innerWidth - 24) / TICKET_W));
+    fit();
+    window.addEventListener('resize', fit);
+    return () => window.removeEventListener('resize', fit);
+  }, []);
   useEffect(() => {
     const style = document.createElement('style');
     style.id = 'ticket-print-style';
@@ -23,6 +35,7 @@ export default function StudentTicket({ data, onClose }) {
           box-shadow: none !important;
           border: 1px solid #000 !important;
           border-radius: 0 !important;
+          zoom: 1 !important;
         }
       }
     `;
@@ -37,7 +50,7 @@ export default function StudentTicket({ data, onClose }) {
     if (!node) return;
     setSharing(true);
     try {
-      const blob = await toBlob(node, { pixelRatio: 2, backgroundColor: '#ffffff' });
+      const blob = await toBlob(node, { pixelRatio: 2, backgroundColor: '#ffffff', width: TICKET_W, height: TICKET_H, style: { zoom: '1' } });
       const fileName = `ticket-${data.studentNumber || 'student'}.png`;
       const file = new File([blob], fileName, { type: 'image/png' });
       if (navigator.canShare?.({ files: [file] })) {
@@ -84,6 +97,7 @@ export default function StudentTicket({ data, onClose }) {
           display: 'flex',
           overflow: 'hidden',
           fontFamily: "'Segoe UI', Arial, sans-serif",
+          ...(scale < 1 && { zoom: scale }),
         }}>
 
         {/* Left accent stripe */}
@@ -109,6 +123,11 @@ export default function StudentTicket({ data, onClose }) {
             <div style={{ fontSize: 12, color: '#475569', marginTop: 3 }}>
               <span style={{ fontWeight: 700 }}>Student number:</span> {data.studentNumber}
             </div>
+            {data.extraDetail && (
+              <div style={{ fontSize: 12, color: '#475569', marginTop: 2 }}>
+                <span style={{ fontWeight: 700 }}>Extra detail:</span> {data.extraDetail}
+              </div>
+            )}
           </div>
 
           {/* Divider */}
@@ -146,7 +165,7 @@ export default function StudentTicket({ data, onClose }) {
       </div>
 
       {/* Action buttons (hidden when printing) */}
-      <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem' }}>
+      <div className="wrap-mobile" style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem' }}>
         <button
           onClick={() => window.print()}
           style={{

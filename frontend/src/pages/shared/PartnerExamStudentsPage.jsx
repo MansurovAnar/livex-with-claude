@@ -56,6 +56,8 @@ export default function PartnerExamStudentsPage() {
   if (!exam) return <p style={{ padding: '1rem', color: '#dc2626' }}>Exam not found.</p>;
 
   const examCost = Number(exam.exam_cost);
+  // Show the Extra Detail column when the exam type defines extra details or any registration has one
+  const showExtraDetail = (exam.exam_type_extra_details || []).length > 0 || students.some(r => r.extra_detail);
   const filtered = search.trim()
     ? students.filter(r =>
         r.full_name.toLowerCase().includes(search.toLowerCase()) ||
@@ -107,11 +109,11 @@ export default function PartnerExamStudentsPage() {
       </div>
 
       {/* Table */}
-      <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, overflow: 'hidden' }}>
+      <div className="table-scroll" style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, overflow: 'hidden' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
-              {['#', 'Full Name', 'Number', 'Email', 'Mobile', 'Class', 'Sector', 'Language', 'Room', 'Seat', 'Registered At', ...(canPay ? ['Paid'] : [])].map(h => (
+              {['#', 'Full Name', 'Number', 'Email', 'Mobile', 'Class', 'Sector', 'Language', 'Room', 'Seat', ...(showExtraDetail ? ['Extra Detail'] : []), 'Registered At', ...(canPay ? ['Paid'] : [])].map(h => (
                 <th key={h} style={th}>{h}</th>
               ))}
             </tr>
@@ -119,7 +121,7 @@ export default function PartnerExamStudentsPage() {
           <tbody>
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={canPay ? 12 : 11} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>
+                <td colSpan={(canPay ? 12 : 11) + (showExtraDetail ? 1 : 0)} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>
                   No students found.
                 </td>
               </tr>
@@ -140,6 +142,7 @@ export default function PartnerExamStudentsPage() {
                   <td style={td}>{r.language || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
                   <td style={td}>{r.room_number || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
                   <td style={td}>{r.seat_number || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
+                  {showExtraDetail && <td style={{ ...td, overflowWrap: 'anywhere' }}>{r.extra_detail || <span style={{ color: '#cbd5e1' }}>—</span>}</td>}
                   <td style={td}>{new Date(r.registered_at).toLocaleString()}</td>
                   {canPay && (
                     <td style={{ ...td, whiteSpace: 'nowrap' }}>
@@ -174,7 +177,7 @@ export default function PartnerExamStudentsPage() {
       {canPay && paymentModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}
           onClick={e => { if (e.target === e.currentTarget) closeModal(); }}>
-          <div style={{ background: '#fff', borderRadius: 12, padding: '1.75rem', width: 360, boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
+          <div className="modal-card" style={{ '--modal-w': '360px', background: '#fff', borderRadius: 12, padding: '1.75rem', width: 360, boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
             <h3 style={{ margin: '0 0 0.25rem' }}>Record Payment</h3>
             <p style={{ margin: '0 0 1.25rem', color: '#64748b', fontSize: '0.875rem' }}>{paymentModal.full_name}</p>
             <div style={{ background: '#f8fafc', borderRadius: 8, padding: '0.75rem 1rem', marginBottom: '1.25rem', fontSize: '0.875rem', display: 'flex', justifyContent: 'space-between' }}>

@@ -55,6 +55,8 @@ export default function ExamStudentsPage() {
   if (!exam) return <p style={{ padding: '1rem', color: '#dc2626' }}>Exam not found.</p>;
 
   const examCost = Number(exam.exam_cost);
+  // Show the Extra Detail column when the exam type defines extra details or any registration has one
+  const showExtraDetail = (exam.exam_type_extra_details || []).length > 0 || registrations.some(r => r.extra_detail);
   const filtered = search.trim()
     ? registrations.filter(r =>
         r.full_name.toLowerCase().includes(search.toLowerCase()) ||
@@ -72,8 +74,15 @@ export default function ExamStudentsPage() {
           style={{ background: 'none', border: 'none', fontSize: '1.25rem', cursor: 'pointer', color: user?.role === 'reception' ? '#7e22ce' : '#2563eb' }}>
           &larr;
         </button>
-        <div>
-          <h2 style={{ margin: 0 }}>{exam.title}</h2>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <h2 style={{ margin: 0 }}>{exam.title}</h2>
+            {exam.exam_type_name && (
+              <span style={{ background: '#eef2ff', color: '#4338ca', border: '1px solid #c7d2fe', padding: '0.15rem 0.6rem', borderRadius: 12, fontSize: '0.78rem', fontWeight: 600, overflowWrap: 'anywhere' }}>
+                {exam.exam_type_name}
+              </span>
+            )}
+          </div>
           <div style={{ color: '#64748b', fontSize: '0.875rem', marginTop: '0.2rem' }}>
             {exam.subject_code && <span>{exam.subject_code} &bull; </span>}
             {exam.exam_location} &bull; {new Date(exam.scheduled_at).toLocaleString()} &bull; {exam.duration_mins} min
@@ -112,11 +121,11 @@ export default function ExamStudentsPage() {
       </div>
 
       {/* Students table */}
-      <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, overflow: 'hidden' }}>
+      <div className="table-scroll" style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, overflow: 'hidden' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
-              {['#', 'Full Name', 'Student Number', 'Email', 'Mobile', 'Room', 'Seat', 'Exam Cost', 'Registered At', 'Paid'].map(h => (
+              {['#', 'Full Name', 'Student Number', 'Email', 'Mobile', 'Room', 'Seat', ...(showExtraDetail ? ['Extra Detail'] : []), 'Exam Cost', 'Registered At', 'Paid'].map(h => (
                 <th key={h} style={th}>{h}</th>
               ))}
             </tr>
@@ -124,7 +133,7 @@ export default function ExamStudentsPage() {
           <tbody>
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={10} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>
+                <td colSpan={showExtraDetail ? 11 : 10} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>
                   No students registered for this exam yet.
                 </td>
               </tr>
@@ -148,6 +157,7 @@ export default function ExamStudentsPage() {
                   <td style={td}>{r.mobile_number || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
                   <td style={td}>{r.room_number || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
                   <td style={td}>{r.seat_number || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
+                  {showExtraDetail && <td style={{ ...td, overflowWrap: 'anywhere' }}>{r.extra_detail || <span style={{ color: '#cbd5e1' }}>—</span>}</td>}
                   <td style={{ ...td, fontWeight: 600, color: '#15803d' }}>{examCost.toFixed(2)} AZN</td>
                   <td style={td}>{new Date(r.registered_at).toLocaleString()}</td>
                   <td style={{ ...td, whiteSpace: 'nowrap' }}>
@@ -186,6 +196,7 @@ export default function ExamStudentsPage() {
           data={{
             studentName: ticketReg.full_name,
             studentNumber: ticketReg.student_number,
+            extraDetail: ticketReg.extra_detail || null,
             examTitle: exam.title,
             examDate: exam.scheduled_at,
             examLocation: exam.exam_location,
@@ -200,7 +211,7 @@ export default function ExamStudentsPage() {
       {paymentModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}
           onClick={(e) => { if (e.target === e.currentTarget) closeModal(); }}>
-          <div style={{ background: '#fff', borderRadius: 12, padding: '1.75rem', width: 360, boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
+          <div className="modal-card" style={{ '--modal-w': '360px', background: '#fff', borderRadius: 12, padding: '1.75rem', width: 360, boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
             <h3 style={{ margin: '0 0 0.25rem' }}>Record Payment</h3>
             <p style={{ margin: '0 0 1.25rem', color: '#64748b', fontSize: '0.875rem' }}>
               {paymentModal.full_name}

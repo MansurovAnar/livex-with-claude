@@ -31,6 +31,9 @@ export default function PartnerMyExamStudentsPage() {
       )
     : rows;
 
+  // Show the Extra Detail column when the exam type defines extra details or any registration has one
+  const showExtraDetail = rows.some(r => (r.exam_type_extra_details || []).length > 0 || r.extra_detail);
+
   const fmt = (dt) => new Date(dt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
 
   return (
@@ -71,7 +74,7 @@ export default function PartnerMyExamStudentsPage() {
       {loading ? (
         <p style={{ color: '#94a3b8' }}>Loading...</p>
       ) : (
-        <div style={{ overflowX: 'auto', borderRadius: 10, border: '1px solid #e2e8f0' }}>
+        <div className="table-scroll" style={{ overflowX: 'auto', borderRadius: 10, border: '1px solid #e2e8f0' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', background: '#fff', fontSize: '0.9rem' }}>
             <thead>
               <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
@@ -83,12 +86,13 @@ export default function PartnerMyExamStudentsPage() {
                 <th style={thStyle}>Language</th>
                 <th style={thStyle}>Room</th>
                 <th style={thStyle}>Seat</th>
+                {showExtraDetail && <th style={thStyle}>Extra Detail</th>}
                 <th style={thStyle}>Registered At</th>
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0 ? (
-                <tr><td colSpan={9} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>No students found.</td></tr>
+                <tr><td colSpan={showExtraDetail ? 10 : 9} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>No students found.</td></tr>
               ) : (
                 filtered.map((r, i) => (
                   <tr key={r.id} style={{ borderBottom: '1px solid #f1f5f9' }}
@@ -107,6 +111,7 @@ export default function PartnerMyExamStudentsPage() {
                     <td style={tdStyle}>{r.language ?? '—'}</td>
                     <td style={tdStyle}>{r.room_number ?? '—'}</td>
                     <td style={tdStyle}>{r.seat_number ?? '—'}</td>
+                    {showExtraDetail && <td style={{ ...tdStyle, overflowWrap: 'anywhere' }}>{r.extra_detail ?? '—'}</td>}
                     <td style={tdStyle}>{new Date(r.registered_at).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}</td>
                   </tr>
                 ))
@@ -121,6 +126,7 @@ export default function PartnerMyExamStudentsPage() {
           data={{
             studentName: ticketReg.full_name,
             studentNumber: ticketReg.student_number,
+            extraDetail: ticketReg.extra_detail || null,
             examTitle: examInfo.title,
             examDate: examInfo.scheduled_at,
             examLocation: examInfo.exam_location,

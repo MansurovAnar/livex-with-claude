@@ -3,6 +3,9 @@ html, body { max-width: 100%; overflow-x: hidden; }
 img, video, canvas { max-width: 100%; height: auto; }
 .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%; }
 .wrap-text { overflow-wrap: anywhere; word-break: break-word; }
+/* Dropdowns never grow past their container to fit a long selected/option label */
+select { max-width: 100%; min-width: 0; text-overflow: ellipsis; }
+.form-grid > * { min-width: 0; }
 
 @media (max-width: 768px) {
   /* Layout (sidebar → top bar + drawer) */
@@ -46,6 +49,17 @@ img, video, canvas { max-width: 100%; height: auto; }
 
   /* Header row: title + action button */
   .page-header  { flex-wrap: wrap !important; gap: 8px !important; }
+  /* Top header bar (layouts without a sidebar) */
+  .app-header   { flex-wrap: wrap !important; gap: 8px !important; padding: 8px 12px !important; }
+  /* Standalone pages (no layout): reduced padding */
+  .page-pad     { padding: 12px !important; }
+  /* Stat cards in a flex row: two per line */
+  .stat-row     { flex-wrap: wrap !important; gap: 8px !important; }
+  .stat-row > * { flex: 1 1 calc(50% - 8px) !important; min-width: 0; }
+  /* Login card fits the screen */
+  .login-card   { width: calc(100vw - 24px) !important; max-width: 360px; padding: 1.25rem !important; }
+  .login-card input { font-size: 16px !important; min-height: 44px; }
+  .login-card button { min-height: 44px; }
   /* Prefix select + number input side by side; selectors are more specific than the global form rules */
   .app-main .mobile-row { display: flex !important; flex-wrap: nowrap !important; width: 100%; min-width: 0; }
   .app-main .mobile-row select.mobile-prefix { width: 96px !important; flex: none !important; }

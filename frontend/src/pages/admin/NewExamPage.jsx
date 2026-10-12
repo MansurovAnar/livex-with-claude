@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createExam } from '../../api/exams.api';
+import { listExamTypes } from '../../api/examTypes.api';
 import apiClient from '../../api/apiClient';
 
 const inputStyle = {
@@ -28,12 +29,19 @@ export default function NewExamPage() {
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [schools, setSchools] = useState([]);
+  const [examTypes, setExamTypes] = useState([]);
+  const [examTypesLoaded, setExamTypesLoaded] = useState(false);
 
   useEffect(() => {
     apiClient.get('/schools').then(res => setSchools(res.data.data));
+    listExamTypes()
+      .then(res => setExamTypes(res.data.data))
+      .catch(() => setExamTypes([]))
+      .finally(() => setExamTypesLoaded(true));
   }, []);
 
   const [form, setForm] = useState({
+    exam_type_id: '',
     title: '',
     subject_code: '',
     exam_location: '',
@@ -71,6 +79,7 @@ export default function NewExamPage() {
     setSubmitting(true);
     try {
       const payload = {
+        exam_type_id: examTypes.length ? form.exam_type_id : null,
         title: form.title,
         subject_code: form.subject_code || undefined,
         exam_location: form.exam_location,
@@ -109,6 +118,31 @@ export default function NewExamPage() {
 
       <form onSubmit={handleSubmit} style={{ background: '#fff', padding: '1.75rem', borderRadius: 10, border: '1px solid #e2e8f0' }}>
 
+        {/* Exam Type */}
+        <div style={fieldStyle}>
+          <label style={labelStyle}>
+            Exam Type {examTypes.length > 0 && <span style={{ color: '#dc2626' }}>*</span>}
+          </label>
+          <select
+            name="exam_type_id"
+            value={form.exam_type_id}
+            onChange={handleChange}
+            required={examTypes.length > 0}
+            disabled={!examTypesLoaded || examTypes.length === 0}
+            style={inputStyle}
+          >
+            <option value="">
+              {!examTypesLoaded ? 'Loading...' : examTypes.length ? '— Select exam type —' : 'No exam types available'}
+            </option>
+            {examTypes.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+          </select>
+          {examTypesLoaded && examTypes.length === 0 && (
+            <div style={{ fontSize: '0.78rem', color: '#94a3b8', marginTop: '0.25rem' }}>
+              No exam types have been added yet — the exam will be created without a type.
+            </div>
+          )}
+        </div>
+
         {/* Title */}
         <div style={fieldStyle}>
           <label style={labelStyle}>Exam Title <span style={{ color: '#dc2626' }}>*</span></label>
@@ -122,7 +156,7 @@ export default function NewExamPage() {
         </div>
 
         {/* Exam Location + Cost + Commission */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: '1rem', marginBottom: '1.25rem' }}>
+        <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: '1rem', marginBottom: '1.25rem' }}>
           <div>
             <label style={labelStyle}>Exam Location <span style={{ color: '#dc2626' }}>*</span></label>
             <select name="exam_location" value={form.exam_location} onChange={handleChange} required style={inputStyle}>
@@ -192,7 +226,7 @@ export default function NewExamPage() {
 
         {/* Entry Window */}
         <div style={{ marginBottom: '0.5rem', fontWeight: 600, color: '#475569', fontSize: '0.875rem' }}>Entry Window</div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.25rem' }}>
+        <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.25rem' }}>
           <div>
             <label style={labelStyle}>Gate Opens <span style={{ color: '#dc2626' }}>*</span></label>
             <input type="datetime-local" name="entry_opens_at" value={form.entry_opens_at} onChange={handleChange} required style={inputStyle} />

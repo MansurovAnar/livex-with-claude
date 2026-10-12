@@ -80,7 +80,7 @@ export default function PartnerExamsPage() {
       </div>
 
       {/* Exams table */}
-      <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, overflow: 'hidden' }}>
+      <div className="table-scroll" style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, overflow: 'hidden' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
@@ -186,12 +186,12 @@ function BonusModal({ partnerId, partnerName, onClose }) {
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}
       onClick={e => e.target === e.currentTarget && onClose()}>
-      <div style={{ background: '#fff', borderRadius: 12, padding: '2rem', width: '100%', maxWidth: 500, boxShadow: '0 8px 32px rgba(0,0,0,0.18)', maxHeight: '90vh', overflowY: 'auto' }}>
+      <div className="modal-card" style={{ '--modal-w': '500px', background: '#fff', borderRadius: 12, padding: '2rem', width: '100%', maxWidth: 500, boxShadow: '0 8px 32px rgba(0,0,0,0.18)', maxHeight: '90vh', overflowY: 'auto' }}>
 
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
           <div>
-            <h2 style={{ margin: 0, fontSize: '1.1rem' }}>Bonus — {partnerName}</h2>
+            <h2 className="wrap-text" style={{ margin: 0, fontSize: '1.1rem' }}>Bonus — {partnerName}</h2>
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '1.25rem', cursor: 'pointer', color: '#64748b', lineHeight: 1 }}>✕</button>
         </div>
@@ -201,7 +201,7 @@ function BonusModal({ partnerId, partnerName, onClose }) {
         ) : (
           <>
             {/* Summary cards */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem', marginBottom: '1.5rem' }}>
+            <div className="stat-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem', marginBottom: '1.5rem' }}>
               <BonusCard label="Total Earned" value={`${Number(data.total_earned).toFixed(2)} AZN`} color="#7c3aed" />
               <BonusCard label="Paid Out" value={`${Number(data.total_paid).toFixed(2)} AZN`} color="#16a34a" />
               <BonusCard label="Remaining" value={`${Number(data.remaining).toFixed(2)} AZN`} color={data.remaining > 0 ? '#dc2626' : '#64748b'} />
@@ -252,7 +252,7 @@ function BonusModal({ partnerId, partnerName, onClose }) {
                 data.payments.length === 0 ? (
                   <p style={{ color: '#94a3b8', fontSize: '0.875rem', margin: '0.5rem 0' }}>No payments recorded yet.</p>
                 ) : (
-                  <div style={{ border: '1px solid #e2e8f0', borderRadius: 8, overflow: 'hidden' }}>
+                  <div className="table-scroll" style={{ border: '1px solid #e2e8f0', borderRadius: 8, overflow: 'hidden' }}>
                     <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
                       <thead>
                         <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>

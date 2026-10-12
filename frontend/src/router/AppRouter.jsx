@@ -8,6 +8,7 @@ import AdminLayout from '../components/layout/AdminLayout';
 import DashboardPage from '../pages/admin/DashboardPage';
 import ExamsPage from '../pages/admin/ExamsPage';
 import NewExamPage from '../pages/admin/NewExamPage';
+import ExamTypesPage from '../pages/admin/ExamTypesPage';
 import StudentsPage from '../pages/admin/StudentsPage';
 import UsersPage from '../pages/admin/UsersPage';
 import SchoolsPage from '../pages/admin/SchoolsPage';
@@ -63,6 +64,7 @@ export default function AppRouter() {
           <Route index element={<DashboardPage />} />
           <Route path="exams" element={<ExamsPage />} />
           <Route path="exams/new" element={<NewExamPage />} />
+          <Route path="exams/types" element={<ExamTypesPage />} />
           <Route path="exams/:id/students" element={<ExamStudentsPage />} />
           <Route path="students" element={<StudentsPage />} />
           <Route path="users" element={<UsersPage />} />
