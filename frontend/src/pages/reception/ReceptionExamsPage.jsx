@@ -23,7 +23,7 @@ export default function ReceptionExamsPage() {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
         <h2 style={{ margin: 0 }}>Exams</h2>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
           {['all', 'ongoing', 'scheduled'].map(f => (
@@ -36,7 +36,7 @@ export default function ReceptionExamsPage() {
       </div>
 
       {loading ? <p style={{ color: '#94a3b8' }}>Loading...</p> : (
-        <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, overflow: 'hidden' }}>
+        <div className="table-scroll" style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, overflow: 'hidden' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>

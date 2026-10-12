@@ -67,9 +67,10 @@ export default function UsersPage() {
   const isPartner = form.role === 'partner';
 
   return (
-    <div style={{ display: 'flex', gap: '2rem' }}>
-      <div style={{ flex: 1 }}>
+    <div className="stack-mobile" style={{ display: 'flex', gap: '2rem' }}>
+      <div style={{ flex: 1, minWidth: 0 }}>
         <h2>Users</h2>
+        <div className="table-scroll">
         <table style={{ width: '100%', borderCollapse: 'collapse', background: '#fff', borderRadius: 8, overflow: 'hidden' }}>
           <thead style={{ background: '#f1f5f9' }}>
             <tr>{['Name', 'Email', 'Role', 'School', 'Status', ''].map(h => <th key={h} style={th}>{h}</th>)}</tr>
@@ -104,9 +105,10 @@ export default function UsersPage() {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
 
-      <div style={{ width: 300 }}>
+      <div className="full-mobile" style={{ width: 300 }}>
         <h3>Create User</h3>
         {error && <div style={{ color: '#dc2626', marginBottom: '0.5rem', fontSize: '0.875rem' }}>{error}</div>}
         <form onSubmit={handleCreate} style={{ background: '#fff', padding: '1rem', borderRadius: 8, border: '1px solid #e2e8f0' }}>
@@ -217,7 +219,7 @@ function EditPartnerModal({ partner, onClose, onSaved }) {
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}
       onClick={e => e.target === e.currentTarget && onClose()}>
-      <div style={{ background: '#fff', borderRadius: 12, padding: '1.5rem', width: '100%', maxWidth: 400, boxShadow: '0 8px 32px rgba(0,0,0,0.18)' }}>
+      <div className="modal-card" style={{ '--modal-w': '400px', background: '#fff', borderRadius: 12, padding: '1.5rem', width: '100%', maxWidth: 400, boxShadow: '0 8px 32px rgba(0,0,0,0.18)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
           <h3 style={{ margin: 0 }}>Edit Partner</h3>
           <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '1.25rem', cursor: 'pointer', color: '#64748b', lineHeight: 1 }}>✕</button>

@@ -15,6 +15,7 @@ export default function RegisterToExamPage() {
   const [selectedExam, setSelectedExam] = useState('');
   const [seat, setSeat] = useState('');
   const [roomNumber, setRoomNumber] = useState('');
+  const [extraDetail, setExtraDetail] = useState('');
 
   // Student search state
   const [studentQuery, setStudentQuery] = useState(prefilledStudent ? prefilledStudent.full_name : '');
@@ -56,17 +57,21 @@ export default function RegisterToExamPage() {
     searchRef.current?.focus();
   };
 
+  const extraDetailOptions = exams.find(ex => ex.id === selectedExam)?.exam_type_extra_details || [];
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!selectedStudent) { setError('Please select a student.'); return; }
     if (!selectedExam) { setError('Please select an exam.'); return; }
+    if (extraDetailOptions.length > 0 && !extraDetail) { setError('Please select an extra detail.'); return; }
     setError(''); setTicket(null); setSubmitting(true);
     try {
-      await registerStudent(selectedExam, { student_id: selectedStudent.id, seat_number: seat || undefined, room_number: roomNumber || undefined });
+      await registerStudent(selectedExam, { student_id: selectedStudent.id, seat_number: seat || undefined, room_number: roomNumber || undefined, extra_detail: extraDetailOptions.length ? extraDetail : undefined });
       const exam = exams.find(ex => ex.id === selectedExam);
       setTicket({
         studentName: selectedStudent.full_name,
         studentNumber: selectedStudent.student_number,
+        extraDetail: extraDetailOptions.length ? extraDetail : null,
         examTitle: exam?.title,
         examDate: exam?.scheduled_at,
         examLocation: exam?.exam_location,
@@ -75,6 +80,7 @@ export default function RegisterToExamPage() {
       });
       setSeat('');
       setRoomNumber('');
+      setExtraDetail('');
       setSelectedStudent(null);
       setStudentQuery('');
       setSelectedExam('');
@@ -153,7 +159,7 @@ export default function RegisterToExamPage() {
         {/* Exam dropdown */}
         <div style={{ marginBottom: '1.25rem' }}>
           <label style={labelStyle}>Exam <span style={{ color: '#dc2626' }}>*</span></label>
-          <select value={selectedExam} onChange={e => setSelectedExam(e.target.value)} required style={inputStyle}>
+          <select value={selectedExam} onChange={e => { setSelectedExam(e.target.value); setExtraDetail(''); }} required style={inputStyle}>
             <option value="">Select exam...</option>
             {exams.map(ex => (
               <option key={ex.id} value={ex.id}>
@@ -174,6 +180,17 @@ export default function RegisterToExamPage() {
             ) : null;
           })()}
         </div>
+
+        {/* Extra detail (required when the exam's type defines extra details) */}
+        {extraDetailOptions.length > 0 && (
+          <div style={{ marginBottom: '1.25rem' }}>
+            <label style={labelStyle}>Extra Detail <span style={{ color: '#dc2626' }}>*</span></label>
+            <select value={extraDetail} onChange={e => setExtraDetail(e.target.value)} required style={inputStyle}>
+              <option value="">Select extra detail...</option>
+              {extraDetailOptions.map(d => <option key={d} value={d}>{d}</option>)}
+            </select>
+          </div>
+        )}
 
         {/* Room + Seat */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>

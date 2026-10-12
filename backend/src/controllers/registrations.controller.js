@@ -1,9 +1,10 @@
 const pool = require('../config/database');
+const { resolveExtraDetail } = require('../services/examExtraDetail.service');
 
 exports.listByExam = async (req, res, next) => {
   try {
     const { rows } = await pool.query(
-      `SELECT r.id, r.seat_number, r.room_number, r.amount_paid, r.registered_at,
+      `SELECT r.id, r.seat_number, r.room_number, r.amount_paid, r.registered_at, r.extra_detail,
               s.id AS student_id, s.student_number, s.full_name, s.email, s.mobile_number, s.photo_url
        FROM registrations r JOIN students s ON s.id = r.student_id
        WHERE r.exam_id = $1 ORDER BY r.room_number NULLS LAST, r.seat_number NULLS LAST`,
@@ -15,11 +16,15 @@ exports.listByExam = async (req, res, next) => {
 
 exports.register = async (req, res, next) => {
   try {
-    const { student_id, seat_number, room_number } = req.body;
+    const { student_id, seat_number, room_number, extra_detail } = req.body;
+    const extra = await resolveExtraDetail(pool, req.params.examId, extra_detail);
+    if (extra.error) {
+      return res.status(extra.status).json({ success: false, error: { code: extra.status === 404 ? 'NOT_FOUND' : 'VALIDATION', message: extra.error } });
+    }
     const { rows } = await pool.query(
-      `INSERT INTO registrations (exam_id, student_id, seat_number, room_number, registered_by)
-       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-      [req.params.examId, student_id, seat_number || null, room_number || null, req.user.id]
+      `INSERT INTO registrations (exam_id, student_id, seat_number, room_number, extra_detail, registered_by)
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+      [req.params.examId, student_id, seat_number || null, room_number || null, extra.value, req.user.id]
     );
     res.status(201).json({ success: true, data: rows[0] });
   } catch (err) {

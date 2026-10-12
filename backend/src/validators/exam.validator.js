@@ -1,6 +1,7 @@
 const { z } = require('zod');
 
 exports.createExamSchema = z.object({
+  exam_type_id: z.string().uuid().nullable().optional(),
   title: z.string().min(1).max(255),
   subject_code: z.string().max(50).optional(),
   exam_location: z.string().min(1).max(255),

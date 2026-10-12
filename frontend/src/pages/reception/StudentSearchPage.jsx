@@ -33,7 +33,7 @@ export default function StudentSearchPage() {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
         <h2 style={{ margin: 0 }}>Students</h2>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
           <button
