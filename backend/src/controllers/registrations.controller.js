@@ -5,8 +5,12 @@ exports.listByExam = async (req, res, next) => {
   try {
     const { rows } = await pool.query(
       `SELECT r.id, r.seat_number, r.room_number, r.amount_paid, r.registered_at, r.extra_detail,
-              s.id AS student_id, s.student_number, s.full_name, s.email, s.mobile_number, s.photo_url
+              s.id AS student_id, s.student_number, s.full_name, s.email, s.mobile_number, s.photo_url,
+              -- Partner who registered the student; falls back to the student's own partner
+              COALESCE(rb.full_name, sp.full_name) AS partner_name
        FROM registrations r JOIN students s ON s.id = r.student_id
+       LEFT JOIN users rb ON rb.id = r.registered_by AND rb.role = 'partner'
+       LEFT JOIN users sp ON sp.id = s.partner_id
        WHERE r.exam_id = $1 ORDER BY r.room_number NULLS LAST, r.seat_number NULLS LAST`,
       [req.params.examId]
     );

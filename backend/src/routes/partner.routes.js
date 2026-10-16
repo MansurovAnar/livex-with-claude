@@ -100,6 +100,14 @@ router.post('/exams/:examId/register', async (req, res, next) => {
     if (!owned.length) {
       return res.status(403).json({ success: false, error: { code: 'FORBIDDEN', message: 'Student does not belong to your school' } });
     }
+    // Partners can only register to scheduled exams; registration closes once an exam is ongoing
+    const { rows: examRows } = await pool.query(
+      'SELECT status FROM exams WHERE id = $1 AND is_active = true',
+      [req.params.examId]
+    );
+    if (examRows[0] && examRows[0].status !== 'scheduled') {
+      return res.status(409).json({ success: false, error: { code: 'REGISTRATION_CLOSED', message: `Registration is closed — exam is ${examRows[0].status}` } });
+    }
     const extra = await resolveExtraDetail(pool, req.params.examId, extra_detail);
     if (extra.error) {
       return res.status(extra.status).json({ success: false, error: { code: extra.status === 404 ? 'NOT_FOUND' : 'VALIDATION', message: extra.error } });
