@@ -4,6 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { getExam } from '../../api/exams.api';
 import { updatePayment } from '../../api/registrations.api';
 import apiClient from '../../api/apiClient';
+import PaymentMethodRadio, { paymentMethodLabel } from '../../components/shared/PaymentMethodRadio';
 
 export default function PartnerExamStudentsPage() {
   const { partnerId, examId } = useParams();
@@ -16,6 +17,8 @@ export default function PartnerExamStudentsPage() {
   const [search, setSearch] = useState('');
   const [paymentModal, setPaymentModal] = useState(null);
   const [payInput, setPayInput] = useState('');
+  const [payMethod, setPayMethod] = useState('');
+  const [payError, setPayError] = useState('');
   const [saving, setSaving] = useState(false);
 
   const canPay = user?.role === 'reception';
@@ -38,17 +41,24 @@ export default function PartnerExamStudentsPage() {
   const openModal = (reg) => {
     setPaymentModal(reg);
     setPayInput(Number(reg.amount_paid) > 0 ? String(Number(reg.amount_paid)) : '');
+    setPayMethod(reg.payment_method || '');
+    setPayError('');
   };
-  const closeModal = () => { setPaymentModal(null); setPayInput(''); };
+  const closeModal = () => { setPaymentModal(null); setPayInput(''); setPayMethod(''); setPayError(''); };
 
   const handleSavePayment = async () => {
     const amt = parseFloat(payInput);
     if (isNaN(amt) || amt < 0) return;
+    if (amt > 0 && !payMethod) { setPayError('Select Card or Cash.'); return; }
+    const method = amt > 0 ? payMethod : null;
     setSaving(true);
+    setPayError('');
     try {
-      await updatePayment(paymentModal.id, amt);
-      setStudents(prev => prev.map(r => r.id === paymentModal.id ? { ...r, amount_paid: amt } : r));
+      await updatePayment(paymentModal.id, amt, method);
+      setStudents(prev => prev.map(r => r.id === paymentModal.id ? { ...r, amount_paid: amt, payment_method: method } : r));
       closeModal();
+    } catch (err) {
+      setPayError(err.response?.data?.error?.message || 'Failed to save payment');
     } finally { setSaving(false); }
   };
 
@@ -148,7 +158,7 @@ export default function PartnerExamStudentsPage() {
                     <td style={{ ...td, whiteSpace: 'nowrap' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         {fullyPaid ? (
-                          <button onClick={() => openModal(r)} title={`Paid: ${paid.toFixed(2)} AZN`}
+                          <button onClick={() => openModal(r)} title={`Paid: ${paid.toFixed(2)} AZN${r.payment_method ? ` (${paymentMethodLabel(r.payment_method)})` : ''}`}
                             style={{ background: '#16a34a', border: 'none', borderRadius: 6, width: 32, height: 32, cursor: 'pointer', fontSize: '1rem', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             ✓
                           </button>
@@ -157,6 +167,11 @@ export default function PartnerExamStudentsPage() {
                             style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: 6, padding: '0.25rem 0.7rem', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600 }}>
                             {paid > 0 ? `${paid.toFixed(2)} AZN` : 'Pay'}
                           </button>
+                        )}
+                        {paid > 0 && r.payment_method && (
+                          <span style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 600 }}>
+                            {paymentMethodLabel(r.payment_method)}
+                          </span>
                         )}
                         {!fullyPaid && examCost > 0 && (
                           <span style={{ color: '#dc2626', fontSize: '0.8rem', fontWeight: 600 }}>
@@ -197,6 +212,8 @@ export default function PartnerExamStudentsPage() {
                 ? <div style={{ marginBottom: '1.25rem', color: '#dc2626', fontSize: '0.875rem', fontWeight: 600 }}>Remaining: {rem.toFixed(2)} AZN</div>
                 : <div style={{ marginBottom: '1.25rem', color: '#16a34a', fontSize: '0.875rem', fontWeight: 600 }}>✓ Fully paid</div>;
             })()}
+            <PaymentMethodRadio value={payMethod} onChange={m => { setPayMethod(m); setPayError(''); }} />
+            {payError && <div style={{ marginBottom: '1rem', color: '#dc2626', fontSize: '0.875rem' }}>{payError}</div>}
             <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
               <button onClick={closeModal} style={{ padding: '0.5rem 1.25rem', background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: 6, cursor: 'pointer' }}>Cancel</button>
               <button onClick={handleSavePayment} disabled={saving}
