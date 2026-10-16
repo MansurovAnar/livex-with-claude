@@ -43,6 +43,9 @@ export default function PartnerRegisterPage() {
     searchRef.current?.focus();
   };
 
+  // Registration closes once an exam is ongoing; ongoing exams stay listed in the table only
+  const registrableExams = exams.filter(ex => ex.status === 'scheduled');
+
   const extraDetailOptions = exams.find(ex => ex.id === selectedExam)?.exam_type_extra_details || [];
 
   const handleSubmit = async (e) => {
@@ -143,13 +146,13 @@ export default function PartnerRegisterPage() {
           <label style={labelStyle}>Exam <span style={{ color: '#dc2626' }}>*</span></label>
           <select value={selectedExam} onChange={e => { setSelectedExam(e.target.value); setExtraDetail(''); }} required style={inputStyle}>
             <option value="">Select exam...</option>
-            {exams.map(ex => (
+            {registrableExams.map(ex => (
               <option key={ex.id} value={ex.id}>
                 {ex.title} — {new Date(ex.scheduled_at).toLocaleDateString()} {new Date(ex.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </option>
             ))}
           </select>
-          {exams.length === 0 && <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '0.25rem' }}>No scheduled exams.</div>}
+          {registrableExams.length === 0 && <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '0.25rem' }}>No scheduled exams.</div>}
           {selectedExam && (() => {
             const ex = exams.find(e => e.id === selectedExam);
             return ex ? (
@@ -217,6 +220,11 @@ export default function PartnerRegisterPage() {
                       onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}>
                       {ex.title}
                     </Link>
+                    {ex.status === 'ongoing' && (
+                      <span style={{ marginLeft: '0.5rem', fontSize: '0.75rem', color: '#b45309', background: '#fef3c7', borderRadius: 4, padding: '0.1rem 0.4rem', whiteSpace: 'nowrap' }}>
+                        Ongoing — registration closed
+                      </span>
+                    )}
                   </td>
                   <td style={tdStyle}>{fmt(ex.scheduled_at)}</td>
                   <td style={tdStyle}>{fmtDur(ex.duration_mins)}</td>

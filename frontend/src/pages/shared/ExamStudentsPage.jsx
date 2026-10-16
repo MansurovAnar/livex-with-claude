@@ -152,7 +152,13 @@ export default function ExamStudentsPage() {
                       {r.full_name}
                     </button>
                   </td>
-                  <td style={td}>{r.student_number}</td>
+                  <td style={td}>
+                    <span
+                      title={r.partner_name ? `Partner: ${r.partner_name}` : 'No partner'}
+                      style={{ cursor: 'help', borderBottom: '1px dotted #94a3b8' }}>
+                      {r.student_number}
+                    </span>
+                  </td>
                   <td style={td}>{r.email}</td>
                   <td style={td}>{r.mobile_number || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
                   <td style={td}>{r.room_number || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
