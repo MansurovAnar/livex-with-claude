@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { getExamMonitor } from '../../api/monitor.api';
 import { useSocket } from '../../contexts/SocketContext';
+import { useAuth } from '../../contexts/AuthContext';
 import ExamPaymentsSummary from '../../components/monitor/ExamPaymentsSummary';
 
 export default function MonitorPage() {
   const { examId } = useParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const { connect, disconnect } = useSocket();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -36,7 +39,15 @@ export default function MonitorPage() {
 
   return (
     <div className="page-pad" style={{ padding: '2rem', maxWidth: 900, margin: '0 auto' }}>
-      <h2 className="wrap-text">{exam.title}</h2>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        {user?.role === 'admin' && (
+          <button onClick={() => navigate('/admin/exams')} title="Back to Exams" aria-label="Back to Exams"
+            style={{ background: 'none', border: 'none', fontSize: '1.25rem', cursor: 'pointer', color: '#2563eb', minWidth: 44, minHeight: 44, padding: 0, flex: 'none' }}>
+            &larr;
+          </button>
+        )}
+        <h2 className="wrap-text" style={{ minWidth: 0 }}>{exam.title}</h2>
+      </div>
       <div className="wrap-text" style={{ color: '#64748b', marginBottom: '1.5rem' }}>
         {exam.exam_location} &bull; {new Date(exam.scheduled_at).toLocaleString()}
         <span style={{ marginLeft: '1rem', background: '#0369a1', color: '#fff', padding: '0.15rem 0.6rem', borderRadius: 12, fontSize: '0.8rem' }}>{exam.status}</span>
