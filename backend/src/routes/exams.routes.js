@@ -7,6 +7,7 @@ const { createExamSchema, updateExamSchema, updateStatusSchema } = require('../v
 
 router.use(authenticate);
 router.get('/', authorize('admin', 'security', 'viewer', 'reception'), ctrl.list);
+router.get('/reports/payments', authorize('admin'), ctrl.paymentsReport);
 router.get('/:id', authorize('admin', 'security', 'viewer', 'reception'), ctrl.get);
 router.post('/', authorize('admin'), validate(createExamSchema), ctrl.create);
 router.put('/:id', authorize('admin'), validate(updateExamSchema), ctrl.update);

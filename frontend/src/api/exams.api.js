@@ -6,3 +6,4 @@ export const createExam = (data) => apiClient.post('/exams', data);
 export const updateExam = (id, data) => apiClient.put(`/exams/${id}`, data);
 export const deleteExam = (id) => apiClient.delete(`/exams/${id}`);
 export const updateExamStatus = (id, status) => apiClient.patch(`/exams/${id}/status`, { status });
+export const getExamPaymentsReport = (params) => apiClient.get('/exams/reports/payments', { params });

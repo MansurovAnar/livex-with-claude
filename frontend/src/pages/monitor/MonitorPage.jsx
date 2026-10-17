@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { getExamMonitor } from '../../api/monitor.api';
 import { useSocket } from '../../contexts/SocketContext';
+import ExamPaymentsSummary from '../../components/monitor/ExamPaymentsSummary';
 
 export default function MonitorPage() {
   const { examId } = useParams();
@@ -47,6 +48,8 @@ export default function MonitorPage() {
         <StatCard label="Outside" value={registered_count - insideCount} color="#dc2626" />
         <StatCard label="Capacity" value={exam.capacity} color="#7e22ce" />
       </div>
+
+      {data.payments && <ExamPaymentsSummary payments={data.payments} />}
 
       <h3>Live Entry Feed</h3>
       <div style={{ border: '1px solid #e2e8f0', borderRadius: 8, overflow: 'hidden' }}>

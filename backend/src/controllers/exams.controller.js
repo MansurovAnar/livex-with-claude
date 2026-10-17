@@ -1,5 +1,6 @@
 const pool = require('../config/database');
 const parsePagination = require('../utils/pagination');
+const { getCompletedExamsReport } = require('../services/examPayments.service');
 
 exports.list = async (req, res, next) => {
   try {
@@ -93,5 +94,22 @@ exports.updateStatus = async (req, res, next) => {
     const { rows } = await pool.query('UPDATE exams SET status = $1, updated_at = NOW() WHERE id = $2 RETURNING *', [req.body.status, req.params.id]);
     if (!rows[0]) return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Exam not found' } });
     res.json({ success: true, data: rows[0] });
+  } catch (err) { next(err); }
+};
+
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+exports.paymentsReport = async (req, res, next) => {
+  try {
+    const from = req.query.from || null;
+    const to = req.query.to || null;
+    if ((from && !DATE_RE.test(from)) || (to && !DATE_RE.test(to))) {
+      return res.status(400).json({ success: false, error: { code: 'VALIDATION_ERROR', message: 'from/to must be dates in YYYY-MM-DD format' } });
+    }
+    if (from && to && from > to) {
+      return res.status(400).json({ success: false, error: { code: 'VALIDATION_ERROR', message: "'from' date must not be after 'to' date" } });
+    }
+    const data = await getCompletedExamsReport({ from, to });
+    res.json({ success: true, data });
   } catch (err) { next(err); }
 };
