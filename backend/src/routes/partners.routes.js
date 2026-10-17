@@ -94,7 +94,7 @@ router.post('/:partnerId/bonus/payments', authorize('admin'), async (req, res, n
 router.get('/:partnerId/exams/:examId/students', async (req, res, next) => {
   try {
     const { rows } = await pool.query(`
-      SELECT r.id, r.amount_paid, r.registered_at, r.seat_number, r.room_number, r.extra_detail,
+      SELECT r.id, r.amount_paid, r.payment_method, r.registered_at, r.seat_number, r.room_number, r.extra_detail,
              s.full_name, s.student_number, s.email, s.mobile_number,
              s.class_level, s.sector, s.language
       FROM registrations r

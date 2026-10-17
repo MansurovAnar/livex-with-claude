@@ -1,10 +1,12 @@
 const pool = require('../config/database');
 const { resolveExtraDetail } = require('../services/examExtraDetail.service');
 
+const PAYMENT_METHODS = ['card', 'cash'];
+
 exports.listByExam = async (req, res, next) => {
   try {
     const { rows } = await pool.query(
-      `SELECT r.id, r.seat_number, r.room_number, r.amount_paid, r.registered_at, r.extra_detail,
+      `SELECT r.id, r.seat_number, r.room_number, r.amount_paid, r.payment_method, r.registered_at, r.extra_detail,
               s.id AS student_id, s.student_number, s.full_name, s.email, s.mobile_number, s.photo_url,
               -- Partner who registered the student; falls back to the student's own partner
               COALESCE(rb.full_name, sp.full_name) AS partner_name
@@ -40,10 +42,15 @@ exports.register = async (req, res, next) => {
 exports.updatePayment = async (req, res, next) => {
   const client = await pool.connect();
   try {
-    const { amount_paid } = req.body;
+    const { amount_paid, payment_method } = req.body;
     if (typeof amount_paid !== 'number' || amount_paid < 0) {
       return res.status(400).json({ success: false, error: { code: 'INVALID_AMOUNT', message: 'amount_paid must be a non-negative number' } });
     }
+    // A payment must be tagged as card or cash; clearing the payment (0) clears the method
+    if (amount_paid > 0 && !PAYMENT_METHODS.includes(payment_method)) {
+      return res.status(400).json({ success: false, error: { code: 'INVALID_PAYMENT_METHOD', message: "payment_method must be 'card' or 'cash'" } });
+    }
+    const method = amount_paid > 0 ? payment_method : null;
 
     // Fetch current registration with exam cost, commission and student's partner
     const { rows: existing } = await client.query(
@@ -66,9 +73,10 @@ exports.updatePayment = async (req, res, next) => {
     const { rows } = await client.query(
       `UPDATE registrations
        SET amount_paid = $1,
+           payment_method = $5,
            bonus_awarded = CASE WHEN $2 THEN true WHEN $3 THEN false ELSE bonus_awarded END
        WHERE id = $4 RETURNING *`,
-      [amount_paid, shouldAward, shouldRevoke, req.params.id]
+      [amount_paid, shouldAward, shouldRevoke, req.params.id, method]
     );
 
     if (shouldAward) {
