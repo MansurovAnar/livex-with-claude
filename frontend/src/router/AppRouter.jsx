@@ -93,8 +93,9 @@ export default function AppRouter() {
         </Route>
 
         <Route path="/partner" element={<RequireAuth roles={['partner']}><PartnerLayout /></RequireAuth>}>
-          <Route index element={<MyStudentsPage />} />
+          <Route index element={<Navigate to="register" replace />} />
           <Route path="register" element={<PartnerRegisterPage />} />
+          <Route path="students" element={<MyStudentsPage />} />
           <Route path="exams/:examId/students" element={<PartnerMyExamStudentsPage />} />
           <Route path="payments" element={<PartnerPaymentsPage />} />
         </Route>
