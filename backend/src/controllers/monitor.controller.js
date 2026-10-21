@@ -1,4 +1,5 @@
 const pool = require('../config/database');
+const { getExamPayments } = require('../services/examPayments.service');
 
 exports.examMonitor = async (req, res, next) => {
   try {
@@ -41,10 +42,14 @@ exports.examMonitor = async (req, res, next) => {
       [examId]
     );
 
+    // Money figures are admin-only; viewers get the same response without them
+    const payments = req.user.role === 'admin' ? await getExamPayments(examId) : undefined;
+
     res.json({
       success: true,
       data: {
         exam: examRows[0],
+        payments,
         registered_count: parseInt(countRows[0].count, 10),
         currently_inside: parseInt(insideRows[0].count, 10),
         recent_logs: recentLogs,
