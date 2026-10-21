@@ -26,8 +26,8 @@ export default function PartnerLayout() {
         <div style={{ fontSize: '0.75rem', color: '#6ee7b7', marginBottom: '1rem', opacity: 0.8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {user?.full_name}
         </div>
-        <NavLink to="/partner" end style={navStyle}>My Students</NavLink>
         <NavLink to="/partner/register" style={navStyle}>Register to Exam</NavLink>
+        <NavLink to="/partner/students" style={navStyle}>My Students</NavLink>
         <NavLink to="/partner/payments" style={navStyle}>Payments</NavLink>
         <div style={{ marginTop: 'auto' }}>
           <button onClick={handleLogout} style={{ width: '100%', background: 'none', border: '1px solid #065f46', color: '#d1fae5', padding: '0.4rem', cursor: 'pointer', borderRadius: 4, fontSize: '0.875rem' }}>
