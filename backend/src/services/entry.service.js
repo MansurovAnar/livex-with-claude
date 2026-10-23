@@ -26,7 +26,7 @@ async function verifyAndLog({ exam_id, student_number, event_type, device_info, 
 
     // 2. Fetch student + registration
     const { rows: studentRows } = await client.query(
-      `SELECT s.*, r.id AS registration_id, r.seat_number
+      `SELECT s.*, r.id AS registration_id, r.seat_number, r.removed_at
        FROM students s
        JOIN registrations r ON r.student_id = s.id AND r.exam_id = $1
        WHERE s.student_number = $2 AND s.is_active = true`,
@@ -36,6 +36,10 @@ async function verifyAndLog({ exam_id, student_number, event_type, device_info, 
     if (!student) {
       await client.query('ROLLBACK');
       return { allowed: false, reason: 'NOT_REGISTERED' };
+    }
+    if (student.removed_at) {
+      await client.query('ROLLBACK');
+      return { allowed: false, reason: 'REMOVED_FROM_EXAM', student: { full_name: student.full_name, photo_url: student.photo_url } };
     }
 
     // 3. Check current presence from last log event

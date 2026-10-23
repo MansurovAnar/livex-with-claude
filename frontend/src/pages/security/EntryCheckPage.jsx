@@ -99,6 +99,7 @@ function ResultCard({ result }) {
     ENTRY_WINDOW_CLOSED: 'Entry Window Closed',
     EXAM_CANCELLED: 'Exam Cancelled',
     EXAM_NOT_FOUND: 'Exam Not Found',
+    REMOVED_FROM_EXAM: 'Removed From This Exam',
   };
 
   return (

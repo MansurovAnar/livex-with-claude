@@ -3,6 +3,7 @@ const pool = require('../config/database');
 // Per-exam payment figures. Legacy payments recorded before payment_method existed
 // (amount_paid > 0, payment_method NULL) are reported as "unspecified", so
 // card + cash + unspecified = paid. Commission = partner bonuses earned on the exam.
+// Students removed from the exam are left out of every figure.
 const PAYMENT_COLUMNS = `
   e.id, e.title, e.scheduled_at, e.exam_location, e.status, e.exam_cost, e.commission_amount,
   COUNT(r.id)::int AS registered_count,
@@ -37,7 +38,7 @@ exports.getExamPayments = async (examId) => {
   const { rows } = await pool.query(
     `SELECT ${PAYMENT_COLUMNS}
      FROM exams e
-     LEFT JOIN registrations r ON r.exam_id = e.id
+     LEFT JOIN registrations r ON r.exam_id = e.id AND r.removed_at IS NULL
      WHERE e.id = $1
      GROUP BY e.id`,
     [examId]
@@ -56,7 +57,7 @@ exports.getCompletedExamsReport = async ({ from, to }) => {
   const { rows } = await pool.query(
     `SELECT ${PAYMENT_COLUMNS}
      FROM exams e
-     LEFT JOIN registrations r ON r.exam_id = e.id
+     LEFT JOIN registrations r ON r.exam_id = e.id AND r.removed_at IS NULL
      WHERE ${conditions.join(' AND ')}
      GROUP BY e.id
      ORDER BY e.scheduled_at`,

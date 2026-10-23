@@ -30,7 +30,7 @@ router.get('/:partnerId/exams', async (req, res, next) => {
       FROM registrations r
       JOIN students s ON s.id = r.student_id
       JOIN exams e ON e.id = r.exam_id
-      WHERE s.partner_id = $1
+      WHERE s.partner_id = $1 AND r.removed_at IS NULL
       GROUP BY e.id
       ORDER BY e.scheduled_at DESC
     `, [req.params.partnerId]);
@@ -99,7 +99,7 @@ router.get('/:partnerId/exams/:examId/students', async (req, res, next) => {
              s.class_level, s.sector, s.language
       FROM registrations r
       JOIN students s ON s.id = r.student_id
-      WHERE s.partner_id = $1 AND r.exam_id = $2
+      WHERE s.partner_id = $1 AND r.exam_id = $2 AND r.removed_at IS NULL
       ORDER BY s.full_name
     `, [req.params.partnerId, req.params.examId]);
     res.json({ success: true, data: rows });
