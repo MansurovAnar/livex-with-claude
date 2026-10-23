@@ -1,14 +1,72 @@
 name: Manual Deploy to Kamatera
 
+# Deploys a release built by "Build and Tag Release" to the VPS.
+# Run it from Actions -> Manual Deploy to Kamatera -> Run workflow (branch: master).
+# Leave the tag empty to deploy the latest GitHub Release, or enter an older
+# tag (e.g. v1.4.1) to roll back.
+#
+# The VPS compose file (/opt/app/docker-compose.yml) must reference the images as
+#   ghcr.io/<owner>/<repo>/backend:${IMAGE_TAG:-latest}
+#   ghcr.io/<owner>/<repo>/frontend:${IMAGE_TAG:-latest}
+# This workflow writes IMAGE_TAG into /opt/app/.env.
+
+run-name: Deploy ${{ inputs.tag || 'latest release' }} by @${{ github.actor }}
+
 on:
   # This triggers the "Run workflow" button in the GitHub UI
   workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to deploy (e.g. v1.4.2). Empty = latest release"
+        type: string
+        required: false
+
+permissions:
+  contents: read   # read releases to resolve/verify the tag
+
+# Never run two deploys against the VPS at the same time.
+concurrency:
+  group: deploy-vps
+  cancel-in-progress: false
 
 jobs:
   deploy:
     name: Execute Remote SSH Manual Deploy
     runs-on: ubuntu-latest
     steps:
+      - name: Require master branch
+        if: github.ref != 'refs/heads/master'
+        run: |
+          echo "::error title=Wrong branch::Deploys must be started from master (got ${GITHUB_REF})."
+          exit 1
+
+      - name: Resolve release tag
+        id: tag
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Passed via env (not inlined) so the input can't inject shell commands
+          INPUT_TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          TAG="${INPUT_TAG// /}"
+          if [[ -z "$TAG" ]]; then
+            TAG=$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName -q .tagName)
+          fi
+
+          if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error title=Invalid tag::'$TAG' is not a release tag like v1.2.3"
+            exit 1
+          fi
+          if ! URL=$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json url -q .url); then
+            echo "::error title=Unknown tag::No GitHub Release found for $TAG"
+            exit 1
+          fi
+
+          echo "Deploying $TAG"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+          echo "REPO_LOWER=${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
+
       - name: SSH and Update VPS
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -17,9 +75,36 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           port: 22
           script: |
+            set -e
             cd /opt/app
             echo "${{ secrets.VPS_GHCR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            touch .env
+            sed -i '/^IMAGE_TAG=/d' .env
+            echo "IMAGE_TAG=${{ steps.tag.outputs.tag }}" >> .env
             docker compose pull
             docker compose up -d
             docker image prune -f
             docker logout ghcr.io
+            echo "Running images:"
+            docker compose images
+
+      - name: Summary
+        if: always() && steps.tag.outputs.tag != ''
+        env:
+          TAG: ${{ steps.tag.outputs.tag }}
+          URL: ${{ steps.tag.outputs.url }}
+          REQUESTED: ${{ inputs.tag }}
+          STATUS: ${{ job.status }}
+        run: |
+          {
+            echo "## Deploy \`$TAG\` — $STATUS"
+            echo ""
+            echo "| | |"
+            echo "|---|---|"
+            echo "| Tag | [\`$TAG\`]($URL) |"
+            echo "| Requested | \`${REQUESTED:-latest release}\` |"
+            echo "| Triggered by | @$GITHUB_ACTOR |"
+            echo "| Backend image | \`ghcr.io/$REPO_LOWER/backend:$TAG\` |"
+            echo "| Frontend image | \`ghcr.io/$REPO_LOWER/frontend:$TAG\` |"
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "::notice title=Deployed tag::$TAG ($STATUS)"
