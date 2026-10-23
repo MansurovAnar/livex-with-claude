@@ -3,7 +3,7 @@ import { toBlob } from 'html-to-image';
 
 /**
  * Printable exam entry ticket (1/3 A4 = 210mm × 99mm).
- * data: { studentName, studentNumber, extraDetail, examTitle, examDate, examLocation, roomNumber, seatNumber }
+ * data: { studentName, studentNumber, studentEmail, extraDetail, examTitle, examDate, examLocation, roomNumber, seatNumber }
  */
 // Ticket width in CSS px (210mm at 96dpi); used to shrink it to fit narrow screens
 const TICKET_W = 794;
@@ -120,8 +120,14 @@ export default function StudentTicket({ data, onClose }) {
             <div style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', lineHeight: 1.2 }}>
               {data.studentName}
             </div>
-            <div style={{ fontSize: 12, color: '#475569', marginTop: 3 }}>
-              <span style={{ fontWeight: 700 }}>Student number:</span> {data.studentNumber}
+            {/* Number and LIVEX email share one row so the fixed-height ticket doesn't overflow */}
+            <div style={{ fontSize: 12, color: '#475569', marginTop: 3, display: 'flex', flexWrap: 'wrap', columnGap: '6mm' }}>
+              <span><span style={{ fontWeight: 700 }}>Student number:</span> {data.studentNumber}</span>
+              {data.studentEmail && (
+                <span style={{ overflowWrap: 'anywhere' }}>
+                  <span style={{ fontWeight: 700 }}>LIVEX email:</span> {data.studentEmail}
+                </span>
+              )}
             </div>
             {data.extraDetail && (
               <div style={{ fontSize: 12, color: '#475569', marginTop: 2 }}>

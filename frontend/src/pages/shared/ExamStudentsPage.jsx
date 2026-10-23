@@ -359,6 +359,7 @@ export default function ExamStudentsPage() {
           data={{
             studentName: ticketReg.full_name,
             studentNumber: ticketReg.student_number,
+            studentEmail: ticketReg.email,
             extraDetail: ticketReg.extra_detail || null,
             examTitle: exam.title,
             examDate: exam.scheduled_at,

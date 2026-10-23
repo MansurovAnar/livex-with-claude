@@ -126,6 +126,7 @@ export default function PartnerMyExamStudentsPage() {
           data={{
             studentName: ticketReg.full_name,
             studentNumber: ticketReg.student_number,
+            studentEmail: ticketReg.email,
             extraDetail: ticketReg.extra_detail || null,
             examTitle: examInfo.title,
             examDate: examInfo.scheduled_at,
