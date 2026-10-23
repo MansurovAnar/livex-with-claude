@@ -12,7 +12,7 @@ exports.examMonitor = async (req, res, next) => {
     if (!examRows[0]) return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Exam not found' } });
 
     const { rows: countRows } = await pool.query(
-      'SELECT COUNT(*) FROM registrations WHERE exam_id = $1', [examId]
+      'SELECT COUNT(*) FROM registrations WHERE exam_id = $1 AND removed_at IS NULL', [examId]
     );
 
     // currently inside = students whose last event is 'entry'
@@ -62,7 +62,7 @@ exports.todayDashboard = async (req, res, next) => {
   try {
     const { rows } = await pool.query(
       `SELECT id, title, status, scheduled_at, exam_location,
-              (SELECT COUNT(*) FROM registrations WHERE exam_id = e.id) AS registered_count
+              (SELECT COUNT(*) FROM registrations WHERE exam_id = e.id AND removed_at IS NULL) AS registered_count
        FROM exams e
        WHERE e.scheduled_at::date = CURRENT_DATE AND e.is_active = true
        ORDER BY e.scheduled_at`

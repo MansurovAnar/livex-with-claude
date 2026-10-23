@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { listExams } from '../../api/exams.api';
 import { listStudents } from '../../api/students.api';
 import { registerStudent } from '../../api/registrations.api';
@@ -27,6 +27,8 @@ export default function RegisterToExamPage() {
   const [submitting, setSubmitting] = useState(false);
   const [ticket, setTicket] = useState(null);
   const [error, setError] = useState('');
+  // Set when the student was removed from the chosen exam: { exam_id, exam_title }
+  const [removedFrom, setRemovedFrom] = useState(null);
 
   useEffect(() => {
     listExams({ status: 'scheduled' }).then(res => setExams(res.data.data));
@@ -64,7 +66,7 @@ export default function RegisterToExamPage() {
     if (!selectedStudent) { setError('Please select a student.'); return; }
     if (!selectedExam) { setError('Please select an exam.'); return; }
     if (extraDetailOptions.length > 0 && !extraDetail) { setError('Please select an extra detail.'); return; }
-    setError(''); setTicket(null); setSubmitting(true);
+    setError(''); setRemovedFrom(null); setTicket(null); setSubmitting(true);
     try {
       await registerStudent(selectedExam, { student_id: selectedStudent.id, seat_number: seat || undefined, room_number: roomNumber || undefined, extra_detail: extraDetailOptions.length ? extraDetail : undefined });
       const exam = exams.find(ex => ex.id === selectedExam);
@@ -85,7 +87,12 @@ export default function RegisterToExamPage() {
       setStudentQuery('');
       setSelectedExam('');
     } catch (err) {
-      setError(err.response?.data?.error?.message || 'Registration failed');
+      const apiError = err.response?.data?.error;
+      if (apiError?.code === 'REMOVED_FROM_EXAM') {
+        setRemovedFrom(apiError.details);
+      } else {
+        setError(apiError?.message || 'Registration failed');
+      }
     } finally {
       setSubmitting(false);
     }
@@ -103,6 +110,14 @@ export default function RegisterToExamPage() {
 
       {ticket && (
         <StudentTicket data={ticket} onClose={() => setTicket(null)} />
+      )}
+      {removedFrom && (
+        <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', padding: '0.75rem 1rem', borderRadius: 6, marginBottom: '1rem', overflowWrap: 'anywhere' }}>
+          This student is removed from {removedFrom.exam_title} exam. You can restore this student from{' '}
+          <Link to={`/reception/exams/${removedFrom.exam_id}/students`} style={{ color: '#7e22ce', fontWeight: 600 }}>
+            {removedFrom.exam_title}
+          </Link>.
+        </div>
       )}
       {error && (
         <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', padding: '0.75rem 1rem', borderRadius: 6, marginBottom: '1rem' }}>

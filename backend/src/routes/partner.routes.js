@@ -4,6 +4,7 @@ const authenticate = require('../middleware/authenticate');
 const authorize = require('../middleware/authorize');
 const { getNextStudentNumber } = require('../services/studentNumber.service');
 const { resolveExtraDetail } = require('../services/examExtraDetail.service');
+const { removedRegistrationError } = require('../services/registrationRemoval.service');
 
 router.use(authenticate, authorize('partner'));
 
@@ -108,6 +109,8 @@ router.post('/exams/:examId/register', async (req, res, next) => {
     if (examRows[0] && examRows[0].status !== 'scheduled') {
       return res.status(409).json({ success: false, error: { code: 'REGISTRATION_CLOSED', message: `Registration is closed — exam is ${examRows[0].status}` } });
     }
+    const removed = await removedRegistrationError(pool, req.params.examId, student_id, { canRestore: false });
+    if (removed) return res.status(409).json(removed);
     const extra = await resolveExtraDetail(pool, req.params.examId, extra_detail);
     if (extra.error) {
       return res.status(extra.status).json({ success: false, error: { code: extra.status === 404 ? 'NOT_FOUND' : 'VALIDATION', message: extra.error } });
@@ -138,7 +141,7 @@ router.get('/exams/:examId/students', async (req, res, next) => {
       JOIN students s ON s.id = r.student_id
       JOIN exams e ON e.id = r.exam_id
       LEFT JOIN exam_types et ON et.id = e.exam_type_id
-      WHERE s.partner_id = $1 AND r.exam_id = $2
+      WHERE s.partner_id = $1 AND r.exam_id = $2 AND r.removed_at IS NULL
       ORDER BY s.full_name
     `, [req.user.id, req.params.examId]);
     res.json({ success: true, data: rows });
@@ -157,7 +160,7 @@ router.get('/payments', async (req, res, next) => {
         FROM registrations r
         JOIN students s ON s.id = r.student_id
         JOIN exams e ON e.id = r.exam_id
-        WHERE s.partner_id = $1
+        WHERE s.partner_id = $1 AND r.removed_at IS NULL
         ORDER BY r.registered_at DESC
       `, [req.user.id]),
       pool.query(

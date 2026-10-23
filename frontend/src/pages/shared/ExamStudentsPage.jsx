@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getExam } from '../../api/exams.api';
-import { listRegistrations, updatePayment } from '../../api/registrations.api';
+import { listRegistrations, listRemovedRegistrations, updatePayment, removeFromExam, restoreToExam } from '../../api/registrations.api';
 import { useAuth } from '../../contexts/AuthContext';
 import StudentTicket from '../../components/shared/StudentTicket';
 import PaymentMethodRadio, { paymentMethodLabel } from '../../components/shared/PaymentMethodRadio';
@@ -20,14 +20,22 @@ export default function ExamStudentsPage() {
   const [payError, setPayError] = useState('');
   const [saving, setSaving] = useState(false);
   const [ticketReg, setTicketReg] = useState(null);
+  const [removed, setRemoved] = useState([]);
+  const [removedOpen, setRemovedOpen] = useState(false);
+  const [removeModal, setRemoveModal] = useState(null);
+  const [removeReason, setRemoveReason] = useState('');
+  const [removeError, setRemoveError] = useState('');
+  const [removing, setRemoving] = useState(false);
+  const [restoringId, setRestoringId] = useState(null);
 
   const backPath = user?.role === 'reception' ? '/reception/exams' : '/admin/exams';
 
   const load = () => {
-    Promise.all([getExam(id), listRegistrations(id)])
-      .then(([examRes, regRes]) => {
+    Promise.all([getExam(id), listRegistrations(id), listRemovedRegistrations(id)])
+      .then(([examRes, regRes, removedRes]) => {
         setExam(examRes.data.data);
         setRegistrations(regRes.data.data);
+        setRemoved(removedRes.data.data);
       })
       .finally(() => setLoading(false));
   };
@@ -58,6 +66,38 @@ export default function ExamStudentsPage() {
       setPayError(err.response?.data?.error?.message || 'Failed to save payment');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const openRemoveModal = (reg) => { setRemoveModal(reg); setRemoveReason(''); setRemoveError(''); };
+  const closeRemoveModal = () => { setRemoveModal(null); setRemoveReason(''); setRemoveError(''); };
+
+  const handleRemove = async () => {
+    const reason = removeReason.trim();
+    if (!reason) { setRemoveError('Please explain why the student is removed.'); return; }
+    setRemoving(true);
+    setRemoveError('');
+    try {
+      await removeFromExam(removeModal.id, reason);
+      closeRemoveModal();
+      load();
+    } catch (err) {
+      setRemoveError(err.response?.data?.error?.message || 'Failed to remove student');
+    } finally {
+      setRemoving(false);
+    }
+  };
+
+  const handleRestore = async (reg) => {
+    if (!window.confirm(`Restore ${reg.full_name} to this exam? Room and seat will be empty.`)) return;
+    setRestoringId(reg.id);
+    try {
+      await restoreToExam(reg.id);
+      load();
+    } catch (err) {
+      window.alert(err.response?.data?.error?.message || 'Failed to restore student');
+    } finally {
+      setRestoringId(null);
     }
   };
 
@@ -106,6 +146,7 @@ export default function ExamStudentsPage() {
         <span><strong>Entry closes:</strong> {new Date(exam.entry_closes_at).toLocaleString()}</span>
         <span><strong>Exam Cost:</strong> <span style={{ color: '#15803d', fontWeight: 700 }}>{examCost.toFixed(2)} AZN</span></span>
         <span><strong>Registered:</strong> {registrations.length}</span>
+        <span><strong>Removed from exam:</strong> <span style={{ color: removed.length ? '#dc2626' : undefined, fontWeight: 600 }}>{removed.length}</span></span>
         <span style={{ marginLeft: 'auto' }}>
           <span style={{ background: exam.status === 'ongoing' ? '#16a34a' : exam.status === 'scheduled' ? '#2563eb' : '#64748b', color: '#fff', padding: '0.15rem 0.75rem', borderRadius: 12, fontSize: '0.78rem', fontWeight: 600 }}>
             {exam.status}
@@ -135,7 +176,7 @@ export default function ExamStudentsPage() {
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
-              {['#', 'Full Name', 'Student Number', 'Email', 'Mobile', 'Room', 'Seat', ...(showExtraDetail ? ['Extra Detail'] : []), 'Exam Cost', 'Registered At', 'Paid'].map(h => (
+              {['#', 'Full Name', 'Student Number', 'Email', 'Mobile', 'Room', 'Seat', ...(showExtraDetail ? ['Extra Detail'] : []), 'Exam Cost', 'Registered At', 'Paid', ''].map(h => (
                 <th key={h} style={th}>{h}</th>
               ))}
             </tr>
@@ -143,7 +184,7 @@ export default function ExamStudentsPage() {
           <tbody>
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={showExtraDetail ? 11 : 10} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>
+                <td colSpan={showExtraDetail ? 12 : 11} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>
                   No students registered for this exam yet.
                 </td>
               </tr>
@@ -204,12 +245,113 @@ export default function ExamStudentsPage() {
                       )}
                     </div>
                   </td>
+                  <td style={{ ...td, whiteSpace: 'nowrap' }}>
+                    {paid > 0 ? (
+                      <span title="Students with a recorded payment cannot be removed" style={{ color: '#cbd5e1' }}>—</span>
+                    ) : (
+                      <button
+                        onClick={() => openRemoveModal(r)}
+                        style={{ background: '#fff', color: '#dc2626', border: '1px solid #fecaca', borderRadius: 6, padding: '0.25rem 0.7rem', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600 }}>
+                        Remove
+                      </button>
+                    )}
+                  </td>
                 </tr>
               );
             })}
           </tbody>
         </table>
       </div>
+
+      {/* Removed students (expandable) */}
+      <div style={{ marginTop: '1.5rem' }}>
+        <button
+          type="button"
+          onClick={() => setRemovedOpen(o => !o)}
+          aria-expanded={removedOpen}
+          className="btn-block"
+          style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, padding: '0.6rem 1rem', cursor: 'pointer', color: '#b91c1c', fontWeight: 600, fontSize: '0.9rem' }}>
+          <span>{removedOpen ? '▾' : '▸'}</span>
+          Removed students ({removed.length})
+        </button>
+        {removedOpen && (
+          <div className="table-scroll" style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, overflow: 'hidden', marginTop: '0.5rem' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
+                  {['#', 'Full Name', 'Student Number', 'Mobile', 'Reason', 'Removed By', 'Removed At', ''].map(h => (
+                    <th key={h} style={th}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {removed.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} style={{ padding: '1.5rem', textAlign: 'center', color: '#94a3b8' }}>
+                      No students removed from this exam.
+                    </td>
+                  </tr>
+                ) : removed.map((r, i) => (
+                  <tr key={r.id} style={{ borderBottom: '1px solid #f1f5f9', background: i % 2 === 0 ? '#fff' : '#fafafa' }}>
+                    <td style={{ ...td, color: '#94a3b8' }}>{i + 1}</td>
+                    <td style={{ ...td, fontWeight: 600 }}>{r.full_name}</td>
+                    <td style={td}>{r.student_number}</td>
+                    <td style={td}>{r.mobile_number || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
+                    <td style={{ ...td, overflowWrap: 'anywhere', minWidth: 160 }}>{r.removal_reason}</td>
+                    <td style={td}>{r.removed_by_name || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
+                    <td style={td}>{new Date(r.removed_at).toLocaleString()}</td>
+                    <td style={{ ...td, whiteSpace: 'nowrap' }}>
+                      <button
+                        onClick={() => handleRestore(r)}
+                        disabled={restoringId === r.id}
+                        style={{ background: '#16a34a', color: '#fff', border: 'none', borderRadius: 6, padding: '0.25rem 0.7rem', cursor: restoringId === r.id ? 'not-allowed' : 'pointer', opacity: restoringId === r.id ? 0.7 : 1, fontSize: '0.8rem', fontWeight: 600 }}>
+                        {restoringId === r.id ? 'Restoring...' : 'Restore'}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Remove Modal */}
+      {removeModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}
+          onClick={(e) => { if (e.target === e.currentTarget) closeRemoveModal(); }}>
+          <div className="modal-card" style={{ '--modal-w': '420px', background: '#fff', borderRadius: 12, padding: '1.75rem', width: 420, boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
+            <h3 style={{ margin: '0 0 0.25rem' }}>Remove from Exam</h3>
+            <p style={{ margin: '0 0 1.25rem', color: '#64748b', fontSize: '0.875rem', overflowWrap: 'anywhere' }}>
+              {removeModal.full_name} ({removeModal.student_number}) will be removed from {exam.title}. Their room and seat will be freed.
+            </p>
+            <label style={{ display: 'block', fontWeight: 500, fontSize: '0.875rem', marginBottom: '0.3rem', color: '#374151' }}>
+              Reason <span style={{ color: '#dc2626' }}>*</span>
+            </label>
+            <textarea
+              value={removeReason}
+              onChange={e => { setRemoveReason(e.target.value); setRemoveError(''); }}
+              autoFocus
+              rows={4}
+              placeholder="Why is this student removed from the exam?"
+              style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #cbd5e1', borderRadius: 6, fontSize: '0.95rem', boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit', marginBottom: '1rem' }}
+            />
+            {removeError && (
+              <div style={{ marginBottom: '1rem', color: '#dc2626', fontSize: '0.875rem' }}>{removeError}</div>
+            )}
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+              <button onClick={closeRemoveModal}
+                style={{ padding: '0.5rem 1.25rem', background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: 6, cursor: 'pointer' }}>
+                Cancel
+              </button>
+              <button onClick={handleRemove} disabled={removing}
+                style={{ padding: '0.5rem 1.5rem', background: '#dc2626', color: '#fff', border: 'none', borderRadius: 6, cursor: removing ? 'not-allowed' : 'pointer', opacity: removing ? 0.7 : 1, fontWeight: 600 }}>
+                {removing ? 'Removing...' : 'Remove'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Ticket Modal */}
       {ticketReg && exam && (
