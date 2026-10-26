@@ -27,6 +27,7 @@ export default function ReceptionLayout() {
           {open && (
             <nav style={{ display: 'flex', flexDirection: 'column', padding: '0 12px 12px', gap: 4, borderTop: '1px solid rgba(255,255,255,0.2)' }}>
               <NavLink to="/reception" end style={mobileNavStyle}>Students</NavLink>
+              <NavLink to="/reception/course-students" style={mobileNavStyle}>Course Students</NavLink>
               <NavLink to="/reception/exams" style={mobileNavStyle}>Exams</NavLink>
               <NavLink to="/reception/partners" style={mobileNavStyle}>Partners</NavLink>
               <div className="wrap-text" style={{ fontSize: '0.85rem', opacity: 0.85, padding: '8px 0 4px' }}>{user?.full_name}</div>
@@ -42,6 +43,7 @@ export default function ReceptionLayout() {
           <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
             <span style={{ fontWeight: 'bold' }}>Reception</span>
             <NavLink to="/reception" end style={navStyle}>Students</NavLink>
+            <NavLink to="/reception/course-students" style={navStyle}>Course Students</NavLink>
             <NavLink to="/reception/exams" style={navStyle}>Exams</NavLink>
             <NavLink to="/reception/partners" style={navStyle}>Partners</NavLink>
           </div>

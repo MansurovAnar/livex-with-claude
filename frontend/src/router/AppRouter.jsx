@@ -26,6 +26,7 @@ import ReceptionExamsPage from '../pages/reception/ReceptionExamsPage';
 
 import ExamStudentsPage from '../pages/shared/ExamStudentsPage';
 import PartnersPage from '../pages/shared/PartnersPage';
+import CourseStudentsPage from '../pages/shared/CourseStudentsPage';
 import MonitorPage from '../pages/monitor/MonitorPage';
 
 import PartnerLayout from '../components/layout/PartnerLayout';
@@ -69,6 +70,7 @@ export default function AppRouter() {
           <Route path="exams/reports" element={<ExamReportsPage />} />
           <Route path="exams/:id/students" element={<ExamStudentsPage />} />
           <Route path="students" element={<StudentsPage />} />
+          <Route path="course-students" element={<CourseStudentsPage />} />
           <Route path="users" element={<UsersPage />} />
           <Route path="partners" element={<PartnersPage />} />
           <Route path="partners/:partnerId/exams" element={<PartnerExamsPage />} />
@@ -84,6 +86,7 @@ export default function AppRouter() {
         <Route path="/reception" element={<RequireAuth roles={['reception', 'admin']}><ReceptionLayout /></RequireAuth>}>
           <Route index element={<StudentSearchPage />} />
           <Route path="add" element={<AddStudentPage />} />
+          <Route path="course-students" element={<CourseStudentsPage />} />
           <Route path="register" element={<RegisterToExamPage />} />
           <Route path="exams" element={<ReceptionExamsPage />} />
           <Route path="exams/:id/students" element={<ExamStudentsPage />} />

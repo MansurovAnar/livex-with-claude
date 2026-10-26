@@ -5,6 +5,10 @@ import { listRegistrations, listRemovedRegistrations, updatePayment, removeFromE
 import { useAuth } from '../../contexts/AuthContext';
 import StudentTicket from '../../components/shared/StudentTicket';
 import PaymentMethodRadio, { paymentMethodLabel } from '../../components/shared/PaymentMethodRadio';
+import CourseDiscountBadge from '../../components/shared/CourseDiscountBadge';
+
+// Price the student owes: course students get their discount (FREE = 0), see due_amount from the API
+const dueOf = (reg, examCost) => (reg.due_amount != null ? Number(reg.due_amount) : examCost);
 
 export default function ExamStudentsPage() {
   const { id } = useParams();
@@ -190,8 +194,9 @@ export default function ExamStudentsPage() {
               </tr>
             ) : filtered.map((r, i) => {
               const paid = Number(r.amount_paid);
-              const remaining = examCost - paid;
-              const fullyPaid = paid >= examCost;
+              const due = dueOf(r, examCost);
+              const remaining = due - paid;
+              const fullyPaid = paid >= due;
 
               return (
                 <tr key={r.id} style={{ borderBottom: '1px solid #f1f5f9', background: i % 2 === 0 ? '#fff' : '#fafafa' }}>
@@ -215,7 +220,10 @@ export default function ExamStudentsPage() {
                   <td style={td}>{r.room_number || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
                   <td style={td}>{r.seat_number || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
                   {showExtraDetail && <td style={{ ...td, overflowWrap: 'anywhere' }}>{r.extra_detail || <span style={{ color: '#cbd5e1' }}>—</span>}</td>}
-                  <td style={{ ...td, fontWeight: 600, color: '#15803d' }}>{examCost.toFixed(2)} AZN</td>
+                  <td style={{ ...td, fontWeight: 600, color: '#15803d', whiteSpace: 'nowrap' }}>
+                    {due.toFixed(2)} AZN
+                    {r.is_course_student && <> <CourseDiscountBadge student={r} /></>}
+                  </td>
                   <td style={td}>{new Date(r.registered_at).toLocaleString()}</td>
                   <td style={{ ...td, whiteSpace: 'nowrap' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -238,7 +246,7 @@ export default function ExamStudentsPage() {
                           {paymentMethodLabel(r.payment_method)}
                         </span>
                       )}
-                      {!fullyPaid && examCost > 0 && (
+                      {!fullyPaid && due > 0 && (
                         <span style={{ color: '#dc2626', fontSize: '0.8rem', fontWeight: 600 }}>
                           -{remaining.toFixed(2)} AZN
                         </span>
@@ -385,6 +393,17 @@ export default function ExamStudentsPage() {
               <span style={{ color: '#475569' }}>Exam Cost</span>
               <span style={{ fontWeight: 700 }}>{examCost.toFixed(2)} AZN</span>
             </div>
+            {paymentModal.is_course_student && (
+              <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 8, padding: '0.75rem 1rem', marginTop: '-0.75rem', marginBottom: '1.25rem', fontSize: '0.875rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem' }}>
+                  <span style={{ color: '#475569' }}>Course student <CourseDiscountBadge student={paymentModal} /></span>
+                  <span style={{ fontWeight: 700 }}>{dueOf(paymentModal, examCost).toFixed(2)} AZN</span>
+                </div>
+                {paymentModal.discount_note && (
+                  <div style={{ color: '#92400e', marginTop: '0.35rem', overflowWrap: 'anywhere' }}>{paymentModal.discount_note}</div>
+                )}
+              </div>
+            )}
 
             <label style={{ display: 'block', fontWeight: 500, fontSize: '0.875rem', marginBottom: '0.3rem', color: '#374151' }}>
               Amount Paid (AZN)
@@ -405,7 +424,7 @@ export default function ExamStudentsPage() {
 
             {payInput !== '' && !isNaN(parseFloat(payInput)) && (() => {
               const amt = parseFloat(payInput);
-              const rem = examCost - amt;
+              const rem = dueOf(paymentModal, examCost) - amt;
               return rem > 0 ? (
                 <div style={{ marginBottom: '1.25rem', color: '#dc2626', fontSize: '0.875rem', fontWeight: 600 }}>
                   Remaining: {rem.toFixed(2)} AZN
