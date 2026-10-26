@@ -73,6 +73,7 @@ export default function RegisterToExamPage() {
       setTicket({
         studentName: selectedStudent.full_name,
         studentNumber: selectedStudent.student_number,
+        studentEmail: selectedStudent.email,
         extraDetail: extraDetailOptions.length ? extraDetail : null,
         examTitle: exam?.title,
         examDate: exam?.scheduled_at,

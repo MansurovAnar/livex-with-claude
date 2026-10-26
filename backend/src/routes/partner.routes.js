@@ -134,7 +134,7 @@ router.get('/exams/:examId/students', async (req, res, next) => {
   try {
     const { rows } = await pool.query(`
       SELECT r.id, r.seat_number, r.room_number, r.registered_at, r.extra_detail,
-             s.full_name, s.student_number, s.class_level, s.sector, s.language,
+             s.full_name, s.student_number, s.email, s.class_level, s.sector, s.language,
              e.title AS exam_title, e.scheduled_at, e.exam_location,
              et.extra_details AS exam_type_extra_details
       FROM registrations r
