@@ -39,6 +39,7 @@ export default function PartnerExamsPage() {
   if (!partner) return <p style={{ padding: '1rem', color: '#dc2626' }}>Partner not found.</p>;
 
   const remaining = Number(bonusInfo?.remaining ?? 0);
+  const totalEarned = Number(bonusInfo?.total_earned ?? 0);
 
   return (
     <div>
@@ -62,6 +63,9 @@ export default function PartnerExamsPage() {
         <span><strong>Address:</strong> {partner.school_address}</span>
         <span><strong>School Students:</strong> {partner.number_of_students}</span>
         <span><strong>Exams Registered:</strong> {exams.length}</span>
+        {isAdmin && (
+          <span><strong>Total Bonus Earned:</strong> <span style={{ color: '#7c3aed', fontWeight: 700 }}>{totalEarned.toFixed(2)} AZN</span></span>
+        )}
         {isAdmin && (
           <span style={{ marginLeft: 'auto' }}>
             <button onClick={() => setBonusModal(true)}
@@ -117,19 +121,22 @@ export default function PartnerExamsPage() {
                     {ex.registered_count}
                   </span>
                 </td>
-                {isAdmin && (
-                  <td style={td}>
-                    <button onClick={() => setBonusModal(true)}
-                      style={{
-                        background: remaining > 0 ? '#ede9fe' : '#f1f5f9',
-                        color: remaining > 0 ? '#7c3aed' : '#94a3b8',
-                        border: 'none', borderRadius: 6, padding: '0.2rem 0.6rem',
-                        cursor: 'pointer', fontWeight: 700, fontSize: '0.8rem',
-                      }}>
-                      {remaining.toFixed(2)} AZN
-                    </button>
-                  </td>
-                )}
+                {isAdmin && (() => {
+                  const examBonus = Number(ex.exam_bonus ?? 0);
+                  return (
+                    <td style={td}>
+                      <button onClick={() => setBonusModal(true)}
+                        style={{
+                          background: examBonus > 0 ? '#ede9fe' : '#f1f5f9',
+                          color: examBonus > 0 ? '#7c3aed' : '#94a3b8',
+                          border: 'none', borderRadius: 6, padding: '0.2rem 0.6rem',
+                          cursor: 'pointer', fontWeight: 700, fontSize: '0.8rem', whiteSpace: 'nowrap',
+                        }}>
+                        {examBonus.toFixed(2)} AZN
+                      </button>
+                    </td>
+                  );
+                })()}
                 <td style={td}>
                   <span style={{ background: ex.status === 'ongoing' ? '#16a34a' : ex.status === 'scheduled' ? '#2563eb' : '#64748b', color: '#fff', padding: '0.15rem 0.6rem', borderRadius: 12, fontSize: '0.75rem', fontWeight: 600 }}>
                     {ex.status}
