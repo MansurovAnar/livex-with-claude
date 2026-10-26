@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { listStudents } from '../../api/students.api';
 import { PageSizeSelect, PaginationBar } from '../../components/shared/Pagination';
+import CourseDiscountBadge from '../../components/shared/CourseDiscountBadge';
 
 export default function StudentSearchPage() {
   const navigate = useNavigate();
@@ -107,6 +108,7 @@ export default function StudentSearchPage() {
                           style={{ background: 'none', border: 'none', color: '#7e22ce', fontWeight: 600, cursor: 'pointer', padding: 0, fontSize: '0.875rem', textDecoration: 'underline' }}>
                           {s.full_name}
                         </button>
+                        {s.is_course_student && <> <CourseDiscountBadge student={s} courseLabel /></>}
                       </td>
                       <td style={td}>{s.student_number}</td>
                       <td className="hide-mobile" style={td}>{s.email}</td>

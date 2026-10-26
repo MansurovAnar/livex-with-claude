@@ -1,6 +1,7 @@
 const pool = require('../config/database');
 const { resolveExtraDetail } = require('../services/examExtraDetail.service');
 const { removedRegistrationError } = require('../services/registrationRemoval.service');
+const { dueAmountSql } = require('../services/coursePrice.service');
 
 const PAYMENT_METHODS = ['card', 'cash'];
 
@@ -9,9 +10,12 @@ exports.listByExam = async (req, res, next) => {
     const { rows } = await pool.query(
       `SELECT r.id, r.seat_number, r.room_number, r.amount_paid, r.payment_method, r.registered_at, r.extra_detail,
               s.id AS student_id, s.student_number, s.full_name, s.email, s.mobile_number, s.photo_url,
+              s.is_course_student, s.is_free, s.discount_amount, s.discount_note,
+              ${dueAmountSql('e', 's')} AS due_amount,
               -- Partner who registered the student; falls back to the student's own partner
               COALESCE(rb.full_name, sp.full_name) AS partner_name
        FROM registrations r JOIN students s ON s.id = r.student_id
+       JOIN exams e ON e.id = r.exam_id
        LEFT JOIN users rb ON rb.id = r.registered_by AND rb.role = 'partner'
        LEFT JOIN users sp ON sp.id = s.partner_id
        WHERE r.exam_id = $1 AND r.removed_at IS NULL
@@ -73,9 +77,10 @@ exports.updatePayment = async (req, res, next) => {
     }
     const method = amount_paid > 0 ? payment_method : null;
 
-    // Fetch current registration with exam cost, commission and student's partner
+    // Fetch current registration with the price the student owes (course discount applied),
+    // commission and student's partner
     const { rows: existing } = await client.query(
-      `SELECT r.bonus_awarded, e.exam_cost, e.commission_amount, s.partner_id
+      `SELECT r.bonus_awarded, ${dueAmountSql('e', 's')} AS due_amount, e.commission_amount, s.partner_id, s.is_course_student
        FROM registrations r
        JOIN exams e ON e.id = r.exam_id
        JOIN students s ON s.id = r.student_id
@@ -84,9 +89,10 @@ exports.updatePayment = async (req, res, next) => {
     );
     if (!existing[0]) return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Registration not found' } });
 
-    const { bonus_awarded, exam_cost, commission_amount, partner_id } = existing[0];
-    const nowFull = amount_paid >= Number(exam_cost);
-    const shouldAward = !bonus_awarded && partner_id && nowFull;
+    const { bonus_awarded, due_amount, commission_amount, partner_id, is_course_student } = existing[0];
+    const nowFull = amount_paid >= Number(due_amount);
+    // Course students never earn a partner commission
+    const shouldAward = !bonus_awarded && partner_id && !is_course_student && nowFull;
     const shouldRevoke = bonus_awarded && partner_id && !nowFull;
 
     await client.query('BEGIN');

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { listStudents, updateStudent, deleteStudent } from '../../api/students.api';
 import { useAuth } from '../../contexts/AuthContext';
 import { PageSizeSelect, PaginationBar } from '../../components/shared/Pagination';
+import CourseDiscountBadge from '../../components/shared/CourseDiscountBadge';
 
 const CLASSES = Array.from({ length: 11 }, (_, i) => i + 1);
 const SECTORS = ['Azerbaijan', 'Rus'];
@@ -63,7 +64,7 @@ export default function StudentsPage() {
             {students.map(s => (
               <tr key={s.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
                 <td style={td}>{s.student_number}</td>
-                <td style={td}>{s.full_name}</td>
+                <td style={td}>{s.full_name}{s.is_course_student && <> <CourseDiscountBadge student={s} courseLabel /></>}</td>
                 <td className="hide-mobile" style={td}>{s.email}</td>
                 <td style={td}>{s.mobile_number || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
                 <td style={td}>{s.class_level ?? <span style={{ color: '#cbd5e1' }}>—</span>}</td>
