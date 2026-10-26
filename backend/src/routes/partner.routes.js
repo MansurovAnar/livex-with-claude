@@ -176,4 +176,27 @@ router.get('/payments', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// ── Bonuses: own totals + bonus payouts received from admin ───────────────────
+
+router.get('/bonus', async (req, res, next) => {
+  try {
+    const [profileRes, paymentsRes] = await Promise.all([
+      pool.query('SELECT bonus_balance FROM partner_profiles WHERE user_id = $1', [req.user.id]),
+      pool.query(`
+        SELECT id, amount, note, paid_at
+        FROM partner_bonus_payments
+        WHERE partner_id = $1
+        ORDER BY paid_at DESC
+      `, [req.user.id]),
+    ]);
+    const remaining = Number(profileRes.rows[0]?.bonus_balance ?? 0);
+    const payments = paymentsRes.rows;
+    const total_received = payments.reduce((s, p) => s + Number(p.amount), 0);
+    res.json({
+      success: true,
+      data: { total_earned: remaining + total_received, total_received, remaining, payments },
+    });
+  } catch (err) { next(err); }
+});
+
 module.exports = router;
