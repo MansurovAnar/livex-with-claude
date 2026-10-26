@@ -1,4 +1,5 @@
 const pool = require('../config/database');
+const { buildFullName, generateStudentEmail } = require('../services/studentEmail.service');
 
 const ALLOWED_PAGE_SIZES = [10, 25, 50];
 const DEFAULT_PAGE_SIZE = 10;
@@ -43,18 +44,35 @@ exports.get = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-exports.create = async (req, res, next) => {
+// Preview of the email the next student with this name will get
+exports.emailPreview = async (req, res, next) => {
   try {
-    const { student_number, full_name, email, mobile_number, class_level, sector, language, photo_url } = req.body;
-    const { rows } = await pool.query(
+    const email = await generateStudentEmail(pool, req.query.first_name, req.query.last_name);
+    res.json({ success: true, data: { email } });
+  } catch (err) { next(err); }
+};
+
+// full_name and email are built by the server; any client-sent values are ignored
+exports.create = async (req, res, next) => {
+  const { student_number, first_name, last_name, father_name, mobile_number, class_level, sector, language, photo_url } = req.body;
+  const full_name = buildFullName(first_name, last_name, father_name);
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const email = await generateStudentEmail(client, first_name, last_name, { lock: true });
+    const { rows } = await client.query(
       `INSERT INTO students (student_number, full_name, email, mobile_number, class_level, sector, language, photo_url)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING ${STUDENT_COLS}`,
       [student_number, full_name, email, mobile_number || null, class_level || null, sector || null, language || null, photo_url || null]
     );
+    await client.query('COMMIT');
     res.status(201).json({ success: true, data: rows[0] });
   } catch (err) {
+    await client.query('ROLLBACK');
     if (err.code === '23505') return res.status(409).json({ success: false, error: { code: 'DUPLICATE', message: 'Student number or email already exists' } });
     next(err);
+  } finally {
+    client.release();
   }
 };
 
