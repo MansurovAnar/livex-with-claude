@@ -12,7 +12,7 @@ export default function PartnersPage() {
 
   const basePath = user?.role === 'reception' ? '/reception/partners' : '/admin/partners';
   const isAdmin = user?.role === 'admin';
-  const headers = ['#', 'Full Name', ...(isAdmin ? ['Bonus Earned'] : []), 'Email', 'School', 'School Address', 'Students', ...(isAdmin ? ['init-student-number'] : []), 'Status', 'Since'];
+  const headers = ['#', 'Full Name', ...(isAdmin ? ['Remaining Bonus'] : []), 'Email', 'School', 'School Address', 'Students', ...(isAdmin ? ['init-student-number'] : []), 'Status', 'Since'];
 
   useEffect(() => {
     apiClient.get('/partners')
@@ -81,8 +81,8 @@ export default function PartnersPage() {
                   </button>
                 </td>
                 {isAdmin && (
-                  <td style={{ ...td, whiteSpace: 'nowrap', fontWeight: 700, color: Number(p.bonus_total_earned) > 0 ? '#7c3aed' : '#94a3b8' }}>
-                    {Number(p.bonus_total_earned ?? 0).toFixed(2)} AZN
+                  <td style={{ ...td, whiteSpace: 'nowrap', fontWeight: 700, color: Number(p.bonus_remaining) > 0 ? '#7c3aed' : '#94a3b8' }}>
+                    {Number(p.bonus_remaining ?? 0).toFixed(2)} AZN
                   </td>
                 )}
                 <td style={td}>{p.email}</td>
