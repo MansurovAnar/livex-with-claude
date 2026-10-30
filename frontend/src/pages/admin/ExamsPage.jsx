@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { listExams, deleteExam, updateExam, updateExamStatus } from '../../api/exams.api';
 import apiClient from '../../api/apiClient';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 const STATUS_COLORS = {
   scheduled: '#2563eb',
@@ -17,6 +18,7 @@ export default function ExamsPage() {
   const [loading, setLoading] = useState(true);
   const [editingExam, setEditingExam] = useState(null);
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const load = () => {
     setLoading(true);
@@ -25,7 +27,7 @@ export default function ExamsPage() {
   useEffect(() => { load(); }, []);
 
   const handleDelete = async (id) => {
-    if (!confirm('Delete this exam?')) return;
+    if (!confirm(t('Delete this exam?'))) return;
     await deleteExam(id);
     load();
   };
@@ -38,36 +40,36 @@ export default function ExamsPage() {
   return (
     <div>
       <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1.25rem' }}>
-        <h2 style={{ margin: 0 }}>Exams</h2>
+        <h2 style={{ margin: 0 }}>{t('Exams')}</h2>
         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
           <button onClick={() => navigate('/admin/exams/reports')}
             style={{ background: '#fff', color: '#475569', border: '1px solid #cbd5e1', borderRadius: 6, padding: '0.5rem 1.25rem', cursor: 'pointer', fontWeight: 500 }}>
-            Reports
+            {t('Reports')}
           </button>
           <button onClick={() => navigate('/admin/exams/types')}
             style={{ background: '#fff', color: '#475569', border: '1px solid #cbd5e1', borderRadius: 6, padding: '0.5rem 1.25rem', cursor: 'pointer', fontWeight: 500 }}>
-            Exam Types
+            {t('Exam Types')}
           </button>
           <button onClick={() => navigate('/admin/exams/new')}
             style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.25rem', cursor: 'pointer', fontWeight: 500 }}>
-            + New Exam
+            {t('+ New Exam')}
           </button>
         </div>
       </div>
 
-      {loading ? <p style={{ color: '#94a3b8' }}>Loading...</p> : (
+      {loading ? <p style={{ color: '#94a3b8' }}>{t('Loading...')}</p> : (
         <div className="table-scroll" style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, overflow: 'hidden' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
                 {['Exam Title', 'Subject Code', 'Location', 'Date & Time', 'Duration', 'Entry Opens', 'Entry Closes', 'Commission', 'Status', 'Actions'].map(h => (
-                  <th key={h} style={th}>{h}</th>
+                  <th key={h} style={th}>{t(h)}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {exams.length === 0 ? (
-                <tr><td colSpan={10} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>No exams found.</td></tr>
+                <tr><td colSpan={10} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>{t('No exams found.')}</td></tr>
               ) : exams.map((e, i) => (
                 <tr key={e.id} style={{ borderBottom: '1px solid #f1f5f9', background: i % 2 === 0 ? '#fff' : '#fafafa' }}>
                   <td style={td}>
@@ -80,7 +82,7 @@ export default function ExamsPage() {
                   <td style={td}>{e.subject_code || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
                   <td style={td}>{e.exam_location}</td>
                   <td style={td}>{new Date(e.scheduled_at).toLocaleString()}</td>
-                  <td style={td}>{e.duration_mins} min</td>
+                  <td style={td}>{e.duration_mins} {t('min')}</td>
                   <td style={td}>{new Date(e.entry_opens_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
                   <td style={td}>{new Date(e.entry_closes_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
                   <td style={td}>
@@ -90,15 +92,15 @@ export default function ExamsPage() {
                   </td>
                   <td style={td}>
                     <span style={{ background: STATUS_COLORS[e.status], color: '#fff', padding: '0.15rem 0.6rem', borderRadius: 12, fontSize: '0.75rem', fontWeight: 600 }}>
-                      {e.status}
+                      {t(e.status)}
                     </span>
                   </td>
                   <td style={{ ...td, whiteSpace: 'nowrap' }}>
-                    <button onClick={() => setEditingExam(e)} style={actionBtn('#475569')}>Edit</button>
-                    <button onClick={() => navigate(`/monitor/${e.id}`)} style={actionBtn('#16a34a')}>Monitor</button>
-                    {e.status === 'scheduled' && <button onClick={() => handleStatus(e.id, 'ongoing')} style={actionBtn('#f59e0b')}>Start</button>}
-                    {e.status === 'ongoing' && <button onClick={() => handleStatus(e.id, 'completed')} style={actionBtn('#64748b')}>End</button>}
-                    <button onClick={() => handleDelete(e.id)} style={actionBtn('#dc2626')}>Delete</button>
+                    <button onClick={() => setEditingExam(e)} style={actionBtn('#475569')}>{t('Edit')}</button>
+                    <button onClick={() => navigate(`/monitor/${e.id}`)} style={actionBtn('#16a34a')}>{t('Monitor')}</button>
+                    {e.status === 'scheduled' && <button onClick={() => handleStatus(e.id, 'ongoing')} style={actionBtn('#f59e0b')}>{t('Start')}</button>}
+                    {e.status === 'ongoing' && <button onClick={() => handleStatus(e.id, 'completed')} style={actionBtn('#64748b')}>{t('End')}</button>}
+                    <button onClick={() => handleDelete(e.id)} style={actionBtn('#dc2626')}>{t('Delete')}</button>
                   </td>
                 </tr>
               ))}
@@ -120,6 +122,7 @@ export default function ExamsPage() {
 }
 
 function EditExamModal({ exam, onClose, onSaved }) {
+  const { t, tError } = useLanguage();
   const [schools, setSchools] = useState([]);
   useEffect(() => {
     apiClient.get('/schools').then(res => setSchools(res.data.data));
@@ -167,7 +170,7 @@ function EditExamModal({ exam, onClose, onSaved }) {
       }
       onSaved();
     } catch (err) {
-      setError(err.response?.data?.error?.message || 'Failed to save changes');
+      setError(tError(err, 'Failed to save changes'));
     } finally {
       setSaving(false);
     }
@@ -178,7 +181,7 @@ function EditExamModal({ exam, onClose, onSaved }) {
       onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="modal-card" style={{ '--modal-w': '680px', background: '#fff', borderRadius: 12, padding: '2rem', width: '100%', maxWidth: 680, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 8px 32px rgba(0,0,0,0.18)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-          <h2 style={{ margin: 0, fontSize: '1.15rem' }}>Edit Exam</h2>
+          <h2 style={{ margin: 0, fontSize: '1.15rem' }}>{t('Edit Exam')}</h2>
           <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '1.25rem', cursor: 'pointer', color: '#64748b', lineHeight: 1 }}>✕</button>
         </div>
 
@@ -191,28 +194,28 @@ function EditExamModal({ exam, onClose, onSaved }) {
         <form onSubmit={handleSubmit}>
           {/* Title */}
           <div style={fieldStyle}>
-            <label style={labelStyle}>Exam Title <span style={{ color: '#dc2626' }}>*</span></label>
+            <label style={labelStyle}>{t('Exam Title')} <span style={{ color: '#dc2626' }}>*</span></label>
             <input name="title" value={form.title} onChange={handleChange} required style={inputStyle} />
           </div>
 
           {/* Subject Code */}
           <div style={fieldStyle}>
-            <label style={labelStyle}>Subject Code</label>
+            <label style={labelStyle}>{t('Subject Code')}</label>
             <input name="subject_code" value={form.subject_code} onChange={handleChange} style={inputStyle} />
           </div>
 
           {/* Location + Cost + Commission */}
           <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: '1rem', marginBottom: '1.25rem' }}>
             <div>
-              <label style={labelStyle}>Exam Location <span style={{ color: '#dc2626' }}>*</span></label>
+              <label style={labelStyle}>{t('Exam Location')} <span style={{ color: '#dc2626' }}>*</span></label>
               <select name="exam_location" value={form.exam_location} onChange={handleChange} required style={inputStyle}>
-                <option value="">— Select location —</option>
-                <option value="General">General</option>
+                <option value="">{t('— Select location —')}</option>
+                <option value="General">{t('General')}</option>
                 {schools.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
               </select>
             </div>
             <div>
-              <label style={labelStyle}>Exam Cost</label>
+              <label style={labelStyle}>{t('Exam Cost')}</label>
               <div style={{ position: 'relative' }}>
                 <input type="number" name="exam_cost" value={form.exam_cost} onChange={handleChange} min="0" step="0.01"
                   style={{ ...inputStyle, width: 120, paddingRight: '2.75rem' }} />
@@ -220,7 +223,7 @@ function EditExamModal({ exam, onClose, onSaved }) {
               </div>
             </div>
             <div>
-              <label style={labelStyle}>Commission</label>
+              <label style={labelStyle}>{t('Commission')}</label>
               <div style={{ position: 'relative' }}>
                 <input type="number" name="commission_amount" value={form.commission_amount} onChange={handleChange} min="0" step="0.01"
                   style={{ ...inputStyle, width: 120, paddingRight: '2.75rem' }} />
@@ -232,11 +235,11 @@ function EditExamModal({ exam, onClose, onSaved }) {
           {/* Date + Duration */}
           <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '1rem', marginBottom: '1.25rem' }}>
             <div>
-              <label style={labelStyle}>Exam Date &amp; Time <span style={{ color: '#dc2626' }}>*</span></label>
+              <label style={labelStyle}>{t('Exam Date & Time')} <span style={{ color: '#dc2626' }}>*</span></label>
               <input type="datetime-local" name="scheduled_at" value={form.scheduled_at} onChange={handleChange} required style={inputStyle} />
             </div>
             <div>
-              <label style={labelStyle}>Duration (min) <span style={{ color: '#dc2626' }}>*</span></label>
+              <label style={labelStyle}>{t('Duration (min)')} <span style={{ color: '#dc2626' }}>*</span></label>
               <input type="number" name="duration_mins" value={form.duration_mins} onChange={handleChange} required min="1"
                 style={{ ...inputStyle, width: 120 }} />
             </div>
@@ -245,31 +248,31 @@ function EditExamModal({ exam, onClose, onSaved }) {
           {/* Entry Window */}
           <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.25rem' }}>
             <div>
-              <label style={labelStyle}>Gate Opens <span style={{ color: '#dc2626' }}>*</span></label>
+              <label style={labelStyle}>{t('Gate Opens')} <span style={{ color: '#dc2626' }}>*</span></label>
               <input type="datetime-local" name="entry_opens_at" value={form.entry_opens_at} onChange={handleChange} required style={inputStyle} />
             </div>
             <div>
-              <label style={labelStyle}>Gate Closes <span style={{ color: '#dc2626' }}>*</span></label>
+              <label style={labelStyle}>{t('Gate Closes')} <span style={{ color: '#dc2626' }}>*</span></label>
               <input type="datetime-local" name="entry_closes_at" value={form.entry_closes_at} onChange={handleChange} required style={inputStyle} />
             </div>
           </div>
 
           {/* Status */}
           <div style={fieldStyle}>
-            <label style={labelStyle}>Status</label>
+            <label style={labelStyle}>{t('Status')}</label>
             <select name="status" value={form.status} onChange={handleChange} style={inputStyle}>
-              {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
+              {STATUS_OPTIONS.map(s => <option key={s} value={s}>{t(s.charAt(0).toUpperCase() + s.slice(1))}</option>)}
             </select>
           </div>
 
           <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '1.5rem' }}>
             <button type="button" onClick={onClose}
               style={{ padding: '0.55rem 1.25rem', background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: 6, cursor: 'pointer', fontSize: '0.9rem' }}>
-              Cancel
+              {t('Cancel')}
             </button>
             <button type="submit" disabled={saving}
               style={{ padding: '0.55rem 1.5rem', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 6, cursor: saving ? 'not-allowed' : 'pointer', fontSize: '0.9rem', opacity: saving ? 0.7 : 1 }}>
-              {saving ? 'Saving...' : 'Save Changes'}
+              {saving ? t('Saving...') : t('Save Changes')}
             </button>
           </div>
         </form>

@@ -2,8 +2,10 @@ import React, { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import apiClient from '../../api/apiClient';
 import StudentTicket from '../../components/shared/StudentTicket';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 export default function PartnerRegisterPage() {
+  const { t, tError } = useLanguage();
   const [exams, setExams] = useState([]);
   const [students, setStudents] = useState([]);
   const [selectedExam, setSelectedExam] = useState('');
@@ -50,9 +52,9 @@ export default function PartnerRegisterPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!selectedStudent) { setError('Please select a student.'); return; }
-    if (!selectedExam) { setError('Please select an exam.'); return; }
-    if (extraDetailOptions.length > 0 && !extraDetail) { setError('Please select an extra detail.'); return; }
+    if (!selectedStudent) { setError(t('Please select a student.')); return; }
+    if (!selectedExam) { setError(t('Please select an exam.')); return; }
+    if (extraDetailOptions.length > 0 && !extraDetail) { setError(t('Please select an extra detail.')); return; }
     setError(''); setSubmitting(true);
     try {
       await apiClient.post(`/partner/exams/${selectedExam}/register`, {
@@ -75,18 +77,18 @@ export default function PartnerRegisterPage() {
       });
       setSeat(''); setRoomNumber(''); setExtraDetail(''); setSelectedStudent(null); setStudentQuery(''); setSelectedExam('');
     } catch (err) {
-      setError(err.response?.data?.error?.message || 'Registration failed');
+      setError(tError(err, 'Registration failed'));
     } finally {
       setSubmitting(false);
     }
   };
 
   const fmt = (dt) => new Date(dt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' });
-  const fmtDur = (mins) => `${mins} min`;
+  const fmtDur = (mins) => `${mins} ${t('min')}`;
 
   return (
     <div style={{ maxWidth: 900 }}>
-      <h2 style={{ marginTop: 0 }}>Register to Exam</h2>
+      <h2 style={{ marginTop: 0 }}>{t('Register to Exam')}</h2>
 
       {ticket && <StudentTicket data={ticket} onClose={() => setTicket(null)} />}
 
@@ -100,7 +102,7 @@ export default function PartnerRegisterPage() {
 
         {/* Student searchable from own list */}
         <div style={{ marginBottom: '1.25rem' }}>
-          <label style={labelStyle}>Student <span style={{ color: '#dc2626' }}>*</span></label>
+          <label style={labelStyle}>{t('Student')} <span style={{ color: '#dc2626' }}>*</span></label>
           <div style={{ position: 'relative' }}>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <input
@@ -109,7 +111,7 @@ export default function PartnerRegisterPage() {
                 value={studentQuery}
                 onChange={e => { setStudentQuery(e.target.value); setSelectedStudent(null); setDropdownOpen(true); }}
                 onFocus={() => filtered.length > 0 && setDropdownOpen(true)}
-                placeholder="Search your students..."
+                placeholder={t('Search your students...')}
                 disabled={!!selectedStudent}
                 style={{ ...inputStyle, flex: 1, background: selectedStudent ? '#f8fafc' : '#fff' }}
               />
@@ -144,21 +146,21 @@ export default function PartnerRegisterPage() {
 
         {/* Exam */}
         <div style={{ marginBottom: '1.25rem' }}>
-          <label style={labelStyle}>Exam <span style={{ color: '#dc2626' }}>*</span></label>
+          <label style={labelStyle}>{t('Exam')} <span style={{ color: '#dc2626' }}>*</span></label>
           <select value={selectedExam} onChange={e => { setSelectedExam(e.target.value); setExtraDetail(''); }} required style={inputStyle}>
-            <option value="">Select exam...</option>
+            <option value="">{t('Select exam...')}</option>
             {registrableExams.map(ex => (
               <option key={ex.id} value={ex.id}>
                 {ex.title} — {new Date(ex.scheduled_at).toLocaleDateString()} {new Date(ex.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </option>
             ))}
           </select>
-          {registrableExams.length === 0 && <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '0.25rem' }}>No scheduled exams.</div>}
+          {registrableExams.length === 0 && <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '0.25rem' }}>{t('No scheduled exams.')}</div>}
           {selectedExam && (() => {
             const ex = exams.find(e => e.id === selectedExam);
             return ex ? (
               <div style={{ marginTop: '0.5rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 6, padding: '0.35rem 0.75rem', fontSize: '0.875rem' }}>
-                <span style={{ color: '#15803d', fontWeight: 600 }}>Exam Cost:</span>
+                <span style={{ color: '#15803d', fontWeight: 600 }}>{t('Exam Cost:')}</span>
                 <span style={{ color: '#166534', fontWeight: 700 }}>{Number(ex.exam_cost).toFixed(2)} AZN</span>
               </div>
             ) : null;
@@ -168,9 +170,9 @@ export default function PartnerRegisterPage() {
         {/* Extra detail (required when the exam's type defines extra details) */}
         {extraDetailOptions.length > 0 && (
           <div style={{ marginBottom: '1.25rem' }}>
-            <label style={labelStyle}>Extra Detail <span style={{ color: '#dc2626' }}>*</span></label>
+            <label style={labelStyle}>{t('Extra Detail')} <span style={{ color: '#dc2626' }}>*</span></label>
             <select value={extraDetail} onChange={e => setExtraDetail(e.target.value)} required style={inputStyle}>
-              <option value="">Select extra detail...</option>
+              <option value="">{t('Select extra detail...')}</option>
               {extraDetailOptions.map(d => <option key={d} value={d}>{d}</option>)}
             </select>
           </div>
@@ -179,34 +181,34 @@ export default function PartnerRegisterPage() {
         {/* Room + Seat */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
           <div>
-            <label style={labelStyle}>Room <span style={{ color: '#94a3b8', fontWeight: 400 }}>(optional)</span></label>
-            <input type="text" value={roomNumber} onChange={e => setRoomNumber(e.target.value)} placeholder="e.g. 101" style={inputStyle} />
+            <label style={labelStyle}>{t('Room')} <span style={{ color: '#94a3b8', fontWeight: 400 }}>{t('(optional)')}</span></label>
+            <input type="text" value={roomNumber} onChange={e => setRoomNumber(e.target.value)} placeholder={t('e.g. 101')} style={inputStyle} />
           </div>
           <div>
-            <label style={labelStyle}>Seat <span style={{ color: '#94a3b8', fontWeight: 400 }}>(optional)</span></label>
-            <input type="text" value={seat} onChange={e => setSeat(e.target.value)} placeholder="e.g. A12" style={inputStyle} />
+            <label style={labelStyle}>{t('Seat')} <span style={{ color: '#94a3b8', fontWeight: 400 }}>{t('(optional)')}</span></label>
+            <input type="text" value={seat} onChange={e => setSeat(e.target.value)} placeholder={t('e.g. A12')} style={inputStyle} />
           </div>
         </div>
 
         <button type="submit" disabled={submitting}
           style={{ width: '100%', padding: '0.6rem', background: '#059669', color: '#fff', border: 'none', borderRadius: 6, cursor: submitting ? 'not-allowed' : 'pointer', opacity: submitting ? 0.7 : 1, fontWeight: 600, fontSize: '0.95rem' }}>
-          {submitting ? 'Registering...' : 'Register'}
+          {submitting ? t('Registering...') : t('Register')}
         </button>
       </form>
 
       {/* Exams table */}
-      <h3 style={{ marginTop: '2rem', marginBottom: '0.75rem', color: '#1e293b' }}>Available Exams</h3>
+      <h3 style={{ marginTop: '2rem', marginBottom: '0.75rem', color: '#1e293b' }}>{t('Available Exams')}</h3>
       {exams.length === 0 ? (
-        <p style={{ color: '#94a3b8', fontSize: '0.9rem' }}>No scheduled or ongoing exams.</p>
+        <p style={{ color: '#94a3b8', fontSize: '0.9rem' }}>{t('No scheduled or ongoing exams.')}</p>
       ) : (
         <div className="table-scroll" style={{ overflowX: 'auto', borderRadius: 10, border: '1px solid #e2e8f0' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', background: '#fff', fontSize: '0.9rem' }}>
             <thead>
               <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-                <th style={thStyle}>Exam Title</th>
-                <th style={thStyle}>Date & Time</th>
-                <th style={thStyle}>Duration</th>
-                <th style={thStyle}>Entry Opens</th>
+                <th style={thStyle}>{t('Exam Title')}</th>
+                <th style={thStyle}>{t('Date & Time')}</th>
+                <th style={thStyle}>{t('Duration')}</th>
+                <th style={thStyle}>{t('Entry Opens')}</th>
               </tr>
             </thead>
             <tbody>
@@ -223,7 +225,7 @@ export default function PartnerRegisterPage() {
                     </Link>
                     {ex.status === 'ongoing' && (
                       <span style={{ marginLeft: '0.5rem', fontSize: '0.75rem', color: '#b45309', background: '#fef3c7', borderRadius: 4, padding: '0.1rem 0.4rem', whiteSpace: 'nowrap' }}>
-                        Ongoing — registration closed
+                        {t('Ongoing — registration closed')}
                       </span>
                     )}
                   </td>

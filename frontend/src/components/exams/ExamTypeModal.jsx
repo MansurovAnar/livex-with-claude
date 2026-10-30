@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { createExamType, updateExamType } from '../../api/examTypes.api';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 // Create (examType = null) or edit an exam type. onSaved receives the saved row.
 export default function ExamTypeModal({ examType, onClose, onSaved }) {
   const isEdit = !!examType;
+  const { t, tError } = useLanguage();
   const [form, setForm] = useState({
     name: examType?.name || '',
     description: examType?.description || '',
@@ -19,7 +21,7 @@ export default function ExamTypeModal({ examType, onClose, onSaved }) {
     const value = newDetail.trim();
     if (!value) return;
     if (details.some(d => d.toLowerCase() === value.toLowerCase())) {
-      setError(`"${value}" is already in the list`);
+      setError(t('"{value}" is already in the list', { value }));
       return;
     }
     setError('');
@@ -41,7 +43,7 @@ export default function ExamTypeModal({ examType, onClose, onSaved }) {
       const res = isEdit ? await updateExamType(examType.id, payload) : await createExamType(payload);
       onSaved(res.data.data);
     } catch (err) {
-      setError(err.response?.data?.error?.message || `Failed to ${isEdit ? 'update' : 'create'} exam type`);
+      setError(tError(err, isEdit ? 'Failed to update exam type' : 'Failed to create exam type'));
     } finally {
       setSaving(false);
     }
@@ -52,7 +54,7 @@ export default function ExamTypeModal({ examType, onClose, onSaved }) {
       onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="modal-card" style={{ '--modal-w': '520px', background: '#fff', borderRadius: 12, padding: '2rem', width: 'min(520px, 100vw - 24px)', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 8px 32px rgba(0,0,0,0.18)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-          <h2 style={{ margin: 0, fontSize: '1.15rem' }}>{isEdit ? 'Edit Exam Type' : 'New Exam Type'}</h2>
+          <h2 style={{ margin: 0, fontSize: '1.15rem' }}>{isEdit ? t('Edit Exam Type') : t('New Exam Type')}</h2>
           <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '1.25rem', cursor: 'pointer', color: '#64748b', lineHeight: 1 }}>✕</button>
         </div>
 
@@ -64,23 +66,23 @@ export default function ExamTypeModal({ examType, onClose, onSaved }) {
 
         <form onSubmit={handleSubmit}>
           <div style={fieldStyle}>
-            <label style={labelStyle}>Name <span style={{ color: '#dc2626' }}>*</span></label>
+            <label style={labelStyle}>{t('Name')} <span style={{ color: '#dc2626' }}>*</span></label>
             <input name="name" value={form.name} onChange={handleChange} required autoFocus style={inputStyle} />
           </div>
           <div style={fieldStyle}>
-            <label style={labelStyle}>Description</label>
+            <label style={labelStyle}>{t('Description')}</label>
             <textarea name="description" value={form.description} onChange={handleChange} rows={3}
               style={{ ...inputStyle, resize: 'vertical', fontFamily: 'inherit' }} />
           </div>
 
           <div style={fieldStyle}>
-            <label style={labelStyle}>Extra Details</label>
+            <label style={labelStyle}>{t('Extra Details')}</label>
             {details.length > 0 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', marginBottom: '0.5rem' }}>
                 {details.map((d, i) => (
                   <div key={i} className="mobile-row" style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
                     <input value={d} onChange={e => updateDetail(i, e.target.value)} style={{ ...inputStyle, flex: 1, minWidth: 0 }} />
-                    <button type="button" onClick={() => removeDetail(i)} title="Remove option"
+                    <button type="button" onClick={() => removeDetail(i)} title={t('Remove option')}
                       style={{ flex: 'none', background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', borderRadius: 6, padding: '0.45rem 0.7rem', cursor: 'pointer' }}>
                       ✕
                     </button>
@@ -91,10 +93,10 @@ export default function ExamTypeModal({ examType, onClose, onSaved }) {
             <div className="mobile-row" style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
               <input value={newDetail} onChange={e => setNewDetail(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addDetail(); } }}
-                placeholder="Add an option and press Enter" style={{ ...inputStyle, flex: 1, minWidth: 0 }} />
+                placeholder={t('Add an option and press Enter')} style={{ ...inputStyle, flex: 1, minWidth: 0 }} />
               <button type="button" onClick={addDetail}
                 style={{ flex: 'none', background: '#eff6ff', color: '#2563eb', border: '1px solid #bfdbfe', borderRadius: 6, padding: '0.45rem 0.9rem', cursor: 'pointer', fontWeight: 500 }}>
-                + Add
+                {t('+ Add')}
               </button>
             </div>
           </div>
@@ -102,11 +104,11 @@ export default function ExamTypeModal({ examType, onClose, onSaved }) {
           <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '1.5rem' }}>
             <button type="button" onClick={onClose}
               style={{ padding: '0.55rem 1.25rem', background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: 6, cursor: 'pointer', fontSize: '0.9rem' }}>
-              Cancel
+              {t('Cancel')}
             </button>
             <button type="submit" disabled={saving}
               style={{ padding: '0.55rem 1.5rem', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 6, cursor: saving ? 'not-allowed' : 'pointer', fontSize: '0.9rem', opacity: saving ? 0.7 : 1 }}>
-              {saving ? 'Saving...' : isEdit ? 'Save Changes' : 'Create'}
+              {saving ? t('Saving...') : isEdit ? t('Save Changes') : t('Create')}
             </button>
           </div>
         </form>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../i18n/LanguageContext';
 
 import LoginPage from '../pages/auth/LoginPage';
 
@@ -49,7 +50,8 @@ function RoleRedirect() {
 
 function RequireAuth({ roles, children }) {
   const { user, loading } = useAuth();
-  if (loading) return <div>Loading...</div>;
+  const { t } = useLanguage();
+  if (loading) return <div>{t('Loading...')}</div>;
   if (!user) return <Navigate to="/login" replace />;
   if (roles && !roles.includes(user.role)) return <Navigate to="/" replace />;
   return children;

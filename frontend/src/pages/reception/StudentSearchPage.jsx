@@ -2,9 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { listStudents } from '../../api/students.api';
 import { PageSizeSelect, PaginationBar } from '../../components/shared/Pagination';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 export default function StudentSearchPage() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [search, setSearch] = useState('');
   const [students, setStudents] = useState([]);
   const [total, setTotal] = useState(0);
@@ -34,17 +36,17 @@ export default function StudentSearchPage() {
   return (
     <div>
       <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-        <h2 style={{ margin: 0 }}>Students</h2>
+        <h2 style={{ margin: 0 }}>{t('Students')}</h2>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
           <button
             onClick={() => navigate('/reception/add')}
             style={{ background: '#dc2626', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.25rem', cursor: 'pointer', fontWeight: 500 }}>
-            + Add New Student
+            {t('+ Add New Student')}
           </button>
           <button
             onClick={() => navigate('/reception/register')}
             style={{ background: '#7e22ce', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.25rem', cursor: 'pointer', fontWeight: 500 }}>
-            + Register to Exam
+            {t('+ Register to Exam')}
           </button>
         </div>
       </div>
@@ -54,17 +56,17 @@ export default function StudentSearchPage() {
           type="text"
           value={search}
           onChange={e => setSearch(e.target.value)}
-          placeholder="Search by name, number, email or mobile..."
+          placeholder={t('Search by name, number, email or mobile...')}
           style={{ flex: 1, padding: '0.5rem 0.75rem', border: '1px solid #cbd5e1', borderRadius: 6, fontSize: '0.95rem' }}
         />
         <button type="submit"
           style={{ padding: '0.5rem 1.25rem', background: '#7e22ce', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer' }}>
-          Search
+          {t('Search')}
         </button>
         {search && (
           <button type="button" onClick={() => { setSearch(''); load(); }}
             style={{ padding: '0.5rem 0.75rem', background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: 6, cursor: 'pointer', color: '#64748b' }}>
-            Clear
+            {t('Clear')}
           </button>
         )}
       </form>
@@ -74,28 +76,28 @@ export default function StudentSearchPage() {
       </div>
 
       {loading ? (
-        <p style={{ color: '#94a3b8' }}>Loading...</p>
+        <p style={{ color: '#94a3b8' }}>{t('Loading...')}</p>
       ) : (
         <>
           <div className="table-scroll" style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8 }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
-                  <th style={th}>Full Name</th>
-                  <th style={th}>Student Number</th>
-                  <th className="hide-mobile" style={th}>Email</th>
-                  <th style={th}>Mobile</th>
-                  <th style={th}>Class</th>
-                  <th className="hide-mobile" style={th}>Sector</th>
-                  <th className="hide-mobile" style={th}>Language</th>
-                  <th className="hide-mobile" style={th}>Registered</th>
+                  <th style={th}>{t('Full Name')}</th>
+                  <th style={th}>{t('Student Number')}</th>
+                  <th className="hide-mobile" style={th}>{t('Email')}</th>
+                  <th style={th}>{t('Mobile')}</th>
+                  <th style={th}>{t('Class')}</th>
+                  <th className="hide-mobile" style={th}>{t('Sector')}</th>
+                  <th className="hide-mobile" style={th}>{t('Language')}</th>
+                  <th className="hide-mobile" style={th}>{t('Registered')}</th>
                 </tr>
               </thead>
               <tbody>
                 {students.length === 0 ? (
                   <tr>
                     <td colSpan={8}style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>
-                      No students found.
+                      {t('No students found.')}
                     </td>
                   </tr>
                 ) : (
@@ -112,8 +114,8 @@ export default function StudentSearchPage() {
                       <td className="hide-mobile" style={td}>{s.email}</td>
                       <td style={td}>{s.mobile_number || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
                       <td style={td}>{s.class_level ?? <span style={{ color: '#cbd5e1' }}>—</span>}</td>
-                      <td className="hide-mobile" style={td}>{s.sector || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
-                      <td className="hide-mobile" style={td}>{s.language || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
+                      <td className="hide-mobile" style={td}>{(s.sector && t(s.sector)) || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
+                      <td className="hide-mobile" style={td}>{(s.language && t(s.language)) || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
                       <td className="hide-mobile" style={td}>{new Date(s.created_at).toLocaleDateString()}</td>
                     </tr>
                   ))

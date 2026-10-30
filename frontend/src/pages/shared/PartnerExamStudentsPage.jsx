@@ -5,11 +5,13 @@ import { getExam } from '../../api/exams.api';
 import { updatePayment } from '../../api/registrations.api';
 import apiClient from '../../api/apiClient';
 import PaymentMethodRadio, { paymentMethodLabel } from '../../components/shared/PaymentMethodRadio';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 export default function PartnerExamStudentsPage() {
   const { partnerId, examId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t, tError } = useLanguage();
 
   const [exam, setExam] = useState(null);
   const [students, setStudents] = useState([]);
@@ -49,7 +51,7 @@ export default function PartnerExamStudentsPage() {
   const handleSavePayment = async () => {
     const amt = parseFloat(payInput);
     if (isNaN(amt) || amt < 0) return;
-    if (amt > 0 && !payMethod) { setPayError('Select Card or Cash.'); return; }
+    if (amt > 0 && !payMethod) { setPayError(t('Select Card or Cash.')); return; }
     const method = amt > 0 ? payMethod : null;
     setSaving(true);
     setPayError('');
@@ -58,12 +60,12 @@ export default function PartnerExamStudentsPage() {
       setStudents(prev => prev.map(r => r.id === paymentModal.id ? { ...r, amount_paid: amt, payment_method: method } : r));
       closeModal();
     } catch (err) {
-      setPayError(err.response?.data?.error?.message || 'Failed to save payment');
+      setPayError(tError(err, 'Failed to save payment'));
     } finally { setSaving(false); }
   };
 
-  if (loading) return <p style={{ padding: '1rem', color: '#94a3b8' }}>Loading...</p>;
-  if (!exam) return <p style={{ padding: '1rem', color: '#dc2626' }}>Exam not found.</p>;
+  if (loading) return <p style={{ padding: '1rem', color: '#94a3b8' }}>{t('Loading...')}</p>;
+  if (!exam) return <p style={{ padding: '1rem', color: '#dc2626' }}>{t('Exam not found.')}</p>;
 
   const examCost = Number(exam.exam_cost);
   // Show the Extra Detail column when the exam type defines extra details or any registration has one
@@ -89,18 +91,18 @@ export default function PartnerExamStudentsPage() {
           <h2 style={{ margin: 0 }}>{exam.title}</h2>
           <div style={{ color: '#64748b', fontSize: '0.875rem', marginTop: '0.2rem' }}>
             {exam.subject_code && <span>{exam.subject_code} &bull; </span>}
-            {exam.exam_location} &bull; {new Date(exam.scheduled_at).toLocaleString()} &bull; {exam.duration_mins} min
+            {exam.exam_location} &bull; {new Date(exam.scheduled_at).toLocaleString()} &bull; {exam.duration_mins} {t('min')}
           </div>
         </div>
       </div>
 
       {/* Exam info strip */}
       <div style={{ display: 'flex', gap: '1.5rem', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8, padding: '0.75rem 1.25rem', marginBottom: '1.5rem', flexWrap: 'wrap', fontSize: '0.875rem' }}>
-        <span><strong>Exam Cost:</strong> <span style={{ color: '#15803d', fontWeight: 700 }}>{examCost.toFixed(2)} AZN</span></span>
-        <span><strong>Partner Students:</strong> {students.length}</span>
+        <span><strong>{t('Exam Cost:')}</strong> <span style={{ color: '#15803d', fontWeight: 700 }}>{examCost.toFixed(2)} AZN</span></span>
+        <span><strong>{t('Partner Students:')}</strong> {students.length}</span>
         <span style={{ marginLeft: 'auto' }}>
           <span style={{ background: exam.status === 'ongoing' ? '#16a34a' : exam.status === 'scheduled' ? '#2563eb' : '#64748b', color: '#fff', padding: '0.15rem 0.75rem', borderRadius: 12, fontSize: '0.78rem', fontWeight: 600 }}>
-            {exam.status}
+            {t(exam.status)}
           </span>
         </span>
       </div>
@@ -108,12 +110,12 @@ export default function PartnerExamStudentsPage() {
       {/* Search */}
       <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
         <input type="text" value={search} onChange={e => setSearch(e.target.value)}
-          placeholder="Search by name, number, email or mobile..."
+          placeholder={t('Search by name, number, email or mobile...')}
           style={{ flex: 1, padding: '0.5rem 0.75rem', border: '1px solid #cbd5e1', borderRadius: 6, fontSize: '0.95rem' }} />
         {search && (
           <button onClick={() => setSearch('')}
             style={{ padding: '0.5rem 0.75rem', background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: 6, cursor: 'pointer', color: '#64748b' }}>
-            Clear
+            {t('Clear')}
           </button>
         )}
       </div>
@@ -124,7 +126,7 @@ export default function PartnerExamStudentsPage() {
           <thead>
             <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
               {['#', 'Full Name', 'Number', 'Email', 'Mobile', 'Class', 'Sector', 'Language', 'Room', 'Seat', ...(showExtraDetail ? ['Extra Detail'] : []), 'Registered At', ...(canPay ? ['Paid'] : [])].map(h => (
-                <th key={h} style={th}>{h}</th>
+                <th key={h} style={th}>{t(h)}</th>
               ))}
             </tr>
           </thead>
@@ -132,7 +134,7 @@ export default function PartnerExamStudentsPage() {
             {filtered.length === 0 ? (
               <tr>
                 <td colSpan={(canPay ? 12 : 11) + (showExtraDetail ? 1 : 0)} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>
-                  No students found.
+                  {t('No students found.')}
                 </td>
               </tr>
             ) : filtered.map((r, i) => {
@@ -148,8 +150,8 @@ export default function PartnerExamStudentsPage() {
                   <td style={td}>{r.email}</td>
                   <td style={td}>{r.mobile_number || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
                   <td style={{ ...td, textAlign: 'center' }}>{r.class_level || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
-                  <td style={td}>{r.sector || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
-                  <td style={td}>{r.language || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
+                  <td style={td}>{(r.sector && t(r.sector)) || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
+                  <td style={td}>{(r.language && t(r.language)) || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
                   <td style={td}>{r.room_number || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
                   <td style={td}>{r.seat_number || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
                   {showExtraDetail && <td style={{ ...td, overflowWrap: 'anywhere' }}>{r.extra_detail || <span style={{ color: '#cbd5e1' }}>—</span>}</td>}
@@ -158,19 +160,19 @@ export default function PartnerExamStudentsPage() {
                     <td style={{ ...td, whiteSpace: 'nowrap' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         {fullyPaid ? (
-                          <button onClick={() => openModal(r)} title={`Paid: ${paid.toFixed(2)} AZN${r.payment_method ? ` (${paymentMethodLabel(r.payment_method)})` : ''}`}
+                          <button onClick={() => openModal(r)} title={`${t('Paid')}: ${paid.toFixed(2)} AZN${r.payment_method ? ` (${t(paymentMethodLabel(r.payment_method))})` : ''}`}
                             style={{ background: '#16a34a', border: 'none', borderRadius: 6, width: 32, height: 32, cursor: 'pointer', fontSize: '1rem', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             ✓
                           </button>
                         ) : (
                           <button onClick={() => openModal(r)}
                             style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: 6, padding: '0.25rem 0.7rem', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600 }}>
-                            {paid > 0 ? `${paid.toFixed(2)} AZN` : 'Pay'}
+                            {paid > 0 ? `${paid.toFixed(2)} AZN` : t('Pay')}
                           </button>
                         )}
                         {paid > 0 && r.payment_method && (
                           <span style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 600 }}>
-                            {paymentMethodLabel(r.payment_method)}
+                            {t(paymentMethodLabel(r.payment_method))}
                           </span>
                         )}
                         {!fullyPaid && examCost > 0 && (
@@ -193,13 +195,13 @@ export default function PartnerExamStudentsPage() {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}
           onClick={e => { if (e.target === e.currentTarget) closeModal(); }}>
           <div className="modal-card" style={{ '--modal-w': '360px', background: '#fff', borderRadius: 12, padding: '1.75rem', width: 360, boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
-            <h3 style={{ margin: '0 0 0.25rem' }}>Record Payment</h3>
+            <h3 style={{ margin: '0 0 0.25rem' }}>{t('Record Payment')}</h3>
             <p style={{ margin: '0 0 1.25rem', color: '#64748b', fontSize: '0.875rem' }}>{paymentModal.full_name}</p>
             <div style={{ background: '#f8fafc', borderRadius: 8, padding: '0.75rem 1rem', marginBottom: '1.25rem', fontSize: '0.875rem', display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: '#475569' }}>Exam Cost</span>
+              <span style={{ color: '#475569' }}>{t('Exam Cost')}</span>
               <span style={{ fontWeight: 700 }}>{examCost.toFixed(2)} AZN</span>
             </div>
-            <label style={{ display: 'block', fontWeight: 500, fontSize: '0.875rem', marginBottom: '0.3rem', color: '#374151' }}>Amount Paid (AZN)</label>
+            <label style={{ display: 'block', fontWeight: 500, fontSize: '0.875rem', marginBottom: '0.3rem', color: '#374151' }}>{t('Amount Paid (AZN)')}</label>
             <div style={{ position: 'relative', marginBottom: '1.5rem' }}>
               <input type="number" min="0" step="0.01" value={payInput} onChange={e => setPayInput(e.target.value)}
                 autoFocus onKeyDown={e => e.key === 'Enter' && handleSavePayment()}
@@ -209,16 +211,16 @@ export default function PartnerExamStudentsPage() {
             {payInput !== '' && !isNaN(parseFloat(payInput)) && (() => {
               const rem = examCost - parseFloat(payInput);
               return rem > 0
-                ? <div style={{ marginBottom: '1.25rem', color: '#dc2626', fontSize: '0.875rem', fontWeight: 600 }}>Remaining: {rem.toFixed(2)} AZN</div>
-                : <div style={{ marginBottom: '1.25rem', color: '#16a34a', fontSize: '0.875rem', fontWeight: 600 }}>✓ Fully paid</div>;
+                ? <div style={{ marginBottom: '1.25rem', color: '#dc2626', fontSize: '0.875rem', fontWeight: 600 }}>{t('Remaining:')} {rem.toFixed(2)} AZN</div>
+                : <div style={{ marginBottom: '1.25rem', color: '#16a34a', fontSize: '0.875rem', fontWeight: 600 }}>{t('✓ Fully paid')}</div>;
             })()}
             <PaymentMethodRadio value={payMethod} onChange={m => { setPayMethod(m); setPayError(''); }} />
             {payError && <div style={{ marginBottom: '1rem', color: '#dc2626', fontSize: '0.875rem' }}>{payError}</div>}
             <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
-              <button onClick={closeModal} style={{ padding: '0.5rem 1.25rem', background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: 6, cursor: 'pointer' }}>Cancel</button>
+              <button onClick={closeModal} style={{ padding: '0.5rem 1.25rem', background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: 6, cursor: 'pointer' }}>{t('Cancel')}</button>
               <button onClick={handleSavePayment} disabled={saving}
                 style={{ padding: '0.5rem 1.5rem', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 6, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1, fontWeight: 600 }}>
-                {saving ? 'Saving...' : 'Save'}
+                {saving ? t('Saving...') : t('Save')}
               </button>
             </div>
           </div>
