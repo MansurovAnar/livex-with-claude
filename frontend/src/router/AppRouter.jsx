@@ -32,6 +32,7 @@ import PartnerLayout from '../components/layout/PartnerLayout';
 import MyStudentsPage from '../pages/partner/MyStudentsPage';
 import PartnerRegisterPage from '../pages/partner/PartnerRegisterPage';
 import PartnerPaymentsPage from '../pages/partner/PartnerPaymentsPage';
+import PartnerBonusesPage from '../pages/partner/PartnerBonusesPage';
 import PartnerExamsPage from '../pages/shared/PartnerExamsPage';
 import PartnerExamStudentsPage from '../pages/shared/PartnerExamStudentsPage';
 import PartnerMyExamStudentsPage from '../pages/partner/PartnerMyExamStudentsPage';
@@ -98,6 +99,7 @@ export default function AppRouter() {
           <Route path="students" element={<MyStudentsPage />} />
           <Route path="exams/:examId/students" element={<PartnerMyExamStudentsPage />} />
           <Route path="payments" element={<PartnerPaymentsPage />} />
+          <Route path="bonuses" element={<PartnerBonusesPage />} />
         </Route>
 
         <Route path="/monitor/:examId" element={<RequireAuth roles={['admin', 'viewer']}><MonitorPage /></RequireAuth>} />
