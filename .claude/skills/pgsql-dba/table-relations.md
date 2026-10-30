@@ -9,7 +9,7 @@ erDiagram
         VARCHAR full_name
         VARCHAR email
         VARCHAR password_hash
-        ENUM    role "admin|security|viewer|reception|partner"
+        ENUM    role "admin|security|viewer|reception|partner|telesales"
         BOOLEAN is_active
         TSTZ    created_at
         TSTZ    updated_at
@@ -119,6 +119,42 @@ erDiagram
         TSTZ    logged_at
     }
 
+    %% ── Telesales ────────────────────────────────────────────────────
+    telesales_leads {
+        UUID     id PK
+        VARCHAR  first_name
+        VARCHAR  last_name
+        VARCHAR  father_name
+        VARCHAR  parent_name
+        VARCHAR  parent_relation
+        UUID     school_id FK
+        VARCHAR  village
+        SMALLINT class_level
+        VARCHAR  sector
+        VARCHAR  language
+        TEXT     income_source
+        TEXT_ARR extra_info "preset flags"
+        SMALLINT another_student_class
+        TEXT     extra_info_other
+        BOOLEAN  knows_hedef_student
+        VARCHAR  hedef_student_name
+        BOOLEAN  is_phone_invalid
+        UUID     created_by FK "nullable"
+        UUID     updated_by FK "nullable"
+        TSTZ     created_at
+        TSTZ     updated_at
+    }
+
+    lead_phones {
+        UUID    id PK
+        UUID    lead_id FK
+        VARCHAR phone_number
+        VARCHAR phone_digits "generated, unique"
+        VARCHAR owner_label
+        BOOLEAN is_primary
+        TSTZ    created_at
+    }
+
     %% ── Legacy (orphaned after migration 008) ────────────────────────
     buildings {
         UUID    id PK
@@ -162,6 +198,10 @@ erDiagram
     students       ||--o{ entry_logs    : "student_id"
     registrations  ||--o{ entry_logs    : "registration_id"
 
+    schools         ||--o{ telesales_leads : "school_id"
+    users           ||--o{ telesales_leads : "created_by / updated_by (SET NULL)"
+    telesales_leads ||--o{ lead_phones     : "lead_id (CASCADE)"
+
     buildings ||--o{ rooms : "building_id (CASCADE)"
 ```
 
@@ -185,6 +225,10 @@ erDiagram
 | `entry_logs.checked_by` | `users.id` | *(restrict)* |
 | `partner_bonus_payments.partner_id` | `users.id` | CASCADE |
 | `partner_bonus_payments.paid_by` | `users.id` | SET NULL |
+| `telesales_leads.school_id` | `schools.id` | *(restrict)* |
+| `telesales_leads.created_by` | `users.id` | SET NULL |
+| `telesales_leads.updated_by` | `users.id` | SET NULL |
+| `lead_phones.lead_id` | `telesales_leads.id` | CASCADE |
 | `rooms.building_id` | `buildings.id` | CASCADE |
 
 > `buildings` and `rooms` are **legacy** — `exams.room_id` was dropped in migration `008`. They remain in the database but are no longer referenced by any active table.
@@ -201,3 +245,4 @@ erDiagram
 | `partner_profiles` | `user_id` |
 | `registrations` | `(exam_id, student_id)`, `(exam_id, seat_number)` |
 | `rooms` | `(building_id, room_number)` |
+| `lead_phones` | `phone_digits` (digits-only phone, across all leads); `lead_id` where `is_primary` (one primary per lead) |
