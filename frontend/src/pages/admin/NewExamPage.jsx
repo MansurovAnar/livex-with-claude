@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { createExam } from '../../api/exams.api';
 import { listExamTypes } from '../../api/examTypes.api';
 import apiClient from '../../api/apiClient';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 const inputStyle = {
   width: '100%',
@@ -26,6 +27,7 @@ const fieldStyle = { marginBottom: '1.25rem' };
 
 export default function NewExamPage() {
   const navigate = useNavigate();
+  const { t, tError } = useLanguage();
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [schools, setSchools] = useState([]);
@@ -93,8 +95,7 @@ export default function NewExamPage() {
       await createExam(payload);
       navigate('/admin/exams');
     } catch (err) {
-      const detail = err.response?.data?.error;
-      setError(detail?.message || 'Failed to create exam');
+      setError(tError(err, 'Failed to create exam'));
     } finally {
       setSubmitting(false);
     }
@@ -107,7 +108,7 @@ export default function NewExamPage() {
           style={{ background: 'none', border: 'none', fontSize: '1.25rem', cursor: 'pointer', color: '#2563eb' }}>
           &larr;
         </button>
-        <h2 style={{ margin: 0 }}>New Exam</h2>
+        <h2 style={{ margin: 0 }}>{t('New Exam')}</h2>
       </div>
 
       {error && (
@@ -121,7 +122,7 @@ export default function NewExamPage() {
         {/* Exam Type */}
         <div style={fieldStyle}>
           <label style={labelStyle}>
-            Exam Type {examTypes.length > 0 && <span style={{ color: '#dc2626' }}>*</span>}
+            {t('Exam Type')} {examTypes.length > 0 && <span style={{ color: '#dc2626' }}>*</span>}
           </label>
           <select
             name="exam_type_id"
@@ -132,41 +133,41 @@ export default function NewExamPage() {
             style={inputStyle}
           >
             <option value="">
-              {!examTypesLoaded ? 'Loading...' : examTypes.length ? '— Select exam type —' : 'No exam types available'}
+              {!examTypesLoaded ? t('Loading...') : examTypes.length ? t('— Select exam type —') : t('No exam types available')}
             </option>
-            {examTypes.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+            {examTypes.map(et => <option key={et.id} value={et.id}>{et.name}</option>)}
           </select>
           {examTypesLoaded && examTypes.length === 0 && (
             <div style={{ fontSize: '0.78rem', color: '#94a3b8', marginTop: '0.25rem' }}>
-              No exam types have been added yet — the exam will be created without a type.
+              {t('No exam types have been added yet — the exam will be created without a type.')}
             </div>
           )}
         </div>
 
         {/* Title */}
         <div style={fieldStyle}>
-          <label style={labelStyle}>Exam Title <span style={{ color: '#dc2626' }}>*</span></label>
-          <input name="title" value={form.title} onChange={handleChange} required style={inputStyle} placeholder="e.g. Mathematics Final Exam" />
+          <label style={labelStyle}>{t('Exam Title')} <span style={{ color: '#dc2626' }}>*</span></label>
+          <input name="title" value={form.title} onChange={handleChange} required style={inputStyle} placeholder={t('e.g. Mathematics Final Exam')} />
         </div>
 
         {/* Subject Code */}
         <div style={fieldStyle}>
-          <label style={labelStyle}>Subject Code</label>
-          <input name="subject_code" value={form.subject_code} onChange={handleChange} style={inputStyle} placeholder="e.g. MATH101" />
+          <label style={labelStyle}>{t('Subject Code')}</label>
+          <input name="subject_code" value={form.subject_code} onChange={handleChange} style={inputStyle} placeholder={t('e.g. MATH101')} />
         </div>
 
         {/* Exam Location + Cost + Commission */}
         <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: '1rem', marginBottom: '1.25rem' }}>
           <div>
-            <label style={labelStyle}>Exam Location <span style={{ color: '#dc2626' }}>*</span></label>
+            <label style={labelStyle}>{t('Exam Location')} <span style={{ color: '#dc2626' }}>*</span></label>
             <select name="exam_location" value={form.exam_location} onChange={handleChange} required style={inputStyle}>
-              <option value="">— Select location —</option>
-              <option value="General">General</option>
+              <option value="">{t('— Select location —')}</option>
+              <option value="General">{t('General')}</option>
               {schools.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
             </select>
           </div>
           <div>
-            <label style={labelStyle}>Exam Cost <span style={{ color: '#dc2626' }}>*</span></label>
+            <label style={labelStyle}>{t('Exam Cost')} <span style={{ color: '#dc2626' }}>*</span></label>
             <div style={{ position: 'relative' }}>
               <input
                 type="number"
@@ -182,7 +183,7 @@ export default function NewExamPage() {
             </div>
           </div>
           <div>
-            <label style={labelStyle}>Commission Amount</label>
+            <label style={labelStyle}>{t('Commission Amount')}</label>
             <div style={{ position: 'relative' }}>
               <input
                 type="number"
@@ -202,7 +203,7 @@ export default function NewExamPage() {
 
         {/* Scheduled At */}
         <div style={fieldStyle}>
-          <label style={labelStyle}>Exam Date &amp; Time <span style={{ color: '#dc2626' }}>*</span></label>
+          <label style={labelStyle}>{t('Exam Date & Time')} <span style={{ color: '#dc2626' }}>*</span></label>
           <input
             type="datetime-local"
             name="scheduled_at"
@@ -212,27 +213,27 @@ export default function NewExamPage() {
             style={inputStyle}
           />
           <div style={{ fontSize: '0.78rem', color: '#94a3b8', marginTop: '0.25rem' }}>
-            Entry window will be auto-filled: opens 30 min before, closes 15 min after start.
+            {t('Entry window will be auto-filled: opens 30 min before, closes 15 min after start.')}
           </div>
         </div>
 
         {/* Duration */}
         <div style={fieldStyle}>
-          <label style={labelStyle}>Duration (minutes) <span style={{ color: '#dc2626' }}>*</span></label>
+          <label style={labelStyle}>{t('Duration (minutes)')} <span style={{ color: '#dc2626' }}>*</span></label>
           <input type="number" name="duration_mins" value={form.duration_mins} onChange={handleChange} required min="1" style={{ ...inputStyle, width: 160 }} />
         </div>
 
         <div style={{ borderTop: '1px solid #f1f5f9', margin: '1.5rem 0' }} />
 
         {/* Entry Window */}
-        <div style={{ marginBottom: '0.5rem', fontWeight: 600, color: '#475569', fontSize: '0.875rem' }}>Entry Window</div>
+        <div style={{ marginBottom: '0.5rem', fontWeight: 600, color: '#475569', fontSize: '0.875rem' }}>{t('Entry Window')}</div>
         <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.25rem' }}>
           <div>
-            <label style={labelStyle}>Gate Opens <span style={{ color: '#dc2626' }}>*</span></label>
+            <label style={labelStyle}>{t('Gate Opens')} <span style={{ color: '#dc2626' }}>*</span></label>
             <input type="datetime-local" name="entry_opens_at" value={form.entry_opens_at} onChange={handleChange} required style={inputStyle} />
           </div>
           <div>
-            <label style={labelStyle}>Gate Closes <span style={{ color: '#dc2626' }}>*</span></label>
+            <label style={labelStyle}>{t('Gate Closes')} <span style={{ color: '#dc2626' }}>*</span></label>
             <input type="datetime-local" name="entry_closes_at" value={form.entry_closes_at} onChange={handleChange} required style={inputStyle} />
           </div>
         </div>
@@ -241,11 +242,11 @@ export default function NewExamPage() {
         <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '1rem' }}>
           <button type="button" onClick={() => navigate('/admin/exams')}
             style={{ padding: '0.55rem 1.25rem', background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: 6, cursor: 'pointer', fontSize: '0.9rem' }}>
-            Cancel
+            {t('Cancel')}
           </button>
           <button type="submit" disabled={submitting}
             style={{ padding: '0.55rem 1.5rem', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 6, cursor: submitting ? 'not-allowed' : 'pointer', fontSize: '0.9rem', opacity: submitting ? 0.7 : 1 }}>
-            {submitting ? 'Creating...' : 'Create Exam'}
+            {submitting ? t('Creating...') : t('Create Exam')}
           </button>
         </div>
       </form>

@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { listExams } from '../../api/exams.api';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 export default function ExamSelectorPage() {
   const [exams, setExams] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   useEffect(() => {
     const today = new Date().toISOString().split('T')[0];
@@ -14,12 +16,12 @@ export default function ExamSelectorPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <p>Loading exams...</p>;
+  if (loading) return <p>{t('Loading exams...')}</p>;
 
   return (
     <div style={{ maxWidth: 600, margin: '0 auto' }}>
-      <h2>Today's Exams</h2>
-      {exams.length === 0 && <p style={{ color: '#64748b' }}>No exams scheduled today.</p>}
+      <h2>{t("Today's Exams")}</h2>
+      {exams.length === 0 && <p style={{ color: '#64748b' }}>{t('No exams scheduled today.')}</p>}
       {exams.map(exam => (
         <div key={exam.id} onClick={() => navigate(`/security/exam/${exam.id}`)}
           style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, padding: '1rem', marginBottom: '0.75rem', cursor: 'pointer' }}>
@@ -28,7 +30,7 @@ export default function ExamSelectorPage() {
           <div style={{ marginTop: '0.25rem', fontSize: '0.875rem' }}>
             {new Date(exam.scheduled_at).toLocaleTimeString()} &bull;
             <span style={{ marginLeft: '0.5rem', background: statusColor(exam.status), color: '#fff', padding: '0.1rem 0.5rem', borderRadius: 12, fontSize: '0.75rem' }}>
-              {exam.status}
+              {t(exam.status)}
             </span>
           </div>
         </div>

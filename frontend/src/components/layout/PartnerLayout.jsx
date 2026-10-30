@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import useIsMobile from '../../hooks/useIsMobile';
+import { useLanguage } from '../../i18n/LanguageContext';
+import LanguageSwitch from '../shared/LanguageSwitch';
 
 export default function PartnerLayout() {
   const { user, logout } = useAuth();
@@ -9,6 +11,7 @@ export default function PartnerLayout() {
   const location = useLocation();
   const isMobile = useIsMobile();
   const [open, setOpen] = useState(false);
+  const { t } = useLanguage();
   const handleLogout = async () => { await logout(); navigate('/login'); };
 
   useEffect(() => { setOpen(false); }, [location.pathname]);
@@ -16,23 +19,24 @@ export default function PartnerLayout() {
   return (
     <div className="app-shell" style={{ display: 'flex', minHeight: '100vh' }}>
       <div className="app-topbar" style={{ display: 'none', alignItems: 'center', gap: 12, background: '#064e3b', color: '#fff', padding: '8px 12px' }}>
-        <button aria-label="Open menu" onClick={() => setOpen(true)}
+        <button aria-label={t('Open menu')} onClick={() => setOpen(true)}
           style={{ background: 'none', border: '1px solid #065f46', color: '#d1fae5', borderRadius: 6, fontSize: '1.25rem', padding: '0 12px', cursor: 'pointer' }}>☰</button>
-        <span style={{ fontWeight: 'bold', color: '#6ee7b7' }}>Partner Portal</span>
+        <span style={{ fontWeight: 'bold', color: '#6ee7b7' }}>{t('Partner Portal')}</span>
       </div>
       {open && isMobile && <div className="app-backdrop" onClick={() => setOpen(false)} />}
       <nav className={`app-sidebar${open ? ' open' : ''}`} style={{ width: 220, background: '#064e3b', color: '#fff', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-        <div style={{ fontWeight: 'bold', fontSize: '1rem', marginBottom: '0.25rem', color: '#6ee7b7' }}>Partner Portal</div>
+        <div style={{ fontWeight: 'bold', fontSize: '1rem', marginBottom: '0.25rem', color: '#6ee7b7' }}>{t('Partner Portal')}</div>
         <div style={{ fontSize: '0.75rem', color: '#6ee7b7', marginBottom: '1rem', opacity: 0.8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {user?.full_name}
         </div>
-        <NavLink to="/partner/register" style={navStyle}>Register to Exam</NavLink>
-        <NavLink to="/partner/students" style={navStyle}>My Students</NavLink>
-        <NavLink to="/partner/payments" style={navStyle}>Payments</NavLink>
-        <NavLink to="/partner/bonuses" style={navStyle}>Bonuses</NavLink>
+        <NavLink to="/partner/register" style={navStyle}>{t('Register to Exam')}</NavLink>
+        <NavLink to="/partner/students" style={navStyle}>{t('My Students')}</NavLink>
+        <NavLink to="/partner/payments" style={navStyle}>{t('Payments')}</NavLink>
+        <NavLink to="/partner/bonuses" style={navStyle}>{t('Bonuses')}</NavLink>
         <div style={{ marginTop: 'auto' }}>
+          <LanguageSwitch fullWidth style={{ marginBottom: '0.5rem' }} />
           <button onClick={handleLogout} style={{ width: '100%', background: 'none', border: '1px solid #065f46', color: '#d1fae5', padding: '0.4rem', cursor: 'pointer', borderRadius: 4, fontSize: '0.875rem' }}>
-            Logout
+            {t('Logout')}
           </button>
         </div>
       </nav>

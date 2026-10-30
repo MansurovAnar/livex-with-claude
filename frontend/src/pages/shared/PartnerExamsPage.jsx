@@ -2,11 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import apiClient from '../../api/apiClient';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 export default function PartnerExamsPage() {
   const { partnerId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [partner, setPartner] = useState(null);
   const [exams, setExams] = useState([]);
   const [bonusInfo, setBonusInfo] = useState(null);
@@ -35,8 +37,8 @@ export default function PartnerExamsPage() {
 
   useEffect(() => { load(); }, [partnerId]);
 
-  if (loading) return <p style={{ padding: '1rem', color: '#94a3b8' }}>Loading...</p>;
-  if (!partner) return <p style={{ padding: '1rem', color: '#dc2626' }}>Partner not found.</p>;
+  if (loading) return <p style={{ padding: '1rem', color: '#94a3b8' }}>{t('Loading...')}</p>;
+  if (!partner) return <p style={{ padding: '1rem', color: '#dc2626' }}>{t('Partner not found.')}</p>;
 
   const remaining = Number(bonusInfo?.remaining ?? 0);
   const totalEarned = Number(bonusInfo?.total_earned ?? 0);
@@ -59,25 +61,25 @@ export default function PartnerExamsPage() {
 
       {/* Info strip */}
       <div style={{ display: 'flex', gap: '1.5rem', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 8, padding: '0.75rem 1.25rem', marginBottom: '1.5rem', flexWrap: 'wrap', fontSize: '0.875rem', alignItems: 'center' }}>
-        <span><strong>School:</strong> {partner.school}</span>
-        <span><strong>Address:</strong> {partner.school_address}</span>
-        <span><strong>School Students:</strong> {partner.number_of_students}</span>
-        <span><strong>Exams Registered:</strong> {exams.length}</span>
+        <span><strong>{t('School:')}</strong> {partner.school}</span>
+        <span><strong>{t('Address:')}</strong> {partner.school_address}</span>
+        <span><strong>{t('School Students:')}</strong> {partner.number_of_students}</span>
+        <span><strong>{t('Exams Registered:')}</strong> {exams.length}</span>
         {isAdmin && (
-          <span><strong>Total Bonus Earned:</strong> <span style={{ color: '#7c3aed', fontWeight: 700 }}>{totalEarned.toFixed(2)} AZN</span></span>
+          <span><strong>{t('Total Bonus Earned:')}</strong> <span style={{ color: '#7c3aed', fontWeight: 700 }}>{totalEarned.toFixed(2)} AZN</span></span>
         )}
         {isAdmin && (
           <span style={{ marginLeft: 'auto' }}>
             <button onClick={() => setBonusModal(true)}
               style={{ background: remaining > 0 ? '#7c3aed' : '#64748b', color: '#fff', border: 'none', borderRadius: 6, padding: '0.3rem 0.9rem', cursor: 'pointer', fontWeight: 700, fontSize: '0.85rem' }}>
-              Left Bonus: {remaining.toFixed(2)} AZN
+              {t('Left Bonus:')} {remaining.toFixed(2)} AZN
             </button>
           </span>
         )}
         {!isAdmin && (
           <span style={{ marginLeft: 'auto' }}>
             <span style={{ background: partner.is_active ? '#16a34a' : '#64748b', color: '#fff', padding: '0.15rem 0.75rem', borderRadius: 12, fontSize: '0.78rem', fontWeight: 600 }}>
-              {partner.is_active ? 'Active' : 'Inactive'}
+              {partner.is_active ? t('Active') : t('Inactive')}
             </span>
           </span>
         )}
@@ -91,7 +93,7 @@ export default function PartnerExamsPage() {
               {['#', 'Exam Title', 'Location', 'Date & Time', 'Duration', 'Cost', 'Registered',
                 ...(isAdmin ? ['Bonus'] : []),
                 'Status'].map(h => (
-                <th key={h} style={th}>{h}</th>
+                <th key={h} style={th}>{t(h)}</th>
               ))}
             </tr>
           </thead>
@@ -99,7 +101,7 @@ export default function PartnerExamsPage() {
             {exams.length === 0 ? (
               <tr>
                 <td colSpan={isAdmin ? 9 : 8} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>
-                  No exam registrations for this partner yet.
+                  {t('No exam registrations for this partner yet.')}
                 </td>
               </tr>
             ) : exams.map((ex, i) => (
@@ -114,7 +116,7 @@ export default function PartnerExamsPage() {
                 </td>
                 <td style={td}>{ex.exam_location}</td>
                 <td style={{ ...td, whiteSpace: 'nowrap' }}>{new Date(ex.scheduled_at).toLocaleString()}</td>
-                <td style={td}>{ex.duration_mins} min</td>
+                <td style={td}>{ex.duration_mins} {t('min')}</td>
                 <td style={{ ...td, fontWeight: 600, color: '#15803d' }}>{Number(ex.exam_cost).toFixed(2)} AZN</td>
                 <td style={{ ...td, textAlign: 'center' }}>
                   <span style={{ background: '#eff6ff', color: '#2563eb', fontWeight: 700, padding: '0.15rem 0.6rem', borderRadius: 12, fontSize: '0.8rem' }}>
@@ -139,7 +141,7 @@ export default function PartnerExamsPage() {
                 })()}
                 <td style={td}>
                   <span style={{ background: ex.status === 'ongoing' ? '#16a34a' : ex.status === 'scheduled' ? '#2563eb' : '#64748b', color: '#fff', padding: '0.15rem 0.6rem', borderRadius: 12, fontSize: '0.75rem', fontWeight: 600 }}>
-                    {ex.status}
+                    {t(ex.status)}
                   </span>
                 </td>
               </tr>
@@ -160,6 +162,7 @@ export default function PartnerExamsPage() {
 }
 
 function BonusModal({ partnerId, partnerName, onClose }) {
+  const { t, tError } = useLanguage();
   const [data, setData] = useState(null);
   const [amount, setAmount] = useState('');
   const [note, setNote] = useState('');
@@ -176,7 +179,7 @@ function BonusModal({ partnerId, partnerName, onClose }) {
     e.preventDefault();
     setError('');
     const amt = Number(amount);
-    if (!amt || amt <= 0) { setError('Enter a positive amount.'); return; }
+    if (!amt || amt <= 0) { setError(t('Enter a positive amount.')); return; }
     setSaving(true);
     try {
       await apiClient.post(`/partners/${partnerId}/bonus/payments`, { amount: amt, note: note || undefined });
@@ -184,7 +187,7 @@ function BonusModal({ partnerId, partnerName, onClose }) {
       setNote('');
       await loadBonus();
     } catch (err) {
-      setError(err.response?.data?.error?.message || 'Payment failed');
+      setError(tError(err, 'Payment failed'));
     } finally {
       setSaving(false);
     }
@@ -198,34 +201,34 @@ function BonusModal({ partnerId, partnerName, onClose }) {
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
           <div>
-            <h2 className="wrap-text" style={{ margin: 0, fontSize: '1.1rem' }}>Bonus — {partnerName}</h2>
+            <h2 className="wrap-text" style={{ margin: 0, fontSize: '1.1rem' }}>{t('Bonus')} — {partnerName}</h2>
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '1.25rem', cursor: 'pointer', color: '#64748b', lineHeight: 1 }}>✕</button>
         </div>
 
         {!data ? (
-          <p style={{ color: '#94a3b8', textAlign: 'center' }}>Loading...</p>
+          <p style={{ color: '#94a3b8', textAlign: 'center' }}>{t('Loading...')}</p>
         ) : (
           <>
             {/* Summary cards */}
             <div className="stat-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem', marginBottom: '1.5rem' }}>
-              <BonusCard label="Total Earned" value={`${Number(data.total_earned).toFixed(2)} AZN`} color="#7c3aed" />
-              <BonusCard label="Paid Out" value={`${Number(data.total_paid).toFixed(2)} AZN`} color="#16a34a" />
-              <BonusCard label="Remaining" value={`${Number(data.remaining).toFixed(2)} AZN`} color={data.remaining > 0 ? '#dc2626' : '#64748b'} />
+              <BonusCard label={t('Total Earned')} value={`${Number(data.total_earned).toFixed(2)} AZN`} color="#7c3aed" />
+              <BonusCard label={t('Paid Out')} value={`${Number(data.total_paid).toFixed(2)} AZN`} color="#16a34a" />
+              <BonusCard label={t('Remaining')} value={`${Number(data.remaining).toFixed(2)} AZN`} color={data.remaining > 0 ? '#dc2626' : '#64748b'} />
             </div>
 
             {/* Pay form */}
             {Number(data.remaining) > 0 && (
               <form onSubmit={handlePay} style={{ background: '#faf5ff', border: '1px solid #ddd6fe', borderRadius: 8, padding: '1rem', marginBottom: '1.25rem' }}>
                 <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#7c3aed', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem' }}>
-                  Record Payment
+                  {t('Record Payment')}
                 </div>
                 {error && (
                   <div style={{ color: '#dc2626', fontSize: '0.8rem', marginBottom: '0.5rem' }}>{error}</div>
                 )}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '0.5rem', marginBottom: '0.5rem', alignItems: 'end' }}>
                   <div>
-                    <label style={lbl}>Amount (max {Number(data.remaining).toFixed(2)} AZN)</label>
+                    <label style={lbl}>{t('Amount (max {max} AZN)', { max: Number(data.remaining).toFixed(2) })}</label>
                     <div style={{ position: 'relative' }}>
                       <input
                         type="number" min="0.01" step="0.01" max={Number(data.remaining)}
@@ -237,12 +240,12 @@ function BonusModal({ partnerId, partnerName, onClose }) {
                   </div>
                   <button type="submit" disabled={saving}
                     style={{ padding: '0.5rem 1rem', background: '#7c3aed', color: '#fff', border: 'none', borderRadius: 6, cursor: saving ? 'not-allowed' : 'pointer', fontWeight: 600, opacity: saving ? 0.7 : 1, whiteSpace: 'nowrap' }}>
-                    {saving ? '...' : 'Pay'}
+                    {saving ? '...' : t('Pay')}
                   </button>
                 </div>
                 <div>
-                  <label style={lbl}>Note (optional)</label>
-                  <input type="text" value={note} onChange={e => setNote(e.target.value)} placeholder="e.g. Cash payment" style={inp} />
+                  <label style={lbl}>{t('Note (optional)')}</label>
+                  <input type="text" value={note} onChange={e => setNote(e.target.value)} placeholder={t('e.g. Cash payment')} style={inp} />
                 </div>
               </form>
             )}
@@ -252,19 +255,19 @@ function BonusModal({ partnerId, partnerName, onClose }) {
               <button onClick={() => setExpanded(x => !x)}
                 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, color: '#475569', fontSize: '0.875rem', padding: 0, marginBottom: '0.5rem' }}>
                 <span style={{ fontSize: '0.75rem', transition: 'transform 0.15s', display: 'inline-block', transform: expanded ? 'rotate(90deg)' : 'rotate(0deg)' }}>▶</span>
-                Payment History ({data.payments.length})
+                {t('Payment History ({n})', { n: data.payments.length })}
               </button>
 
               {expanded && (
                 data.payments.length === 0 ? (
-                  <p style={{ color: '#94a3b8', fontSize: '0.875rem', margin: '0.5rem 0' }}>No payments recorded yet.</p>
+                  <p style={{ color: '#94a3b8', fontSize: '0.875rem', margin: '0.5rem 0' }}>{t('No payments recorded yet.')}</p>
                 ) : (
                   <div className="table-scroll" style={{ border: '1px solid #e2e8f0', borderRadius: 8, overflow: 'hidden' }}>
                     <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
                       <thead>
                         <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
                           {['Date & Time', 'Amount', 'Note', 'Paid By'].map(h => (
-                            <th key={h} style={{ padding: '0.5rem 0.75rem', textAlign: 'left', fontWeight: 700, color: '#64748b', fontSize: '0.75rem', textTransform: 'uppercase' }}>{h}</th>
+                            <th key={h} style={{ padding: '0.5rem 0.75rem', textAlign: 'left', fontWeight: 700, color: '#64748b', fontSize: '0.75rem', textTransform: 'uppercase' }}>{t(h)}</th>
                           ))}
                         </tr>
                       </thead>

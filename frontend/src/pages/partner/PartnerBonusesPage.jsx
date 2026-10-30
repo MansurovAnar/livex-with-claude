@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import apiClient from '../../api/apiClient';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 export default function PartnerBonusesPage() {
+  const { t, tError } = useLanguage();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -9,11 +11,11 @@ export default function PartnerBonusesPage() {
   useEffect(() => {
     apiClient.get('/partner/bonus')
       .then(res => setData(res.data.data))
-      .catch(err => setError(err.response?.data?.error?.message || 'Failed to load bonuses'))
+      .catch(err => setError(tError(err, 'Failed to load bonuses')))
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <p style={{ color: '#94a3b8' }}>Loading...</p>;
+  if (loading) return <p style={{ color: '#94a3b8' }}>{t('Loading...')}</p>;
   if (error) return <p style={{ color: '#dc2626' }}>{error}</p>;
 
   const payments = data?.payments ?? [];
@@ -22,15 +24,15 @@ export default function PartnerBonusesPage() {
   return (
     <div>
       <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-        <h2 style={{ margin: 0 }}>Bonuses</h2>
-        <span style={{ fontSize: '0.85rem', color: '#64748b' }}>{payments.length} bonus payment{payments.length !== 1 ? 's' : ''}</span>
+        <h2 style={{ margin: 0 }}>{t('Bonuses')}</h2>
+        <span style={{ fontSize: '0.85rem', color: '#64748b' }}>{payments.length === 1 ? t('1 bonus payment') : t('{n} bonus payments', { n: payments.length })}</span>
       </div>
 
       {/* Summary cards */}
       <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
-        <SummaryCard label="Total Earned" value={`${Number(data?.total_earned ?? 0).toFixed(2)} AZN`} color="#7c3aed" />
-        <SummaryCard label="Received" value={`${Number(data?.total_received ?? 0).toFixed(2)} AZN`} color="#16a34a" />
-        <SummaryCard label="Remaining" value={`${remaining.toFixed(2)} AZN`} color={remaining > 0 ? '#dc2626' : '#64748b'} />
+        <SummaryCard label={t('Total Earned')} value={`${Number(data?.total_earned ?? 0).toFixed(2)} AZN`} color="#7c3aed" />
+        <SummaryCard label={t('Received')} value={`${Number(data?.total_received ?? 0).toFixed(2)} AZN`} color="#16a34a" />
+        <SummaryCard label={t('Remaining')} value={`${remaining.toFixed(2)} AZN`} color={remaining > 0 ? '#dc2626' : '#64748b'} />
       </div>
 
       {/* Received bonuses */}
@@ -39,13 +41,13 @@ export default function PartnerBonusesPage() {
           <thead>
             <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
               {['#', 'Date & Time', 'Amount', 'Description'].map(h => (
-                <th key={h} style={th}>{h}</th>
+                <th key={h} style={th}>{t(h)}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {payments.length === 0 ? (
-              <tr><td colSpan={4} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>No bonuses received yet.</td></tr>
+              <tr><td colSpan={4} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>{t('No bonuses received yet.')}</td></tr>
             ) : payments.map((p, i) => (
               <tr key={p.id} style={{ borderBottom: '1px solid #f1f5f9', background: i % 2 === 0 ? '#fff' : '#fafafa' }}>
                 <td style={{ ...td, color: '#94a3b8' }}>{i + 1}</td>

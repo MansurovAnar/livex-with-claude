@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import apiClient from '../../api/apiClient';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 export default function SchoolsPage() {
+  const { t } = useLanguage();
   const [schools, setSchools] = useState([]);
   const [partners, setPartners] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -21,7 +23,7 @@ export default function SchoolsPage() {
   useEffect(() => { load(); }, []);
 
   const handleDelete = async (id) => {
-    if (!confirm('Delete this school?')) return;
+    if (!confirm(t('Delete this school?'))) return;
     await apiClient.delete(`/schools/${id}`);
     load();
   };
@@ -29,26 +31,26 @@ export default function SchoolsPage() {
   return (
     <div>
       <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-        <h2 style={{ margin: 0 }}>Schools</h2>
+        <h2 style={{ margin: 0 }}>{t('Schools')}</h2>
         <button onClick={() => setShowForm(true)}
           style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.25rem', cursor: 'pointer', fontWeight: 500 }}>
-          + Add New School
+          {t('+ Add New School')}
         </button>
       </div>
 
-      {loading ? <p style={{ color: '#94a3b8' }}>Loading...</p> : (
+      {loading ? <p style={{ color: '#94a3b8' }}>{t('Loading...')}</p> : (
         <div className="table-scroll" style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, overflow: 'hidden' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
                 {['#', 'School Name', 'Location', 'Director', 'Students (1–7)', 'Students (8–11)', 'Assigned To', 'Actions'].map(h => (
-                  <th key={h} style={th}>{h}</th>
+                  <th key={h} style={th}>{t(h)}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {schools.length === 0 ? (
-                <tr><td colSpan={8} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>No schools found.</td></tr>
+                <tr><td colSpan={8} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>{t('No schools found.')}</td></tr>
               ) : schools.map((s, i) => (
                 <tr key={s.id} style={{ borderBottom: '1px solid #f1f5f9', background: i % 2 === 0 ? '#fff' : '#fafafa' }}>
                   <td style={{ ...td, color: '#94a3b8' }}>{i + 1}</td>
@@ -65,7 +67,7 @@ export default function SchoolsPage() {
                   <td style={td}>
                     <button onClick={() => handleDelete(s.id)}
                       style={{ background: '#dc2626', color: '#fff', border: 'none', borderRadius: 4, padding: '0.25rem 0.6rem', cursor: 'pointer', fontSize: '0.75rem' }}>
-                      Delete
+                      {t('Delete')}
                     </button>
                   </td>
                 </tr>
@@ -87,6 +89,7 @@ export default function SchoolsPage() {
 }
 
 function AddSchoolModal({ partners, onClose, onSaved }) {
+  const { t, tError } = useLanguage();
   const [form, setForm] = useState({
     name: '',
     location: '',
@@ -118,7 +121,7 @@ function AddSchoolModal({ partners, onClose, onSaved }) {
       });
       onSaved();
     } catch (err) {
-      setError(err.response?.data?.error?.message || 'Failed to add school');
+      setError(tError(err, 'Failed to add school'));
     } finally {
       setSaving(false);
     }
@@ -129,7 +132,7 @@ function AddSchoolModal({ partners, onClose, onSaved }) {
       onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="modal-card" style={{ '--modal-w': '560px', background: '#fff', borderRadius: 12, padding: '2rem', width: '100%', maxWidth: 560, boxShadow: '0 8px 32px rgba(0,0,0,0.18)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-          <h2 style={{ margin: 0, fontSize: '1.15rem' }}>Add New School</h2>
+          <h2 style={{ margin: 0, fontSize: '1.15rem' }}>{t('Add New School')}</h2>
           <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '1.25rem', cursor: 'pointer', color: '#64748b', lineHeight: 1 }}>✕</button>
         </div>
 
@@ -141,35 +144,35 @@ function AddSchoolModal({ partners, onClose, onSaved }) {
 
         <form onSubmit={handleSubmit}>
           <div style={field}>
-            <label style={label}>Name <span style={{ color: '#dc2626' }}>*</span></label>
-            <input name="name" value={form.name} onChange={handleChange} required style={input} placeholder="e.g. School №5" />
+            <label style={label}>{t('Name')} <span style={{ color: '#dc2626' }}>*</span></label>
+            <input name="name" value={form.name} onChange={handleChange} required style={input} placeholder={t('e.g. School №5')} />
           </div>
 
           <div style={field}>
-            <label style={label}>Location <span style={{ color: '#dc2626' }}>*</span></label>
-            <input name="location" value={form.location} onChange={handleChange} required style={input} placeholder="e.g. Balakən, Müsəlim küç. 12" />
+            <label style={label}>{t('Location')} <span style={{ color: '#dc2626' }}>*</span></label>
+            <input name="location" value={form.location} onChange={handleChange} required style={input} placeholder={t('e.g. Balakən, Müsəlim küç. 12')} />
           </div>
 
           <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.25rem' }}>
             <div>
-              <label style={label}>Students (grades 1–7)</label>
+              <label style={label}>{t('Students (grades 1–7)')}</label>
               <input type="number" name="students_1_to_7" value={form.students_1_to_7} onChange={handleChange} min="0" style={input} placeholder="0" />
             </div>
             <div>
-              <label style={label}>Students (grades 8–11)</label>
+              <label style={label}>{t('Students (grades 8–11)')}</label>
               <input type="number" name="students_8_to_11" value={form.students_8_to_11} onChange={handleChange} min="0" style={input} placeholder="0" />
             </div>
           </div>
 
           <div style={field}>
-            <label style={label}>Name of Director <span style={{ color: '#dc2626' }}>*</span></label>
-            <input name="director_name" value={form.director_name} onChange={handleChange} required style={input} placeholder="Full name" />
+            <label style={label}>{t('Name of Director')} <span style={{ color: '#dc2626' }}>*</span></label>
+            <input name="director_name" value={form.director_name} onChange={handleChange} required style={input} placeholder={t('Full name')} />
           </div>
 
           <div style={field}>
-            <label style={label}>Assigned To</label>
+            <label style={label}>{t('Assigned To')}</label>
             <select name="assigned_to" value={form.assigned_to} onChange={handleChange} style={input}>
-              <option value="">— Select partner —</option>
+              <option value="">{t('— Select partner —')}</option>
               {partners.map(p => (
                 <option key={p.id} value={p.id}>{p.full_name}</option>
               ))}
@@ -179,11 +182,11 @@ function AddSchoolModal({ partners, onClose, onSaved }) {
           <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '1.5rem' }}>
             <button type="button" onClick={onClose}
               style={{ padding: '0.55rem 1.25rem', background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: 6, cursor: 'pointer', fontSize: '0.9rem' }}>
-              Cancel
+              {t('Cancel')}
             </button>
             <button type="submit" disabled={saving}
               style={{ padding: '0.55rem 1.5rem', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 6, cursor: saving ? 'not-allowed' : 'pointer', fontSize: '0.9rem', opacity: saving ? 0.7 : 1 }}>
-              {saving ? 'Saving...' : 'Add School'}
+              {saving ? t('Saving...') : t('Add School')}
             </button>
           </div>
         </form>

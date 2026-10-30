@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import apiClient from '../../api/apiClient';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 export default function PartnersPage() {
   const [partners, setPartners] = useState([]);
@@ -9,6 +10,7 @@ export default function PartnersPage() {
   const [search, setSearch] = useState('');
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useLanguage();
 
   const basePath = user?.role === 'reception' ? '/reception/partners' : '/admin/partners';
   const isAdmin = user?.role === 'admin';
@@ -29,26 +31,26 @@ export default function PartnersPage() {
       )
     : partners;
 
-  if (loading) return <p style={{ padding: '1rem', color: '#94a3b8' }}>Loading...</p>;
+  if (loading) return <p style={{ padding: '1rem', color: '#94a3b8' }}>{t('Loading...')}</p>;
 
   return (
     <div>
       <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-        <h2 style={{ margin: 0 }}>Partners</h2>
+        <h2 style={{ margin: 0 }}>{t('Partners')}</h2>
         <span style={{ fontSize: '0.85rem', color: '#64748b' }}>
-          {partners.length} partner{partners.length !== 1 ? 's' : ''}
+          {partners.length === 1 ? t('1 partner') : t('{n} partners', { n: partners.length })}
         </span>
       </div>
 
       {/* Search */}
       <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.25rem' }}>
         <input type="text" value={search} onChange={e => setSearch(e.target.value)}
-          placeholder="Search by name, email or school..."
+          placeholder={t('Search by name, email or school...')}
           style={{ flex: 1, padding: '0.5rem 0.75rem', border: '1px solid #cbd5e1', borderRadius: 6, fontSize: '0.95rem' }} />
         {search && (
           <button onClick={() => setSearch('')}
             style={{ padding: '0.5rem 0.75rem', background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: 6, cursor: 'pointer', color: '#64748b' }}>
-            Clear
+            {t('Clear')}
           </button>
         )}
       </div>
@@ -59,7 +61,7 @@ export default function PartnersPage() {
           <thead>
             <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
               {headers.map(h => (
-                <th key={h} style={th}>{h}</th>
+                <th key={h} style={th}>{t(h)}</th>
               ))}
             </tr>
           </thead>
@@ -67,7 +69,7 @@ export default function PartnersPage() {
             {filtered.length === 0 ? (
               <tr>
                 <td colSpan={headers.length} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>
-                  {search ? 'No partners match your search.' : 'No partners found.'}
+                  {search ? t('No partners match your search.') : t('No partners found.')}
                 </td>
               </tr>
             ) : filtered.map((p, i) => (
@@ -96,8 +98,8 @@ export default function PartnersPage() {
                 {isAdmin && <td style={{ ...td, fontFamily: 'monospace' }}>{p.initial_student_number}</td>}
                 <td style={td}>
                   {p.is_active
-                    ? <span style={{ color: '#16a34a', fontWeight: 600, fontSize: '0.8rem' }}>Active</span>
-                    : <span style={{ color: '#dc2626', fontWeight: 600, fontSize: '0.8rem' }}>Inactive</span>}
+                    ? <span style={{ color: '#16a34a', fontWeight: 600, fontSize: '0.8rem' }}>{t('Active')}</span>
+                    : <span style={{ color: '#dc2626', fontWeight: 600, fontSize: '0.8rem' }}>{t('Inactive')}</span>}
                 </td>
                 <td style={{ ...td, color: '#64748b' }}>{new Date(p.created_at).toLocaleDateString()}</td>
               </tr>

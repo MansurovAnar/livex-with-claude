@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { listStudents, updateStudent, deleteStudent } from '../../api/students.api';
 import { useAuth } from '../../contexts/AuthContext';
 import { PageSizeSelect, PaginationBar } from '../../components/shared/Pagination';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 const CLASSES = Array.from({ length: 11 }, (_, i) => i + 1);
 const SECTORS = ['Azerbaijan', 'Rus'];
@@ -9,6 +10,7 @@ const LANGUAGES = ['English', 'Russian', 'German', 'French'];
 
 export default function StudentsPage() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [students, setStudents] = useState([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
@@ -34,7 +36,7 @@ export default function StudentsPage() {
   useEffect(() => { load(); }, []);
 
   const handleDelete = async (id) => {
-    if (!confirm('Remove this student?')) return;
+    if (!confirm(t('Remove this student?'))) return;
     await deleteStudent(id);
     load(search, page);
   };
@@ -43,21 +45,21 @@ export default function StudentsPage() {
 
   return (
     <div>
-      <h2>Students</h2>
+      <h2>{t('Students')}</h2>
       <div className="toolbar" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
         <input value={search} onChange={e => setSearch(e.target.value)} onKeyDown={e => e.key === 'Enter' && load(search)}
-          placeholder="Search..." style={{ flex: 1, padding: '0.5rem', border: '1px solid #cbd5e1', borderRadius: 4 }} />
-        <button onClick={() => load(search)} style={{ padding: '0.5rem 1rem', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer' }}>Search</button>
+          placeholder={t('Search...')} style={{ flex: 1, padding: '0.5rem', border: '1px solid #cbd5e1', borderRadius: 4 }} />
+        <button onClick={() => load(search)} style={{ padding: '0.5rem 1rem', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer' }}>{t('Search')}</button>
       </div>
       <div className="pagination-top" style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.5rem' }}>
         <PageSizeSelect limit={limit} onLimitChange={handleLimitChange} />
       </div>
-      {loading ? <p>Loading...</p> : (
+      {loading ? <p>{t('Loading...')}</p> : (
         <>
         <div className="table-scroll">
         <table style={{ width: '100%', borderCollapse: 'collapse', background: '#fff', borderRadius: 8, overflow: 'hidden' }}>
           <thead style={{ background: '#f1f5f9' }}>
-            <tr>{['Number', 'Name', 'Email', 'Mobile', 'Class', 'Sector', 'Language', ''].map(h => <th key={h} className={['Email', 'Sector', 'Language'].includes(h) ? 'hide-mobile' : undefined} style={th}>{h}</th>)}</tr>
+            <tr>{['Number', 'Name', 'Email', 'Mobile', 'Class', 'Sector', 'Language', ''].map(h => <th key={h} className={['Email', 'Sector', 'Language'].includes(h) ? 'hide-mobile' : undefined} style={th}>{t(h)}</th>)}</tr>
           </thead>
           <tbody>
             {students.map(s => (
@@ -67,13 +69,13 @@ export default function StudentsPage() {
                 <td className="hide-mobile" style={td}>{s.email}</td>
                 <td style={td}>{s.mobile_number || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
                 <td style={td}>{s.class_level ?? <span style={{ color: '#cbd5e1' }}>—</span>}</td>
-                <td className="hide-mobile" style={td}>{s.sector || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
-                <td className="hide-mobile" style={td}>{s.language || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
+                <td className="hide-mobile" style={td}>{(s.sector && t(s.sector)) || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
+                <td className="hide-mobile" style={td}>{(s.language && t(s.language)) || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
                 <td style={{ ...td, whiteSpace: 'nowrap' }}>
                   {user?.role === 'admin' && (
-                    <button onClick={() => setEditingStudent(s)} style={actionBtn('#475569')}>Edit</button>
+                    <button onClick={() => setEditingStudent(s)} style={actionBtn('#475569')}>{t('Edit')}</button>
                   )}
-                  <button onClick={() => handleDelete(s.id)} style={actionBtn('#dc2626')}>Remove</button>
+                  <button onClick={() => handleDelete(s.id)} style={actionBtn('#dc2626')}>{t('Remove')}</button>
                 </td>
               </tr>
             ))}
@@ -96,6 +98,7 @@ export default function StudentsPage() {
 }
 
 function EditStudentModal({ student, onClose, onSaved }) {
+  const { t, tError } = useLanguage();
   const [form, setForm] = useState({
     student_number: student.student_number,
     full_name: student.full_name,
@@ -115,7 +118,7 @@ function EditStudentModal({ student, onClose, onSaved }) {
     e.preventDefault();
     setError('');
     if (!/^\d{1,7}$/.test(form.student_number)) {
-      setError('Student number must be 1-7 digits');
+      setError(t('Student number must be 1-7 digits'));
       return;
     }
     setSaving(true);
@@ -132,7 +135,7 @@ function EditStudentModal({ student, onClose, onSaved }) {
       });
       onSaved();
     } catch (err) {
-      setError(err.response?.data?.error?.message || 'Failed to save changes');
+      setError(tError(err, 'Failed to save changes'));
     } finally {
       setSaving(false);
     }
@@ -143,7 +146,7 @@ function EditStudentModal({ student, onClose, onSaved }) {
       onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="modal-card" style={{ '--modal-w': '480px', background: '#fff', borderRadius: 12, padding: '2rem', width: '100%', maxWidth: 480, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 8px 32px rgba(0,0,0,0.18)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-          <h2 style={{ margin: 0, fontSize: '1.1rem' }}>Edit Student</h2>
+          <h2 style={{ margin: 0, fontSize: '1.1rem' }}>{t('Edit Student')}</h2>
           <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '1.25rem', cursor: 'pointer', color: '#64748b', lineHeight: 1 }}>✕</button>
         </div>
 
@@ -155,65 +158,65 @@ function EditStudentModal({ student, onClose, onSaved }) {
 
         <form onSubmit={handleSubmit}>
           <div style={fieldStyle}>
-            <label style={labelStyle}>Student Number <span style={{ color: '#dc2626' }}>*</span></label>
-            <input name="student_number" value={form.student_number} onChange={handleChange} required maxLength={7} inputMode="numeric" pattern="\d{1,7}" title="1-7 digits" style={inputStyle} />
+            <label style={labelStyle}>{t('Student Number')} <span style={{ color: '#dc2626' }}>*</span></label>
+            <input name="student_number" value={form.student_number} onChange={handleChange} required maxLength={7} inputMode="numeric" pattern="\d{1,7}" title={t('1-7 digits')} style={inputStyle} />
           </div>
           <div style={fieldStyle}>
-            <label style={labelStyle}>Full Name <span style={{ color: '#dc2626' }}>*</span></label>
+            <label style={labelStyle}>{t('Full Name')} <span style={{ color: '#dc2626' }}>*</span></label>
             <input name="full_name" value={form.full_name} onChange={handleChange} required style={inputStyle} />
           </div>
           <div style={fieldStyle}>
-            <label style={labelStyle}>Email <span style={{ color: '#dc2626' }}>*</span></label>
+            <label style={labelStyle}>{t('Email')} <span style={{ color: '#dc2626' }}>*</span></label>
             <input name="email" type="email" value={form.email} onChange={handleChange} required style={inputStyle} />
           </div>
           <div style={fieldStyle}>
-            <label style={labelStyle}>Mobile Number</label>
+            <label style={labelStyle}>{t('Mobile Number')}</label>
             <input name="mobile_number" value={form.mobile_number} onChange={handleChange} maxLength={10} style={inputStyle} />
           </div>
           <div style={fieldStyle}>
-            <label style={labelStyle}>Class</label>
+            <label style={labelStyle}>{t('Class')}</label>
             <select name="class_level" value={form.class_level} onChange={handleChange} style={inputStyle}>
-              <option value="">Select class...</option>
+              <option value="">{t('Select class...')}</option>
               {CLASSES.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
           <div style={fieldStyle}>
-            <label style={labelStyle}>Sector</label>
+            <label style={labelStyle}>{t('Sector')}</label>
             <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
               {SECTORS.map(s => (
                 <label key={s} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 500, color: '#374151' }}>
                   <input type="radio" name="sector" value={s} checked={form.sector === s} onChange={handleChange} style={{ width: 16, height: 16 }} />
-                  {s}
+                  {t(s)}
                 </label>
               ))}
               {form.sector && (
                 <button type="button" onClick={() => setForm(f => ({ ...f, sector: '' }))}
                   style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '0.8rem' }}>
-                  Clear
+                  {t('Clear')}
                 </button>
               )}
             </div>
           </div>
           <div style={fieldStyle}>
-            <label style={labelStyle}>Language</label>
+            <label style={labelStyle}>{t('Language')}</label>
             <select name="language" value={form.language} onChange={handleChange} style={inputStyle}>
-              <option value="">Select language...</option>
-              {LANGUAGES.map(l => <option key={l} value={l}>{l}</option>)}
+              <option value="">{t('Select language...')}</option>
+              {LANGUAGES.map(l => <option key={l} value={l}>{t(l)}</option>)}
             </select>
           </div>
           <div style={fieldStyle}>
-            <label style={labelStyle}>Photo URL</label>
+            <label style={labelStyle}>{t('Photo URL')}</label>
             <input name="photo_url" value={form.photo_url} onChange={handleChange} style={inputStyle} />
           </div>
 
           <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '1.5rem' }}>
             <button type="button" onClick={onClose}
               style={{ padding: '0.55rem 1.25rem', background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: 6, cursor: 'pointer', fontSize: '0.9rem' }}>
-              Cancel
+              {t('Cancel')}
             </button>
             <button type="submit" disabled={saving}
               style={{ padding: '0.55rem 1.5rem', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 6, cursor: saving ? 'not-allowed' : 'pointer', fontSize: '0.9rem', opacity: saving ? 0.7 : 1 }}>
-              {saving ? 'Saving...' : 'Save Changes'}
+              {saving ? t('Saving...') : t('Save Changes')}
             </button>
           </div>
         </form>
