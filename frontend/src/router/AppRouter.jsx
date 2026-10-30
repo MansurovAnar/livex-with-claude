@@ -40,7 +40,7 @@ import PartnerExamStudentsPage from '../pages/shared/PartnerExamStudentsPage';
 import PartnerMyExamStudentsPage from '../pages/partner/PartnerMyExamStudentsPage';
 
 import TelesalesLayout from '../components/layout/TelesalesLayout';
-import TelesalesHomePage from '../pages/telesales/TelesalesHomePage';
+import LeadsPage from '../pages/telesales/LeadsPage';
 import LeadFormPage from '../pages/telesales/LeadFormPage';
 
 function RoleRedirect() {
@@ -84,7 +84,7 @@ export default function AppRouter() {
           <Route path="partners/:partnerId/exams/:examId/students" element={<PartnerExamStudentsPage />} />
           <Route path="schools" element={<SchoolsPage />} />
           <Route path="telesales/villages" element={<VillagesPage />} />
-          <Route path="telesales/leads" element={<TelesalesHomePage />} />
+          <Route path="telesales/leads" element={<LeadsPage />} />
           <Route path="telesales/leads/new" element={<LeadFormPage />} />
           <Route path="telesales/leads/:id/edit" element={<LeadFormPage />} />
         </Route>
@@ -115,7 +115,7 @@ export default function AppRouter() {
         </Route>
 
         <Route path="/telesales" element={<RequireAuth roles={['telesales']}><TelesalesLayout /></RequireAuth>}>
-          <Route index element={<TelesalesHomePage />} />
+          <Route index element={<LeadsPage />} />
           <Route path="leads/new" element={<LeadFormPage />} />
           <Route path="leads/:id/edit" element={<LeadFormPage />} />
         </Route>

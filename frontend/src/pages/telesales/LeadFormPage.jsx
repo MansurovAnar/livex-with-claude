@@ -5,22 +5,10 @@ import { SchoolSelect, VillageSelect } from '../../components/shared/SchoolVilla
 import { useAuth } from '../../contexts/AuthContext';
 import useIsMobile from '../../hooks/useIsMobile';
 import { useLanguage } from '../../i18n/LanguageContext';
+import { CLASSES, EXTRA_INFO, LANGUAGES, SECTORS } from './leadOptions';
 
-const CLASSES = Array.from({ length: 11 }, (_, i) => i + 1);
-const SECTORS = ['Azerbaijan', 'Rus'];
-const LANGUAGES = ['English', 'Russian', 'German', 'French'];
 const PHONE_OWNERS = ['Self', 'Father', 'Mother', 'Grandmother', 'Grandfather', 'Brother', 'Sister', 'Relative'];
 const PARENT_RELATIONS = ['Mother', 'Grandmother', 'Grandfather', 'Aunt', 'Uncle', 'Brother', 'Sister'];
-const EXTRA_INFO = [
-  { value: 'birthday', label: 'Birthday' },
-  { value: 'marriage_ceremony', label: 'Marriage ceremony' },
-  { value: 'another_student_at_home', label: 'Another student at home' },
-  { value: 'someone_died_recently', label: 'Someone died recently' },
-  { value: 'someone_in_hospital', label: 'Someone in hospital' },
-  { value: 'father_in_russia', label: 'Father living in Russia' },
-  { value: 'mother_died', label: 'Mother died' },
-  { value: 'father_died', label: 'Father died' },
-];
 
 const emptyPhone = () => ({ phone_number: '', owner_label: '' });
 const emptyForm = () => ({

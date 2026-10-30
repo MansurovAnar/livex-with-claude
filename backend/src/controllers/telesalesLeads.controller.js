@@ -79,7 +79,7 @@ function handleWriteError(err, res, next) {
   return next(err);
 }
 
-// GET /api/telesales/leads — basic paginated list (search by name, phone or school)
+// GET /api/telesales/leads — paginated list; ?q= searches name, phone or school; ?class_level, ?sector, ?language filter
 exports.list = async (req, res, next) => {
   try {
     const { page, limit, offset } = parsePagination(req.query);
@@ -96,6 +96,18 @@ exports.list = async (req, res, next) => {
         phoneCond = ` OR EXISTS (SELECT 1 FROM lead_phones sp WHERE sp.lead_id = l.id AND sp.phone_digits LIKE $${values.length})`;
       }
       conditions.push(`(l.first_name || ' ' || l.last_name ILIKE ${like} OR l.last_name || ' ' || l.first_name ILIKE ${like} OR s.name ILIKE ${like}${phoneCond})`);
+    }
+    const classLevel = parseInt(req.query.class_level, 10);
+    if (classLevel >= 1 && classLevel <= 11) {
+      values.push(classLevel);
+      conditions.push(`l.class_level = $${values.length}`);
+    }
+    for (const field of ['sector', 'language']) {
+      const v = typeof req.query[field] === 'string' ? req.query[field].trim() : '';
+      if (v) {
+        values.push(v);
+        conditions.push(`l.${field} = $${values.length}`);
+      }
     }
     const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
 

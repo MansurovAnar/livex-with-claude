@@ -23,7 +23,6 @@ export const AZ = {
   'Reception': 'Qəbul',
   'Telesales': 'Telesatış',
   'Leads': 'Potensial şagirdlər',
-  'Telesales leads will appear here.': 'Potensial şagirdlərin siyahısı burada görünəcək.',
   'Villages': 'Kəndlər',
   'Security — Exam Entrance': 'Mühafizə — İmtahana giriş',
   'Language': 'Dil',
@@ -564,6 +563,21 @@ export const AZ = {
   'The same phone number is entered twice': 'Eyni telefon nömrəsi iki dəfə daxil edilib',
   'Enter the name of the person studying in HƏDƏF': 'HƏDƏF-də oxuyan şəxsin adını daxil edin',
   'Unknown extra info option': 'Naməlum əlavə məlumat seçimi',
+
+  // ── Telesales lead list + details modal ──
+  'Search name, school or phone...': 'Ad, məktəb və ya telefon üzrə axtar...',
+  'All classes': 'Bütün siniflər',
+  'All sectors': 'Bütün bölmələr',
+  'All languages': 'Bütün dillər',
+  'Name / Surname': 'Ad / Soyad',
+  'Primary phone': 'Əsas telefon',
+  'Last call': 'Son zəng',
+  'Last answer': 'Son cavab',
+  'No leads found.': 'Potensial şagird tapılmadı.',
+  'Failed to load leads': 'Potensial şagirdləri yükləmək alınmadı',
+  'Lead details': 'Potensial şagird haqqında',
+  'Added {date} by {name}': '{date} tarixində {name} əlavə edib',
+  'Last updated {date} by {name}': 'Son dəyişiklik: {date}, {name}',
 };
 
 // Server messages that contain runtime values. In the replacement, {1} inserts the
