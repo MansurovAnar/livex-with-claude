@@ -68,6 +68,9 @@ select { max-width: 100%; min-width: 0; text-overflow: ellipsis; }
   .radio-row label { min-height: 44px; }
   /* EN/AZ language switch: large tap targets */
   .lang-switch button { min-height: 44px; min-width: 44px; }
+  /* Searchable dropdown: large tap targets for options and the clear button */
+  .ss-list .ss-option { min-height: 44px; display: flex; align-items: center; }
+  .app-main .ss-root button.ss-clear, .modal-card .ss-root button.ss-clear { min-height: 44px; min-width: 44px; }
   /* Payment summary tiles: two per line */
   .pay-grid     { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 8px !important; }
 }

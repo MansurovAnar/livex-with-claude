@@ -14,6 +14,7 @@ import ExamReportsPage from '../pages/admin/ExamReportsPage';
 import StudentsPage from '../pages/admin/StudentsPage';
 import UsersPage from '../pages/admin/UsersPage';
 import SchoolsPage from '../pages/admin/SchoolsPage';
+import VillagesPage from '../pages/admin/VillagesPage';
 
 import SecurityLayout from '../components/layout/SecurityLayout';
 import ExamSelectorPage from '../pages/security/ExamSelectorPage';
@@ -81,6 +82,7 @@ export default function AppRouter() {
           <Route path="partners/:partnerId/exams" element={<PartnerExamsPage />} />
           <Route path="partners/:partnerId/exams/:examId/students" element={<PartnerExamStudentsPage />} />
           <Route path="schools" element={<SchoolsPage />} />
+          <Route path="telesales/villages" element={<VillagesPage />} />
         </Route>
 
         <Route path="/security" element={<RequireAuth roles={['security', 'admin']}><SecurityLayout /></RequireAuth>}>

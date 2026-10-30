@@ -24,6 +24,7 @@ export const AZ = {
   'Telesales': 'Telesatış',
   'Leads': 'Potensial şagirdlər',
   'Telesales leads will appear here.': 'Potensial şagirdlərin siyahısı burada görünəcək.',
+  'Villages': 'Kəndlər',
   'Security — Exam Entrance': 'Mühafizə — İmtahana giriş',
   'Language': 'Dil',
 
@@ -472,6 +473,30 @@ export const AZ = {
   'name, location and director_name are required': 'Ad, ünvan və direktorun adı mütləqdir',
   'from/to must be dates in YYYY-MM-DD format': 'Tarixlər YYYY-MM-DD formatında olmalıdır',
   'An unexpected error occurred': 'Gözlənilməz xəta baş verdi',
+
+  // ── Villages (Admin › Telesales) and searchable dropdowns ──
+  'Village / Street': 'Kənd / küçə',
+  '+ Add Village': '+ Kənd əlavə et',
+  'Add Village': 'Kənd əlavə et',
+  'Edit Village': 'Kəndi redaktə et',
+  'Search village / street...': 'Kənd / küçə axtar...',
+  'Search school...': 'Məktəb axtar...',
+  'Show inactive': 'Deaktivləri göstər',
+  'No villages found.': 'Kənd tapılmadı.',
+  'No matches found': 'Uyğun nəticə tapılmadı',
+  'e.g. Qaysa village': 'məs. Qaysa kəndi',
+  'Village "{name}" added successfully.': '"{name}" kəndi uğurla əlavə edildi.',
+  'Village "{name}" updated successfully.': '"{name}" kəndi uğurla yeniləndi.',
+  'Village "{name}" deactivated.': '"{name}" kəndi deaktiv edildi.',
+  'Village "{name}" activated.': '"{name}" kəndi aktivləşdirildi.',
+  'Deactivate village "{name}"?': '"{name}" kəndi deaktiv edilsin?',
+  'Failed to load villages': 'Kəndləri yükləmək alınmadı',
+  'Failed to save village': 'Kəndi yadda saxlamaq alınmadı',
+  'Failed to update village': 'Kəndi yeniləmək alınmadı',
+  'An active village with this name already exists': 'Bu adda aktiv kənd artıq mövcuddur',
+  'Village not found': 'Kənd tapılmadı',
+  'is_active must be true or false': 'Status düzgün deyil',
+  'name must be at most 255 characters': 'Ad ən çox 255 simvol ola bilər',
 };
 
 // Server messages that contain runtime values. In the replacement, {1} inserts the

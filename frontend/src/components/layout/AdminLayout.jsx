@@ -33,6 +33,8 @@ export default function AdminLayout() {
         <NavLink to="/admin/users" style={navStyle}>{t('Users')}</NavLink>
         <NavLink to="/admin/partners" style={navStyle}>{t('Partners')}</NavLink>
         <NavLink to="/admin/schools" style={navStyle}>{t('Schools')}</NavLink>
+        <div style={{ marginTop: '0.75rem', padding: '0 0.5rem', fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase', color: '#64748b' }}>{t('Telesales')}</div>
+        <NavLink to="/admin/telesales/villages" style={subNavStyle}>{t('Villages')}</NavLink>
         <div style={{ marginTop: 'auto', fontSize: '0.85rem', color: '#94a3b8' }}>{user?.full_name}</div>
         <LanguageSwitch fullWidth />
         <button onClick={handleLogout} style={{ background: 'none', border: '1px solid #475569', color: '#fff', padding: '0.4rem', cursor: 'pointer', borderRadius: 4 }}>
@@ -54,3 +56,5 @@ const navStyle = ({ isActive }) => ({
   background: isActive ? '#0f172a' : 'transparent',
   display: 'block',
 });
+
+const subNavStyle = (state) => ({ ...navStyle(state), paddingLeft: '1.25rem' });

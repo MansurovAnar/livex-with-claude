@@ -48,6 +48,16 @@ erDiagram
         TSTZ    updated_at
     }
 
+    villages {
+        UUID    id PK
+        VARCHAR name "village / street"
+        BOOLEAN is_active
+        UUID    created_by FK "nullable"
+        UUID    updated_by FK "nullable"
+        TSTZ    created_at
+        TSTZ    updated_at
+    }
+
     partner_bonus_payments {
         UUID    id PK
         UUID    partner_id FK
@@ -155,6 +165,7 @@ erDiagram
     users ||--o{ entry_logs             : "checked_by"
     users ||--o{ partner_bonus_payments : "partner_id (CASCADE)"
     users ||--o{ partner_bonus_payments : "paid_by (SET NULL)"
+    users ||--o{ villages               : "created_by / updated_by (SET NULL)"
 
     exams          ||--o{ registrations : "exam_id (CASCADE)"
     students       ||--o{ registrations : "student_id (CASCADE)"
@@ -174,6 +185,8 @@ erDiagram
 | `refresh_tokens.user_id` | `users.id` | CASCADE |
 | `partner_profiles.user_id` | `users.id` | CASCADE |
 | `schools.assigned_to` | `users.id` | SET NULL |
+| `villages.created_by` | `users.id` | SET NULL |
+| `villages.updated_by` | `users.id` | SET NULL |
 | `students.partner_id` | `users.id` | SET NULL |
 | `exams.created_by` | `users.id` | *(restrict)* |
 | `registrations.exam_id` | `exams.id` | CASCADE |
@@ -196,6 +209,7 @@ erDiagram
 | Table | Unique On |
 |---|---|
 | `users` | `email` |
+| `villages` | `LOWER(name)` where `is_active` |
 | `refresh_tokens` | `token` |
 | `students` | `student_number`, `email` |
 | `partner_profiles` | `user_id` |
