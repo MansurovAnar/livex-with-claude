@@ -3,6 +3,7 @@ const pool = require('../config/database');
 const authenticate = require('../middleware/authenticate');
 const authorize = require('../middleware/authorize');
 const { getNextStudentNumber } = require('../services/studentNumber.service');
+const { cleanNamePart, buildFullName, generateStudentEmail } = require('../services/studentEmail.service');
 const { resolveExtraDetail } = require('../services/examExtraDetail.service');
 const { removedRegistrationError } = require('../services/registrationRemoval.service');
 
@@ -38,18 +39,31 @@ router.get('/students/next-number', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// student_number is assigned by the server; any client-sent value is ignored
+// Preview of the email the next student with this name will get
+router.get('/students/email-preview', async (req, res, next) => {
+  try {
+    const email = await generateStudentEmail(pool, req.query.first_name, req.query.last_name);
+    res.json({ success: true, data: { email } });
+  } catch (err) { next(err); }
+});
+
+// student_number, full_name and email are built by the server; any client-sent values are ignored
 router.post('/students', async (req, res, next) => {
-  const { full_name, email, mobile_number, class_level, sector, language } = req.body;
-  if (!full_name || !email) {
-    return res.status(400).json({ success: false, error: { code: 'VALIDATION', message: 'full_name and email are required' } });
+  const { first_name, last_name, father_name, mobile_number, class_level, sector, language } = req.body;
+  if (!cleanNamePart(first_name) || !cleanNamePart(last_name)) {
+    return res.status(400).json({ success: false, error: { code: 'VALIDATION', message: 'Name and surname are required' } });
   }
+  if ([first_name, last_name, father_name].some(v => cleanNamePart(v).length > 50)) {
+    return res.status(400).json({ success: false, error: { code: 'VALIDATION', message: 'Name parts must be at most 50 characters' } });
+  }
+  const full_name = buildFullName(first_name, last_name, father_name);
   const client = await pool.connect();
   let student_number;
   try {
     await client.query('BEGIN');
     // lock the partner row so concurrent adds get sequential numbers
     student_number = await getNextStudentNumber(client, req.user.id, { lock: true });
+    const email = await generateStudentEmail(client, first_name, last_name, { lock: true });
     const { rows } = await client.query(
       `INSERT INTO students (student_number, full_name, email, mobile_number, class_level, sector, language, partner_id)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
