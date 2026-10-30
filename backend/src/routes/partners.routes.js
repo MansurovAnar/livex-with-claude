@@ -5,26 +5,21 @@ const authorize = require('../middleware/authorize');
 
 router.use(authenticate, authorize('admin', 'reception'));
 
-// List all partners (admin also gets total bonus earned = remaining balance + paid out)
+// List all partners (admin also gets the remaining, not yet paid out, bonus balance)
 router.get('/', async (req, res, next) => {
   try {
     const { rows } = await pool.query(`
       SELECT u.id, u.full_name, u.email, u.is_active, u.created_at,
              pp.school, pp.school_address, pp.number_of_students, pp.initial_student_number,
-             (pp.bonus_balance + COALESCE(paid.total_paid, 0))::numeric AS bonus_total_earned
+             pp.bonus_balance AS bonus_remaining
       FROM users u
       JOIN partner_profiles pp ON pp.user_id = u.id
-      LEFT JOIN (
-        SELECT partner_id, SUM(amount) AS total_paid
-        FROM partner_bonus_payments
-        GROUP BY partner_id
-      ) paid ON paid.partner_id = u.id
       WHERE u.role = 'partner'
       ORDER BY u.full_name
     `);
     const data = req.user.role === 'admin'
       ? rows
-      : rows.map(({ bonus_total_earned, ...rest }) => rest);
+      : rows.map(({ bonus_remaining, ...rest }) => rest);
     res.json({ success: true, data });
   } catch (err) { next(err); }
 });
