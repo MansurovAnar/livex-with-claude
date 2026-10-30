@@ -21,6 +21,9 @@ export const AZ = {
   'Payments': 'Ödənişlər',
   'Bonuses': 'Bonuslar',
   'Reception': 'Qəbul',
+  'Telesales': 'Telesatış',
+  'Leads': 'Potensial şagirdlər',
+  'Telesales leads will appear here.': 'Potensial şagirdlərin siyahısı burada görünəcək.',
   'Security — Exam Entrance': 'Mühafizə — İmtahana giriş',
   'Language': 'Dil',
 
@@ -273,6 +276,7 @@ export const AZ = {
   'viewer': 'İzləyici',
   'reception': 'Qəbul',
   'partner': 'Tərəfdaş',
+  'telesales': 'Telesatış',
   'Admin': 'Admin',
   'Security': 'Mühafizə',
   'Viewer': 'İzləyici',

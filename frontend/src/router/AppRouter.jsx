@@ -38,6 +38,9 @@ import PartnerExamsPage from '../pages/shared/PartnerExamsPage';
 import PartnerExamStudentsPage from '../pages/shared/PartnerExamStudentsPage';
 import PartnerMyExamStudentsPage from '../pages/partner/PartnerMyExamStudentsPage';
 
+import TelesalesLayout from '../components/layout/TelesalesLayout';
+import TelesalesHomePage from '../pages/telesales/TelesalesHomePage';
+
 function RoleRedirect() {
   const { user } = useAuth();
   if (!user) return <Navigate to="/login" replace />;
@@ -45,6 +48,7 @@ function RoleRedirect() {
   if (user.role === 'security') return <Navigate to="/security" replace />;
   if (user.role === 'reception') return <Navigate to="/reception" replace />;
   if (user.role === 'partner') return <Navigate to="/partner" replace />;
+  if (user.role === 'telesales') return <Navigate to="/telesales" replace />;
   return <Navigate to="/monitor" replace />;
 }
 
@@ -102,6 +106,10 @@ export default function AppRouter() {
           <Route path="exams/:examId/students" element={<PartnerMyExamStudentsPage />} />
           <Route path="payments" element={<PartnerPaymentsPage />} />
           <Route path="bonuses" element={<PartnerBonusesPage />} />
+        </Route>
+
+        <Route path="/telesales" element={<RequireAuth roles={['telesales']}><TelesalesLayout /></RequireAuth>}>
+          <Route index element={<TelesalesHomePage />} />
         </Route>
 
         <Route path="/monitor/:examId" element={<RequireAuth roles={['admin', 'viewer']}><MonitorPage /></RequireAuth>} />
