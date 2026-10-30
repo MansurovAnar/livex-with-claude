@@ -138,7 +138,7 @@ erDiagram
         VARCHAR  parent_name
         VARCHAR  parent_relation
         UUID     school_id FK
-        VARCHAR  village
+        UUID     village_id FK
         SMALLINT class_level
         VARCHAR  sector
         VARCHAR  language
@@ -210,6 +210,7 @@ erDiagram
     registrations  ||--o{ entry_logs    : "registration_id"
 
     schools         ||--o{ telesales_leads : "school_id"
+    villages        ||--o{ telesales_leads : "village_id"
     users           ||--o{ telesales_leads : "created_by / updated_by (SET NULL)"
     telesales_leads ||--o{ lead_phones     : "lead_id (CASCADE)"
 
@@ -239,6 +240,7 @@ erDiagram
 | `partner_bonus_payments.partner_id` | `users.id` | CASCADE |
 | `partner_bonus_payments.paid_by` | `users.id` | SET NULL |
 | `telesales_leads.school_id` | `schools.id` | *(restrict)* |
+| `telesales_leads.village_id` | `villages.id` | *(restrict)* |
 | `telesales_leads.created_by` | `users.id` | SET NULL |
 | `telesales_leads.updated_by` | `users.id` | SET NULL |
 | `lead_phones.lead_id` | `telesales_leads.id` | CASCADE |

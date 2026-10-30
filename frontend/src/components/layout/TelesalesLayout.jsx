@@ -30,6 +30,7 @@ export default function TelesalesLayout() {
           {user?.full_name}
         </div>
         <NavLink to="/telesales" end style={navStyle}>{t('Leads')}</NavLink>
+        <NavLink to="/telesales/leads/new" style={navStyle}>{t('Add Lead')}</NavLink>
         <div style={{ marginTop: 'auto' }}>
           <LanguageSwitch fullWidth style={{ marginBottom: '0.5rem' }} />
           <button onClick={handleLogout} style={{ width: '100%', background: 'none', border: '1px solid #9a3412', color: '#ffedd5', padding: '0.4rem', cursor: 'pointer', borderRadius: 4, fontSize: '0.875rem' }}>

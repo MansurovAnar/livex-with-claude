@@ -34,6 +34,7 @@ export default function AdminLayout() {
         <NavLink to="/admin/partners" style={navStyle}>{t('Partners')}</NavLink>
         <NavLink to="/admin/schools" style={navStyle}>{t('Schools')}</NavLink>
         <div style={{ marginTop: '0.75rem', padding: '0 0.5rem', fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase', color: '#64748b' }}>{t('Telesales')}</div>
+        <NavLink to="/admin/telesales/leads" style={subNavStyle}>{t('Leads')}</NavLink>
         <NavLink to="/admin/telesales/villages" style={subNavStyle}>{t('Villages')}</NavLink>
         <div style={{ marginTop: 'auto', fontSize: '0.85rem', color: '#94a3b8' }}>{user?.full_name}</div>
         <LanguageSwitch fullWidth />

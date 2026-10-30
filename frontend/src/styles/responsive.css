@@ -71,6 +71,11 @@ select { max-width: 100%; min-width: 0; text-overflow: ellipsis; }
   /* Searchable dropdown: large tap targets for options and the clear button */
   .ss-list .ss-option { min-height: 44px; display: flex; align-items: center; }
   .app-main .ss-root button.ss-clear, .modal-card .ss-root button.ss-clear { min-height: 44px; min-width: 44px; }
+  /* Telesales lead form: phone + owner stack, remove button full width; checkbox rows are tappable */
+  .lead-phone-row { flex-wrap: wrap !important; align-items: stretch !important; }
+  .lead-phone-row > div { flex: 1 1 100% !important; }
+  .lead-phone-row > button { width: 100%; }
+  .lead-check   { min-height: 44px; }
   /* Payment summary tiles: two per line */
   .pay-grid     { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 8px !important; }
 }

@@ -16,6 +16,7 @@ const partnerSelfRoutes = require('../routes/partner.routes');
 const schoolRoutes = require('../routes/schools.routes');
 const examTypeRoutes = require('../routes/examTypes.routes');
 const villageRoutes = require('../routes/villages.routes');
+const telesalesRoutes = require('../routes/telesales.routes');
 
 const app = express();
 
@@ -37,6 +38,7 @@ app.use('/api/partner', partnerSelfRoutes);
 app.use('/api/schools', schoolRoutes);
 app.use('/api/exam-types', examTypeRoutes);
 app.use('/api/villages', villageRoutes);
+app.use('/api/telesales', telesalesRoutes);
 
 app.use(errorHandler);
 
