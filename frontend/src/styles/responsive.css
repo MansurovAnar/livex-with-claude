@@ -82,6 +82,8 @@ select { max-width: 100%; min-width: 0; text-overflow: ellipsis; }
   /* Lead list actions (Log call / Calls / Edit) stack as full-width 44px buttons */
   .lead-actions { flex-direction: column !important; align-items: stretch !important; }
   .lead-actions > .lead-action-btn, .lead-actions > .lead-edit-link { justify-content: center; padding: 0 0.9rem !important; font-size: 0.85rem !important; }
+  /* Telesales lead list: Main / Invalid tabs share the row */
+  .lead-tabs > button { flex: 1 1 140px; min-height: 44px; }
   /* Payment summary tiles: two per line */
   .pay-grid     { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 8px !important; }
 }

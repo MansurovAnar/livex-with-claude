@@ -30,6 +30,7 @@ router.get('/leads', ctrl.list);
 router.get('/leads/:id', ctrl.get);
 router.post('/leads', validateBody(leadSchema), ctrl.create);
 router.put('/leads/:id', validateBody(leadSchema), ctrl.update);
+router.patch('/leads/:id/phone-invalid', ctrl.setPhoneInvalid);
 
 // Call log: shared answer options + each lead's call history
 router.get('/answer-options', calls.listAnswerOptions);

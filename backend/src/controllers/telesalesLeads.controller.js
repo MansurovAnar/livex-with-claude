@@ -79,11 +79,13 @@ function handleWriteError(err, res, next) {
   return next(err);
 }
 
-// GET /api/telesales/leads — paginated list with the latest call; ?q= searches name, phone or school; ?class_level, ?sector, ?language filter
+// GET /api/telesales/leads — paginated list with the latest call; ?q= searches name, phone or school; ?class_level, ?sector, ?language filter.
+// Leads marked "phone number is not valid" are left out of the main list; ?invalid=true lists only those.
 exports.list = async (req, res, next) => {
   try {
     const { page, limit, offset } = parsePagination(req.query);
-    const conditions = [];
+    const invalid = req.query.invalid === 'true';
+    const conditions = [`l.is_phone_invalid = ${invalid ? 'TRUE' : 'FALSE'}`];
     const values = [];
     const q = typeof req.query.q === 'string' ? req.query.q.trim() : '';
     if (q) {
@@ -109,7 +111,7 @@ exports.list = async (req, res, next) => {
         conditions.push(`l.${field} = $${values.length}`);
       }
     }
-    const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+    const where = `WHERE ${conditions.join(' AND ')}`;
 
     const { rows: countRows } = await pool.query(
       `SELECT COUNT(*) FROM telesales_leads l JOIN schools s ON s.id = l.school_id ${where}`,
@@ -138,8 +140,36 @@ exports.list = async (req, res, next) => {
        LIMIT $${values.length + 1} OFFSET $${values.length + 2}`,
       [...values, limit, offset]
     );
-    res.json({ success: true, data: rows, meta: { page, limit, total: parseInt(countRows[0].count, 10) } });
+    const { rows: invalidRows } = await pool.query('SELECT COUNT(*) FROM telesales_leads WHERE is_phone_invalid');
+    res.json({
+      success: true,
+      data: rows,
+      meta: { page, limit, total: parseInt(countRows[0].count, 10), invalid_total: parseInt(invalidRows[0].count, 10) },
+    });
   } catch (err) { next(err); }
+};
+
+// PATCH /api/telesales/leads/:id/phone-invalid — { is_phone_invalid: true } moves the lead to the
+// "Phone numbers are invalid" section; false restores it to the main list
+exports.setPhoneInvalid = async (req, res, next) => {
+  const flag = req.body?.is_phone_invalid;
+  if (typeof flag !== 'boolean') {
+    return res.status(400).json({ success: false, error: { code: 'VALIDATION_ERROR', message: 'is_phone_invalid must be true or false' } });
+  }
+  try {
+    const { rows } = await pool.query(
+      `UPDATE telesales_leads
+       SET is_phone_invalid = $1, updated_by = $2, updated_at = NOW()
+       WHERE id = $3
+       RETURNING id, first_name, last_name, is_phone_invalid`,
+      [flag, req.user.id, req.params.id]
+    );
+    if (!rows.length) return notFound(res);
+    res.json({ success: true, data: rows[0] });
+  } catch (err) {
+    if (err.code === '22P02') return notFound(res); // malformed UUID
+    next(err);
+  }
 };
 
 // GET /api/telesales/leads/:id

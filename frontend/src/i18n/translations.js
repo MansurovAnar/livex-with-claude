@@ -606,6 +606,18 @@ export const AZ = {
   'Interested': 'Maraqlanır',
   'Not interested': 'Maraqlanmır',
   'Call back later': 'Sonra zəng edin',
+
+  // ── Telesales invalid phone numbers section ──
+  'Main list': 'Əsas siyahı',
+  'Phone numbers are invalid': 'Telefon nömrələri etibarsızdır',
+  'Phone number is not valid': 'Telefon nömrəsi etibarsızdır',
+  'No leads with an invalid phone number.': 'Telefon nömrəsi etibarsız olan potensial şagird yoxdur.',
+  'Restore to main list': 'Əsas siyahıya qaytar',
+  'Restore {name} to the main list?': '{name} əsas siyahıya qaytarılsın?',
+  'Mark the phone number of {name} as not valid? The lead moves to "Phone numbers are invalid".': '{name} üçün telefon nömrəsi etibarsız qeyd edilsin? Potensial şagird "Telefon nömrələri etibarsızdır" bölməsinə keçəcək.',
+  '{name} was moved to "Phone numbers are invalid".': '{name} "Telefon nömrələri etibarsızdır" bölməsinə keçirildi.',
+  '{name} was restored to the main list.': '{name} əsas siyahıya qaytarıldı.',
+  'Failed to update lead': 'Potensial şagirdi yeniləmək alınmadı',
 };
 
 // Server messages that contain runtime values. In the replacement, {1} inserts the
