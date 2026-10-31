@@ -79,7 +79,7 @@ function handleWriteError(err, res, next) {
   return next(err);
 }
 
-// GET /api/telesales/leads — paginated list; ?q= searches name, phone or school; ?class_level, ?sector, ?language filter
+// GET /api/telesales/leads — paginated list with the latest call; ?q= searches name, phone or school; ?class_level, ?sector, ?language filter
 exports.list = async (req, res, next) => {
   try {
     const { page, limit, offset } = parsePagination(req.query);
@@ -119,10 +119,20 @@ exports.list = async (req, res, next) => {
       `SELECT l.id, l.first_name, l.last_name, l.class_level, l.sector, l.language,
               l.is_phone_invalid, l.created_at, l.updated_at,
               s.name AS school_name,
-              p.phone_number AS primary_phone, p.owner_label AS primary_phone_owner
+              p.phone_number AS primary_phone, p.owner_label AS primary_phone_owner,
+              lc.called_at AS last_call_at, lc.answer AS last_answer,
+              (SELECT COUNT(*)::int FROM lead_calls cc WHERE cc.lead_id = l.id) AS calls_count
        FROM telesales_leads l
        JOIN schools s ON s.id = l.school_id
        LEFT JOIN lead_phones p ON p.lead_id = l.id AND p.is_primary
+       LEFT JOIN LATERAL (
+         SELECT c.called_at, o.label AS answer
+         FROM lead_calls c
+         JOIN call_answer_options o ON o.id = c.answer_id
+         WHERE c.lead_id = l.id
+         ORDER BY c.called_at DESC, c.created_at DESC
+         LIMIT 1
+       ) lc ON true
        ${where}
        ORDER BY l.created_at DESC
        LIMIT $${values.length + 1} OFFSET $${values.length + 2}`,

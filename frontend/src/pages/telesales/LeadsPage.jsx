@@ -4,6 +4,7 @@ import { getLead, listLeads } from '../../api/telesalesLeads.api';
 import { PageSizeSelect, PaginationBar } from '../../components/shared/Pagination';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../i18n/LanguageContext';
+import { CallHistory, CallHistoryPanel, CallLogForm, LogCallModal, useLeadCalls } from './LeadCalls';
 import { CLASSES, EXTRA_INFO, LANGUAGES, SECTORS } from './leadOptions';
 
 const emptyFilters = { class_level: '', sector: '', language: '' };
@@ -27,9 +28,13 @@ export default function LeadsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [detailsId, setDetailsId] = useState(null);
+  const [logCallLead, setLogCallLead] = useState(null);
+  const [expanded, setExpanded] = useState([]);   // lead ids whose call history is open
+  const [callsVersion, setCallsVersion] = useState(0);
 
-  const load = (q = search, f = filters, p = 1, l = limit) => {
-    setLoading(true);
+  // quiet = refresh the rows in place (after logging a call) without the loading state
+  const load = (q = search, f = filters, p = 1, l = limit, quiet = false) => {
+    if (!quiet) setLoading(true);
     const params = { page: p, limit: l };
     if (q.trim()) params.q = q.trim();
     Object.entries(f).forEach(([k, v]) => { if (v) params[k] = v; });
@@ -42,6 +47,12 @@ export default function LeadsPage() {
       .finally(() => setLoading(false));
   };
   useEffect(() => { load(); }, []);
+
+  const onCallLogged = () => {
+    setCallsVersion(v => v + 1);
+    load(search, filters, page, limit, true);
+  };
+  const toggleHistory = (id) => setExpanded(list => (list.includes(id) ? list.filter(x => x !== id) : [...list, id]));
 
   const changeFilter = (name, value) => {
     const next = { ...filters, [name]: value };
@@ -111,7 +122,8 @@ export default function LeadsPage() {
                 {leads.length === 0 ? (
                   <tr><td colSpan={7} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>{t('No leads found.')}</td></tr>
                 ) : leads.map((l, i) => (
-                  <tr key={l.id} style={{ borderBottom: '1px solid #f1f5f9', background: i % 2 === 0 ? '#fff' : '#fafafa' }}>
+                  <React.Fragment key={l.id}>
+                  <tr style={{ borderBottom: '1px solid #f1f5f9', background: i % 2 === 0 ? '#fff' : '#fafafa' }}>
                     <td style={td} className="wrap-text">
                       <button type="button" onClick={() => setDetailsId(l.id)} className="lead-name-btn" style={nameBtn}>
                         {l.first_name} {l.last_name}
@@ -124,11 +136,27 @@ export default function LeadsPage() {
                       {l.primary_phone_owner && <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{t(l.primary_phone_owner)}</div>}
                     </td>
                     <td style={{ ...td, whiteSpace: 'nowrap' }} className="hide-mobile">{l.last_call_at ? new Date(l.last_call_at).toLocaleString() : dash}</td>
-                    <td style={td} className="hide-mobile wrap-text">{l.last_answer || dash}</td>
-                    <td style={{ ...td, whiteSpace: 'nowrap' }}>
-                      <Link to={`${formBase}/${l.id}/edit`} className="lead-edit-link" style={editLink}>{t('Edit')}</Link>
+                    <td style={td} className="hide-mobile wrap-text">{l.last_answer ? t(l.last_answer) : dash}</td>
+                    <td style={td}>
+                      <div className="lead-actions" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem' }}>
+                        <button type="button" onClick={() => setLogCallLead(l)} className="lead-action-btn" style={callBtn}>{t('Log call')}</button>
+                        {l.calls_count > 0 && (
+                          <button type="button" onClick={() => toggleHistory(l.id)} className="lead-action-btn" aria-expanded={expanded.includes(l.id)} style={historyBtn}>
+                            {expanded.includes(l.id) ? '▾' : '▸'} {t('Calls ({n})', { n: l.calls_count })}
+                          </button>
+                        )}
+                        <Link to={`${formBase}/${l.id}/edit`} className="lead-edit-link" style={editLink}>{t('Edit')}</Link>
+                      </div>
                     </td>
                   </tr>
+                  {expanded.includes(l.id) && (
+                    <tr style={{ borderBottom: '1px solid #e2e8f0', background: '#fffbf5' }}>
+                      <td colSpan={7} style={{ padding: '0.5rem 1rem 0.75rem' }}>
+                        <CallHistoryPanel leadId={l.id} version={callsVersion} />
+                      </td>
+                    </tr>
+                  )}
+                  </React.Fragment>
                 ))}
               </tbody>
             </table>
@@ -137,15 +165,18 @@ export default function LeadsPage() {
         </>
       )}
 
-      {detailsId && <LeadDetailsModal id={detailsId} editPath={`${formBase}/${detailsId}/edit`} onClose={() => setDetailsId(null)} />}
+      {detailsId && <LeadDetailsModal id={detailsId} editPath={`${formBase}/${detailsId}/edit`} onClose={() => setDetailsId(null)} onCallLogged={onCallLogged} />}
+      {logCallLead && <LogCallModal lead={logCallLead} onClose={() => setLogCallLead(null)} onSaved={onCallLogged} />}
     </div>
   );
 }
 
-function LeadDetailsModal({ id, editPath, onClose }) {
+function LeadDetailsModal({ id, editPath, onClose, onCallLogged }) {
   const { t, tError } = useLanguage();
   const [lead, setLead] = useState(null);
   const [error, setError] = useState('');
+  const [callsVersion, setCallsVersion] = useState(0);
+  const { calls, loading: callsLoading, error: callsError } = useLeadCalls(id, callsVersion);
 
   useEffect(() => {
     getLead(id)
@@ -154,7 +185,8 @@ function LeadDetailsModal({ id, editPath, onClose }) {
   }, [id]);
 
   useEffect(() => {
-    const onKey = e => e.key === 'Escape' && onClose();
+    // The answer dropdown handles Escape itself (closes its list) and marks the event as handled
+    const onKey = e => e.key === 'Escape' && !e.defaultPrevented && onClose();
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
@@ -224,6 +256,12 @@ function LeadDetailsModal({ id, editPath, onClose }) {
               <Item label={t('Other information')}>{lead.extra_info_other}</Item>
             </dl>
 
+            <h3 style={sectionTitle}>{t('Calls')}</h3>
+            <CallLogForm leadId={id} onSaved={() => { setCallsVersion(v => v + 1); onCallLogged?.(); }} />
+            <div style={{ marginBottom: '1rem' }}>
+              <CallHistory calls={calls} loading={callsLoading} error={callsError} />
+            </div>
+
             <div style={{ fontSize: '0.78rem', color: '#64748b', margin: '0.5rem 0 1.25rem' }} className="wrap-text">
               {t('Added {date} by {name}', { date: new Date(lead.created_at).toLocaleString(), name: lead.created_by_name || '—' })}
               <br />
@@ -261,6 +299,8 @@ const th = { padding: '0.65rem 1rem', textAlign: 'left', fontSize: '0.78rem', fo
 const td = { padding: '0.65rem 1rem', fontSize: '0.875rem', color: '#1e293b', verticalAlign: 'top' };
 const nameBtn = { font: 'inherit', background: 'none', border: 'none', padding: 0, color: '#c2410c', fontWeight: 600, cursor: 'pointer', textAlign: 'left' };
 const editLink = { background: '#475569', color: '#fff', borderRadius: 4, padding: '0.25rem 0.6rem', fontSize: '0.75rem', textDecoration: 'none', display: 'inline-block' };
+const callBtn = { background: '#c2410c', color: '#fff', border: 'none', borderRadius: 4, padding: '0.25rem 0.6rem', fontSize: '0.75rem', cursor: 'pointer', whiteSpace: 'nowrap' };
+const historyBtn = { background: '#fff', color: '#334155', border: '1px solid #cbd5e1', borderRadius: 4, padding: '0.25rem 0.6rem', fontSize: '0.75rem', cursor: 'pointer', whiteSpace: 'nowrap' };
 const filterSelect = { padding: '0.5rem 0.5rem', border: '1px solid #cbd5e1', borderRadius: 4, fontSize: '0.9rem', background: '#fff' };
 const sectionTitle = { fontSize: '0.95rem', color: '#7c2d12', margin: '0.25rem 0 0.75rem', paddingBottom: '0.35rem', borderBottom: '1px solid #fed7aa' };
 const detailGrid = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 1rem', margin: '0 0 0.5rem' };

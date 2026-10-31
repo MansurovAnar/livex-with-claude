@@ -578,6 +578,34 @@ export const AZ = {
   'Lead details': 'Potensial şagird haqqında',
   'Added {date} by {name}': '{date} tarixində {name} əlavə edib',
   'Last updated {date} by {name}': 'Son dəyişiklik: {date}, {name}',
+
+  // ── Telesales call log ──
+  'Log call': 'Zəngi qeyd et',
+  'Calls': 'Zənglər',
+  'Calls ({n})': 'Zənglər ({n})',
+  'Answer': 'Cavab',
+  'Called at': 'Zəng vaxtı',
+  'Save call': 'Zəngi yadda saxla',
+  'Call saved': 'Zəng yadda saxlanıldı',
+  'No calls yet.': 'Hələ zəng edilməyib.',
+  'Search or type an answer...': 'Cavab axtarın və ya yazın...',
+  '+ Add "{text}"': '+ "{text}" əlavə et',
+  'Failed to load answers': 'Cavabları yükləmək alınmadı',
+  'Failed to load calls': 'Zəngləri yükləmək alınmadı',
+  'Failed to save call': 'Zəngi yadda saxlamaq alınmadı',
+  'Answer is required': 'Cavab mütləqdir',
+  'Answer must be at most 150 characters': 'Cavab ən çox 150 simvol ola bilər',
+  'Note must be at most 2000 characters': 'Qeyd ən çox 2000 simvol ola bilər',
+  'Call date is invalid': 'Zəng tarixi yanlışdır',
+  'Call date cannot be in the future': 'Zəng tarixi gələcəkdə ola bilməz',
+  'Selected answer no longer exists': 'Seçilmiş cavab artıq mövcud deyil',
+  // Starter call answers (stored in English, shown translated)
+  'No answer': 'Cavab vermədi',
+  'Busy': 'Məşğuldur',
+  'Phone switched off': 'Telefon söndürülüb',
+  'Interested': 'Maraqlanır',
+  'Not interested': 'Maraqlanmır',
+  'Call back later': 'Sonra zəng edin',
 };
 
 // Server messages that contain runtime values. In the replacement, {1} inserts the

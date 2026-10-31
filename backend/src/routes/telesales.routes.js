@@ -1,12 +1,14 @@
 const router = require('express').Router();
 const ctrl = require('../controllers/telesalesLeads.controller');
+const calls = require('../controllers/telesalesCalls.controller');
 const authenticate = require('../middleware/authenticate');
 const authorize = require('../middleware/authorize');
 const { leadSchema } = require('../validators/telesalesLead.validator');
+const { callSchema } = require('../validators/telesalesCall.validator');
 
 // Like middleware/validate, but the message is the first problem found, so the form can show it as-is
-const validateLead = (req, res, next) => {
-  const result = leadSchema.safeParse(req.body);
+const validateBody = (schema) => (req, res, next) => {
+  const result = schema.safeParse(req.body);
   if (!result.success) {
     return res.status(400).json({
       success: false,
@@ -26,7 +28,12 @@ router.use(authenticate, authorize('admin', 'telesales'));
 
 router.get('/leads', ctrl.list);
 router.get('/leads/:id', ctrl.get);
-router.post('/leads', validateLead, ctrl.create);
-router.put('/leads/:id', validateLead, ctrl.update);
+router.post('/leads', validateBody(leadSchema), ctrl.create);
+router.put('/leads/:id', validateBody(leadSchema), ctrl.update);
+
+// Call log: shared answer options + each lead's call history
+router.get('/answer-options', calls.listAnswerOptions);
+router.get('/leads/:id/calls', calls.listCalls);
+router.post('/leads/:id/calls', validateBody(callSchema), calls.createCall);
 
 module.exports = router;

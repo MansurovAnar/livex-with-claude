@@ -165,6 +165,23 @@ erDiagram
         TSTZ    created_at
     }
 
+    call_answer_options {
+        UUID    id PK
+        VARCHAR label "unique (case-insensitive)"
+        UUID    created_by FK
+        TSTZ    created_at
+    }
+
+    lead_calls {
+        UUID    id PK
+        UUID    lead_id FK
+        UUID    called_by FK
+        TSTZ    called_at
+        UUID    answer_id FK
+        TEXT    note
+        TSTZ    created_at
+    }
+
     %% ── Legacy (orphaned after migration 008) ────────────────────────
     buildings {
         UUID    id PK
@@ -213,6 +230,10 @@ erDiagram
     villages        ||--o{ telesales_leads : "village_id"
     users           ||--o{ telesales_leads : "created_by / updated_by (SET NULL)"
     telesales_leads ||--o{ lead_phones     : "lead_id (CASCADE)"
+    telesales_leads ||--o{ lead_calls      : "lead_id (CASCADE)"
+    users           ||--o{ lead_calls      : "called_by (SET NULL)"
+    call_answer_options ||--o{ lead_calls  : "answer_id"
+    users           ||--o{ call_answer_options : "created_by (SET NULL)"
 
     buildings ||--o{ rooms : "building_id (CASCADE)"
 ```
@@ -244,6 +265,10 @@ erDiagram
 | `telesales_leads.created_by` | `users.id` | SET NULL |
 | `telesales_leads.updated_by` | `users.id` | SET NULL |
 | `lead_phones.lead_id` | `telesales_leads.id` | CASCADE |
+| `lead_calls.lead_id` | `telesales_leads.id` | CASCADE |
+| `lead_calls.called_by` | `users.id` | SET NULL |
+| `lead_calls.answer_id` | `call_answer_options.id` | *(restrict)* |
+| `call_answer_options.created_by` | `users.id` | SET NULL |
 | `rooms.building_id` | `buildings.id` | CASCADE |
 
 > `buildings` and `rooms` are **legacy** — `exams.room_id` was dropped in migration `008`. They remain in the database but are no longer referenced by any active table.
@@ -262,3 +287,4 @@ erDiagram
 | `registrations` | `(exam_id, student_id)`, `(exam_id, seat_number)` |
 | `rooms` | `(building_id, room_number)` |
 | `lead_phones` | `phone_digits` (digits-only phone, across all leads); `lead_id` where `is_primary` (one primary per lead) |
+| `call_answer_options` | `LOWER(BTRIM(label))` |

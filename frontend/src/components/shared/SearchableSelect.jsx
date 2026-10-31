@@ -13,6 +13,8 @@ const fold = (s) => String(s ?? '')
  * options:  [{ value, label }]
  * value:    the selected option's value ('' / null = nothing selected)
  * onChange: (value, option) => void — called with ('', null) when cleared
+ * onCreate: optional (text) => void — when set, typed text that matches no option
+ *           can be chosen as a new entry ('+ Add "text"')
  */
 export default function SearchableSelect({
   options = [],
@@ -26,6 +28,7 @@ export default function SearchableSelect({
   name,
   id,
   style,
+  onCreate,
 }) {
   const { t } = useLanguage();
   const autoId = useId();
@@ -45,8 +48,13 @@ export default function SearchableSelect({
 
   const filtered = useMemo(() => {
     const q = fold(query.trim());
-    return q ? options.filter(o => fold(o.label).includes(q)) : options;
-  }, [options, query]);
+    const matches = q ? options.filter(o => fold(o.label).includes(q)) : options;
+    // Offer the typed text as a new entry unless an option has exactly that label
+    if (onCreate && q && !options.some(o => fold(o.label).trim() === q)) {
+      return [...matches, { value: CREATE_VALUE, label: query.trim(), isNew: true }];
+    }
+    return matches;
+  }, [options, query, onCreate]);
 
   // Close when clicking/tapping outside
   useEffect(() => {
@@ -77,7 +85,8 @@ export default function SearchableSelect({
   const close = () => { setOpen(false); setQuery(''); };
 
   const choose = (opt) => {
-    onChange?.(opt.value, opt);
+    if (opt.isNew) onCreate(opt.label);
+    else onChange?.(opt.value, opt);
     close();
   };
 
@@ -144,14 +153,14 @@ export default function SearchableSelect({
           ) : filtered.length === 0 ? (
             <li style={emptyStyle}>{noOptionsText ?? t('No matches found')}</li>
           ) : filtered.map((o, i) => {
-            const isSelected = selected && o.value === selected.value;
+            const isSelected = !o.isNew && selected && o.value === selected.value;
             return (
               <li key={o.value} data-index={i} role="option" aria-selected={!!isSelected} className="ss-option wrap-text"
                 onMouseDown={e => e.preventDefault()}
                 onMouseEnter={() => setActive(i)}
                 onClick={() => choose(o)}
                 style={{ padding: '0.45rem 0.75rem', fontSize: '0.9rem', cursor: 'pointer', color: '#1e293b', background: i === active ? '#eff6ff' : 'transparent', fontWeight: isSelected ? 600 : 400 }}>
-                {o.label}
+                {o.isNew ? t('+ Add "{text}"', { text: o.label }) : o.label}
               </li>
             );
           })}
@@ -161,5 +170,6 @@ export default function SearchableSelect({
   );
 }
 
+const CREATE_VALUE = '__create__';
 const inputStyle = { width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #cbd5e1', borderRadius: 6, fontSize: '0.95rem', boxSizing: 'border-box' };
 const emptyStyle = { padding: '0.5rem 0.75rem', fontSize: '0.875rem', color: '#94a3b8' };
