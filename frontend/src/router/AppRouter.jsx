@@ -14,6 +14,8 @@ import ExamReportsPage from '../pages/admin/ExamReportsPage';
 import StudentsPage from '../pages/admin/StudentsPage';
 import UsersPage from '../pages/admin/UsersPage';
 import SchoolsPage from '../pages/admin/SchoolsPage';
+import VillagesPage from '../pages/admin/VillagesPage';
+import TelesalesReportsPage from '../pages/admin/TelesalesReportsPage';
 
 import SecurityLayout from '../components/layout/SecurityLayout';
 import ExamSelectorPage from '../pages/security/ExamSelectorPage';
@@ -38,6 +40,11 @@ import PartnerExamsPage from '../pages/shared/PartnerExamsPage';
 import PartnerExamStudentsPage from '../pages/shared/PartnerExamStudentsPage';
 import PartnerMyExamStudentsPage from '../pages/partner/PartnerMyExamStudentsPage';
 
+import TelesalesLayout from '../components/layout/TelesalesLayout';
+import LeadsPage from '../pages/telesales/LeadsPage';
+import LeadFormPage from '../pages/telesales/LeadFormPage';
+import CallbacksPage from '../pages/telesales/CallbacksPage';
+
 function RoleRedirect() {
   const { user } = useAuth();
   if (!user) return <Navigate to="/login" replace />;
@@ -45,6 +52,7 @@ function RoleRedirect() {
   if (user.role === 'security') return <Navigate to="/security" replace />;
   if (user.role === 'reception') return <Navigate to="/reception" replace />;
   if (user.role === 'partner') return <Navigate to="/partner" replace />;
+  if (user.role === 'telesales') return <Navigate to="/telesales" replace />;
   return <Navigate to="/monitor" replace />;
 }
 
@@ -77,6 +85,12 @@ export default function AppRouter() {
           <Route path="partners/:partnerId/exams" element={<PartnerExamsPage />} />
           <Route path="partners/:partnerId/exams/:examId/students" element={<PartnerExamStudentsPage />} />
           <Route path="schools" element={<SchoolsPage />} />
+          <Route path="telesales/villages" element={<VillagesPage />} />
+          <Route path="telesales/leads" element={<LeadsPage />} />
+          <Route path="telesales/leads/new" element={<LeadFormPage />} />
+          <Route path="telesales/leads/:id/edit" element={<LeadFormPage />} />
+          <Route path="telesales/callbacks" element={<CallbacksPage />} />
+          <Route path="telesales/reporting" element={<TelesalesReportsPage />} />
         </Route>
 
         <Route path="/security" element={<RequireAuth roles={['security', 'admin']}><SecurityLayout /></RequireAuth>}>
@@ -102,6 +116,13 @@ export default function AppRouter() {
           <Route path="exams/:examId/students" element={<PartnerMyExamStudentsPage />} />
           <Route path="payments" element={<PartnerPaymentsPage />} />
           <Route path="bonuses" element={<PartnerBonusesPage />} />
+        </Route>
+
+        <Route path="/telesales" element={<RequireAuth roles={['telesales']}><TelesalesLayout /></RequireAuth>}>
+          <Route index element={<LeadsPage />} />
+          <Route path="leads/new" element={<LeadFormPage />} />
+          <Route path="leads/:id/edit" element={<LeadFormPage />} />
+          <Route path="callbacks" element={<CallbacksPage />} />
         </Route>
 
         <Route path="/monitor/:examId" element={<RequireAuth roles={['admin', 'viewer']}><MonitorPage /></RequireAuth>} />

@@ -3,7 +3,19 @@ const pool = require('../config/database');
 const authenticate = require('../middleware/authenticate');
 const authorize = require('../middleware/authorize');
 
-router.use(authenticate, authorize('admin'));
+router.use(authenticate);
+
+// Minimal active school list for dropdowns (e.g. the telesales lead form)
+router.get('/options', authorize('admin', 'telesales'), async (req, res, next) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT id, name FROM schools WHERE is_active = true ORDER BY name`
+    );
+    res.json({ success: true, data: rows });
+  } catch (err) { next(err); }
+});
+
+router.use(authorize('admin'));
 
 // List all schools
 router.get('/', async (req, res, next) => {

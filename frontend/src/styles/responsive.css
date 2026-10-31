@@ -68,6 +68,30 @@ select { max-width: 100%; min-width: 0; text-overflow: ellipsis; }
   .radio-row label { min-height: 44px; }
   /* EN/AZ language switch: large tap targets */
   .lang-switch button { min-height: 44px; min-width: 44px; }
+  /* Searchable dropdown: large tap targets for options and the clear button */
+  .ss-list .ss-option { min-height: 44px; display: flex; align-items: center; }
+  .app-main .ss-root button.ss-clear, .modal-card .ss-root button.ss-clear { min-height: 44px; min-width: 44px; }
+  /* Telesales lead form: phone + owner stack, remove button full width; checkbox rows are tappable */
+  .lead-phone-row { flex-wrap: wrap !important; align-items: stretch !important; }
+  .lead-phone-row > div { flex: 1 1 100% !important; }
+  .lead-phone-row > button { width: 100%; }
+  .lead-check   { min-height: 44px; }
+  /* Telesales lead list: name opens the details modal, Edit link is a 44px tap target */
+  .app-main button.lead-name-btn { min-height: 44px; text-align: left; }
+  .lead-edit-link { min-height: 44px; display: inline-flex !important; align-items: center; padding: 0 0.9rem !important; }
+  /* Lead list actions (Log call / Calls / Edit) stack as full-width 44px buttons */
+  .lead-actions { flex-direction: column !important; align-items: stretch !important; }
+  .lead-actions > .lead-action-btn, .lead-actions > .lead-edit-link { justify-content: center; padding: 0 0.9rem !important; font-size: 0.85rem !important; }
+  /* Telesales lead list: Main / Invalid tabs share the row */
+  .lead-tabs > button { flex: 1 1 140px; min-height: 44px; }
+  /* Telesales callbacks: All / Only mine / Refresh share the row as 44px buttons */
+  .callback-filter { width: 100%; }
+  .callback-filter > button { flex: 1 1 90px; min-height: 44px; }
+  /* Telesales reporting: filters stack full width; period presets share rows as 44px buttons */
+  .report-toolbar { flex-direction: column !important; align-items: stretch !important; padding: 0.75rem !important; }
+  .report-toolbar > * { width: 100%; }
+  .report-presets > button { flex: 1 1 120px; min-height: 44px; }
+  .report-bar   { display: none !important; }
   /* Payment summary tiles: two per line */
   .pay-grid     { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 8px !important; }
 }

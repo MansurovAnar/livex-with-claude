@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import apiClient from '../../api/apiClient';
 import { useLanguage } from '../../i18n/LanguageContext';
 
-const ROLES = ['admin', 'security', 'viewer', 'reception', 'partner'];
+const ROLES = ['admin', 'security', 'viewer', 'reception', 'partner', 'telesales'];
 
 const emptyForm = { full_name: '', email: '', password: '', role: 'security', school: '', school_address: '', number_of_students: '', initial_student_number: '' };
 const STUDENT_NUMBER_RE = /^\d{1,7}$/;
@@ -271,7 +271,7 @@ function EyeIcon({ off }) {
 }
 
 function roleColor(role) {
-  return { admin: '#dc2626', security: '#0369a1', viewer: '#64748b', reception: '#7e22ce', partner: '#059669' }[role] || '#475569';
+  return { admin: '#dc2626', security: '#0369a1', viewer: '#64748b', reception: '#7e22ce', partner: '#059669', telesales: '#c2410c' }[role] || '#475569';
 }
 
 const th = { padding: '0.75rem', textAlign: 'left', fontSize: '0.875rem', fontWeight: 600 };
