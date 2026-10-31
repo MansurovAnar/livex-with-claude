@@ -218,7 +218,8 @@ export default function LeadsPage() {
   );
 }
 
-function LeadDetailsModal({ id, editPath, onClose, onCallLogged, onStatusChange }) {
+// Also used by the Callbacks page
+export function LeadDetailsModal({ id, editPath, onClose, onCallLogged, onStatusChange }) {
   const { t, tError } = useLanguage();
   const [lead, setLead] = useState(null);
   const [error, setError] = useState('');

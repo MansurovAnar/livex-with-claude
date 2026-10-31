@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createLeadCall, listAnswerOptions, listLeadCalls } from '../../api/telesalesLeads.api';
 import SearchableSelect from '../../components/shared/SearchableSelect';
+import { notifyCallbacksChanged } from '../../hooks/useDueCallbacks';
 import { useLanguage } from '../../i18n/LanguageContext';
 
 // 'YYYY-MM-DDTHH:mm' in local time, for <input type="datetime-local">
@@ -13,7 +14,8 @@ const NEW_PREFIX = 'new:';
 
 /**
  * Log a call for a lead: searchable answer (typing an answer that matches no option adds it as a
- * new shared option on save), when the call was made (defaults to now) and an optional note.
+ * new shared option on save), when the call was made (defaults to now), an optional note and an
+ * optional "Call back on" time. Saving a call also closes the lead's open callback.
  */
 export function CallLogForm({ leadId, onSaved }) {
   const { t, tError } = useLanguage();
@@ -23,6 +25,7 @@ export function CallLogForm({ leadId, onSaved }) {
   const [answer, setAnswer] = useState('');
   const [calledAt, setCalledAt] = useState(() => toLocalInput(Date.now()));
   const [note, setNote] = useState('');
+  const [callbackAt, setCallbackAt] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [saved, setSaved] = useState(false);
@@ -50,14 +53,16 @@ export function CallLogForm({ leadId, onSaved }) {
     const payload = {
       note,
       called_at: calledAt ? new Date(calledAt).toISOString() : null,
+      callback_at: callbackAt ? new Date(callbackAt).toISOString() : null,
       ...(answer.startsWith(NEW_PREFIX) ? { answer: answer.slice(NEW_PREFIX.length) } : { answer_id: answer }),
     };
     setSaving(true);
     try {
       const res = await createLeadCall(leadId, payload);
       if (res.data.data.answer_created) loadOptions();
-      setNewAnswers([]); setAnswer(''); setNote(''); setCalledAt(toLocalInput(Date.now()));
+      setNewAnswers([]); setAnswer(''); setNote(''); setCallbackAt(''); setCalledAt(toLocalInput(Date.now()));
       setSaved(true);
+      notifyCallbacksChanged();
       onSaved?.(res.data.data);
     } catch (err) {
       setError(tError(err, 'Failed to save call'));
@@ -83,6 +88,16 @@ export function CallLogForm({ leadId, onSaved }) {
       <label style={labelStyle}>{t('Note')}</label>
       <textarea value={note} onChange={e => setNote(e.target.value)} rows={2} maxLength={2000}
         style={{ ...inputStyle, resize: 'vertical', fontFamily: 'inherit' }} />
+      <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginTop: '0.75rem' }}>
+        <div>
+          <label style={labelStyle}>{t('Call back on')}</label>
+          <input type="datetime-local" value={callbackAt} min={calledAt || toLocalInput(Date.now())} onChange={e => setCallbackAt(e.target.value)}
+            style={inputStyle} />
+        </div>
+        <p style={{ alignSelf: 'end', margin: 0, fontSize: '0.78rem', color: '#64748b' }}>
+          {t('Optional. Every telesales user sees it in Callbacks; it is marked done when the next call is logged.')}
+        </p>
+      </div>
 
       {error && <div style={{ color: '#dc2626', fontSize: '0.85rem', marginTop: '0.5rem' }} className="wrap-text">{error}</div>}
       {saved && !error && <div style={{ color: '#15803d', fontSize: '0.85rem', marginTop: '0.5rem' }}>{t('Call saved')}</div>}
@@ -113,6 +128,11 @@ export function CallHistory({ calls, loading, error }) {
             <span style={{ color: '#64748b' }} className="wrap-text">{c.called_by_name || '—'}</span>
           </div>
           {c.note && <div style={{ color: '#334155', marginTop: '0.2rem', whiteSpace: 'pre-wrap' }} className="wrap-text">{c.note}</div>}
+          {c.callback_at && (
+            <div style={{ color: c.callback_completed_at ? '#64748b' : '#9a3412', marginTop: '0.2rem', fontSize: '0.8rem' }}>
+              {t('Call back on')}: {new Date(c.callback_at).toLocaleString()}{c.callback_completed_at ? ` · ${t('done')}` : ''}
+            </div>
+          )}
         </li>
       ))}
     </ul>

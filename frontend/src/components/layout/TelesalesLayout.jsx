@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import useIsMobile from '../../hooks/useIsMobile';
+import useDueCallbacks from '../../hooks/useDueCallbacks';
 import { useLanguage } from '../../i18n/LanguageContext';
 import LanguageSwitch from '../shared/LanguageSwitch';
 
@@ -12,6 +13,7 @@ export default function TelesalesLayout() {
   const isMobile = useIsMobile();
   const [open, setOpen] = useState(false);
   const { t } = useLanguage();
+  const dueCallbacks = useDueCallbacks([location.pathname]);
   const handleLogout = async () => { await logout(); navigate('/login'); };
 
   useEffect(() => { setOpen(false); }, [location.pathname]);
@@ -22,6 +24,9 @@ export default function TelesalesLayout() {
         <button aria-label={t('Open menu')} onClick={() => setOpen(true)}
           style={{ background: 'none', border: '1px solid #9a3412', color: '#ffedd5', borderRadius: 6, fontSize: '1.25rem', padding: '0 12px', minHeight: 44, cursor: 'pointer' }}>☰</button>
         <span style={{ fontWeight: 'bold', color: '#fdba74' }}>{t('Telesales')}</span>
+        {dueCallbacks > 0 && (
+          <NavLink to="/telesales/callbacks" aria-label={t('{n} callbacks due', { n: dueCallbacks })} style={{ ...countBadge, textDecoration: 'none' }}>{dueCallbacks}</NavLink>
+        )}
       </div>
       {open && isMobile && <div className="app-backdrop" onClick={() => setOpen(false)} />}
       <nav className={`app-sidebar${open ? ' open' : ''}`} style={{ width: 220, background: '#7c2d12', color: '#fff', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -30,6 +35,12 @@ export default function TelesalesLayout() {
           {user?.full_name}
         </div>
         <NavLink to="/telesales" end style={navStyle}>{t('Leads')}</NavLink>
+        <NavLink to="/telesales/callbacks" style={navStyle}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            {t('Callbacks')}
+            {dueCallbacks > 0 && <span style={countBadge} aria-label={t('{n} callbacks due', { n: dueCallbacks })}>{dueCallbacks}</span>}
+          </span>
+        </NavLink>
         <NavLink to="/telesales/leads/new" style={navStyle}>{t('Add Lead')}</NavLink>
         <div style={{ marginTop: 'auto' }}>
           <LanguageSwitch fullWidth style={{ marginBottom: '0.5rem' }} />
@@ -45,6 +56,7 @@ export default function TelesalesLayout() {
   );
 }
 
+const countBadge = { marginLeft: 'auto', minWidth: 20, padding: '0 6px', borderRadius: 10, background: '#dc2626', color: '#fff', fontSize: '0.72rem', fontWeight: 700, lineHeight: '20px', textAlign: 'center' };
 const navStyle = ({ isActive }) => ({
   color: isActive ? '#fdba74' : '#ffedd5',
   textDecoration: 'none',

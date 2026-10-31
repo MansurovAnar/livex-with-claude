@@ -182,6 +182,17 @@ erDiagram
         TSTZ    created_at
     }
 
+    lead_callbacks {
+        UUID    id PK
+        UUID    lead_id FK
+        UUID    call_id FK "call that scheduled it"
+        UUID    scheduled_by FK "owner"
+        TSTZ    due_at
+        TSTZ    completed_at "set when the next call is logged"
+        UUID    completed_call_id FK
+        TSTZ    created_at
+    }
+
     %% ── Legacy (orphaned after migration 008) ────────────────────────
     buildings {
         UUID    id PK
@@ -234,6 +245,9 @@ erDiagram
     users           ||--o{ lead_calls      : "called_by (SET NULL)"
     call_answer_options ||--o{ lead_calls  : "answer_id"
     users           ||--o{ call_answer_options : "created_by (SET NULL)"
+    telesales_leads ||--o{ lead_callbacks  : "lead_id (CASCADE)"
+    lead_calls      ||--o{ lead_callbacks  : "call_id / completed_call_id (SET NULL)"
+    users           ||--o{ lead_callbacks  : "scheduled_by (SET NULL)"
 
     buildings ||--o{ rooms : "building_id (CASCADE)"
 ```
@@ -269,6 +283,10 @@ erDiagram
 | `lead_calls.called_by` | `users.id` | SET NULL |
 | `lead_calls.answer_id` | `call_answer_options.id` | *(restrict)* |
 | `call_answer_options.created_by` | `users.id` | SET NULL |
+| `lead_callbacks.lead_id` | `telesales_leads.id` | CASCADE |
+| `lead_callbacks.call_id` | `lead_calls.id` | SET NULL |
+| `lead_callbacks.completed_call_id` | `lead_calls.id` | SET NULL |
+| `lead_callbacks.scheduled_by` | `users.id` | SET NULL |
 | `rooms.building_id` | `buildings.id` | CASCADE |
 
 > `buildings` and `rooms` are **legacy** — `exams.room_id` was dropped in migration `008`. They remain in the database but are no longer referenced by any active table.
@@ -288,3 +306,4 @@ erDiagram
 | `rooms` | `(building_id, room_number)` |
 | `lead_phones` | `phone_digits` (digits-only phone, across all leads); `lead_id` where `is_primary` (one primary per lead) |
 | `call_answer_options` | `LOWER(BTRIM(label))` |
+| `lead_callbacks` | `lead_id` where `completed_at IS NULL` (one open callback per lead) |

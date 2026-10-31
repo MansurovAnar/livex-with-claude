@@ -37,4 +37,8 @@ router.get('/answer-options', calls.listAnswerOptions);
 router.get('/leads/:id/calls', calls.listCalls);
 router.post('/leads/:id/calls', validateBody(callSchema), calls.createCall);
 
+// Callbacks scheduled while logging calls: visible to every telesales user
+router.get('/callbacks', calls.listCallbacks);
+router.get('/callbacks/count', calls.countDueCallbacks);
+
 module.exports = router;

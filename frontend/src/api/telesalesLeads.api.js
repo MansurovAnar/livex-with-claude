@@ -8,3 +8,5 @@ export const setLeadPhoneInvalid = (id, isInvalid) => apiClient.patch(`/telesale
 export const listLeadCalls = (id) => apiClient.get(`/telesales/leads/${id}/calls`);
 export const createLeadCall = (id, data) => apiClient.post(`/telesales/leads/${id}/calls`, data);
 export const listAnswerOptions = () => apiClient.get('/telesales/answer-options');
+export const listCallbacks = (params) => apiClient.get('/telesales/callbacks', { params });
+export const countDueCallbacks = (until) => apiClient.get('/telesales/callbacks/count', { params: { until } });

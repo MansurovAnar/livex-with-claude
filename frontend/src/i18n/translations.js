@@ -618,6 +618,26 @@ export const AZ = {
   '{name} was moved to "Phone numbers are invalid".': '{name} "Telefon nömrələri etibarsızdır" bölməsinə keçirildi.',
   '{name} was restored to the main list.': '{name} əsas siyahıya qaytarıldı.',
   'Failed to update lead': 'Potensial şagirdi yeniləmək alınmadı',
+
+  // ── Telesales callbacks ──
+  'Callbacks': 'Geri zənglər',
+  'Call back on': 'Geri zəng vaxtı',
+  'Optional. Every telesales user sees it in Callbacks; it is marked done when the next call is logged.': 'İstəyə bağlıdır. Bütün telesatış istifadəçiləri onu "Geri zənglər" bölməsində görür; növbəti zəng qeyd ediləndə tamamlanmış sayılır.',
+  'done': 'tamamlandı',
+  'Overdue': 'Gecikmiş',
+  'Due today': 'Bu gün',
+  'Upcoming': 'Qarşıdakı',
+  'All callbacks': 'Bütün geri zənglər',
+  'Only mine': 'Yalnız mənimkilər',
+  'Refresh': 'Yenilə',
+  'No callbacks scheduled.': 'Planlaşdırılmış geri zəng yoxdur.',
+  'None': 'Yoxdur',
+  'Scheduled by': 'Planlaşdıran',
+  'me': 'mən',
+  '{n} callbacks due': '{n} geri zəng vaxtı çatıb',
+  'Failed to load callbacks': 'Geri zəngləri yükləmək alınmadı',
+  'Call back time is invalid': 'Geri zəng vaxtı yanlışdır',
+  'Call back time must be later than the call': 'Geri zəng vaxtı zəng vaxtından sonra olmalıdır',
 };
 
 // Server messages that contain runtime values. In the replacement, {1} inserts the
