@@ -79,6 +79,10 @@ select { max-width: 100%; min-width: 0; text-overflow: ellipsis; }
   /* Telesales lead list: name opens the details modal, Edit link is a 44px tap target */
   .app-main button.lead-name-btn { min-height: 44px; text-align: left; }
   .lead-edit-link { min-height: 44px; display: inline-flex !important; align-items: center; padding: 0 0.9rem !important; }
+  /* Telesales lead list: Main / Invalid tabs share the row; row actions stack */
+  .lead-tabs > button { flex: 1 1 140px; min-height: 44px; }
+  .lead-row-actions { flex-direction: column; }
+  .app-main button.lead-restore-btn { padding: 0 0.9rem !important; }
   /* Payment summary tiles: two per line */
   .pay-grid     { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 8px !important; }
 }

@@ -28,5 +28,6 @@ router.get('/leads', ctrl.list);
 router.get('/leads/:id', ctrl.get);
 router.post('/leads', validateLead, ctrl.create);
 router.put('/leads/:id', validateLead, ctrl.update);
+router.patch('/leads/:id/phone-invalid', ctrl.setPhoneInvalid);
 
 module.exports = router;
