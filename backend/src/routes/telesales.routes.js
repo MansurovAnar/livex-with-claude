@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const ctrl = require('../controllers/telesalesLeads.controller');
 const calls = require('../controllers/telesalesCalls.controller');
+const reports = require('../controllers/telesalesReports.controller');
 const authenticate = require('../middleware/authenticate');
 const authorize = require('../middleware/authorize');
 const { leadSchema } = require('../validators/telesalesLead.validator');
@@ -40,5 +41,8 @@ router.post('/leads/:id/calls', validateBody(callSchema), calls.createCall);
 // Callbacks scheduled while logging calls: visible to every telesales user
 router.get('/callbacks', calls.listCallbacks);
 router.get('/callbacks/count', calls.countDueCallbacks);
+
+// Reporting is for admins only; telesales users just log their work
+router.get('/reports', authorize('admin'), reports.report);
 
 module.exports = router;

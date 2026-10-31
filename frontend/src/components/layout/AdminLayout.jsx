@@ -43,6 +43,7 @@ export default function AdminLayout() {
             {dueCallbacks > 0 && <span style={countBadge} aria-label={t('{n} callbacks due', { n: dueCallbacks })}>{dueCallbacks}</span>}
           </span>
         </NavLink>
+        <NavLink to="/admin/telesales/reporting" style={subNavStyle}>{t('Reporting')}</NavLink>
         <NavLink to="/admin/telesales/villages" style={subNavStyle}>{t('Villages')}</NavLink>
         <div style={{ marginTop: 'auto', fontSize: '0.85rem', color: '#94a3b8' }}>{user?.full_name}</div>
         <LanguageSwitch fullWidth />

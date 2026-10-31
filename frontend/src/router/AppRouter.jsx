@@ -15,6 +15,7 @@ import StudentsPage from '../pages/admin/StudentsPage';
 import UsersPage from '../pages/admin/UsersPage';
 import SchoolsPage from '../pages/admin/SchoolsPage';
 import VillagesPage from '../pages/admin/VillagesPage';
+import TelesalesReportsPage from '../pages/admin/TelesalesReportsPage';
 
 import SecurityLayout from '../components/layout/SecurityLayout';
 import ExamSelectorPage from '../pages/security/ExamSelectorPage';
@@ -89,6 +90,7 @@ export default function AppRouter() {
           <Route path="telesales/leads/new" element={<LeadFormPage />} />
           <Route path="telesales/leads/:id/edit" element={<LeadFormPage />} />
           <Route path="telesales/callbacks" element={<CallbacksPage />} />
+          <Route path="telesales/reporting" element={<TelesalesReportsPage />} />
         </Route>
 
         <Route path="/security" element={<RequireAuth roles={['security', 'admin']}><SecurityLayout /></RequireAuth>}>

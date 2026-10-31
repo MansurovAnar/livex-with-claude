@@ -10,3 +10,4 @@ export const createLeadCall = (id, data) => apiClient.post(`/telesales/leads/${i
 export const listAnswerOptions = () => apiClient.get('/telesales/answer-options');
 export const listCallbacks = (params) => apiClient.get('/telesales/callbacks', { params });
 export const countDueCallbacks = (until) => apiClient.get('/telesales/callbacks/count', { params: { until } });
+export const getTelesalesReport = (params) => apiClient.get('/telesales/reports', { params });

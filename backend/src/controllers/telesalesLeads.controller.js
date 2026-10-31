@@ -156,19 +156,39 @@ exports.setPhoneInvalid = async (req, res, next) => {
   if (typeof flag !== 'boolean') {
     return res.status(400).json({ success: false, error: { code: 'VALIDATION_ERROR', message: 'is_phone_invalid must be true or false' } });
   }
+  const client = await pool.connect();
   try {
-    const { rows } = await pool.query(
+    await client.query('BEGIN');
+    const { rows: current } = await client.query(
+      'SELECT is_phone_invalid FROM telesales_leads WHERE id = $1 FOR UPDATE',
+      [req.params.id]
+    );
+    if (!current.length) {
+      await client.query('ROLLBACK');
+      return notFound(res);
+    }
+    const { rows } = await client.query(
       `UPDATE telesales_leads
        SET is_phone_invalid = $1, updated_by = $2, updated_at = NOW()
        WHERE id = $3
        RETURNING id, first_name, last_name, is_phone_invalid`,
       [flag, req.user.id, req.params.id]
     );
-    if (!rows.length) return notFound(res);
+    // History for the admin report (LV#48): only real changes count as a mark / restore
+    if (current[0].is_phone_invalid !== flag) {
+      await client.query(
+        'INSERT INTO lead_phone_status_events (lead_id, is_phone_invalid, changed_by) VALUES ($1, $2, $3)',
+        [req.params.id, flag, req.user.id]
+      );
+    }
+    await client.query('COMMIT');
     res.json({ success: true, data: rows[0] });
   } catch (err) {
+    await client.query('ROLLBACK').catch(() => {});
     if (err.code === '22P02') return notFound(res); // malformed UUID
     next(err);
+  } finally {
+    client.release();
   }
 };
 
