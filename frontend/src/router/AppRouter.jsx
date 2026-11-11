@@ -125,7 +125,7 @@ export default function AppRouter() {
           <Route path="callbacks" element={<CallbacksPage />} />
         </Route>
 
-        <Route path="/monitor/:examId" element={<RequireAuth roles={['admin', 'viewer']}><MonitorPage /></RequireAuth>} />
+        <Route path="/monitor/:examId" element={<RequireAuth roles={['admin', 'viewer', 'reception']}><MonitorPage /></RequireAuth>} />
       </Routes>
     </BrowserRouter>
   );

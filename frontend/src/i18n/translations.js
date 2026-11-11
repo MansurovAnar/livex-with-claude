@@ -399,6 +399,10 @@ export const AZ = {
   // ── P. Live monitor ──
   'Live Entry Feed': 'İmtahan prossesinə Canlı Nəzarət',
   'No entries yet.': 'Hələ giriş yoxdur.',
+  'Exam papers': 'İmtahan vərəqləri',
+  'Detail': 'Detal',
+  'Number of exam papers': 'İmtahan vərəqlərinin sayı',
+  'No registered students yet.': 'Hələ qeydiyyatdan keçmiş şagird yoxdur.',
   'Inside': 'İçəridə',
   'Outside': 'Bayırda',
   'Capacity': 'Tutum',

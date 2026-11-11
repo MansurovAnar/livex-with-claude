@@ -45,11 +45,38 @@ exports.examMonitor = async (req, res, next) => {
     // Money figures are admin-only; viewers get the same response without them
     const payments = req.user.role === 'admin' ? await getExamPayments(examId) : undefined;
 
+    // Exam-paper breakdown (admin + reception): active registrants per (detail,) class, sector, language
+    let paper_breakdown;
+    if (req.user.role === 'admin' || req.user.role === 'reception') {
+      const { rows: typeRows } = await pool.query(
+        `SELECT COALESCE(cardinality(et.extra_details), 0) > 0 AS has_details
+         FROM exams e LEFT JOIN exam_types et ON et.id = e.exam_type_id
+         WHERE e.id = $1`,
+        [examId]
+      );
+      const { rows: breakdownRows } = await pool.query(
+        `SELECT NULLIF(r.extra_detail, '') AS extra_detail, s.class_level,
+                NULLIF(s.sector, '') AS sector, NULLIF(s.language, '') AS language,
+                COUNT(*)::int AS count
+         FROM registrations r
+         JOIN students s ON s.id = r.student_id
+         WHERE r.exam_id = $1 AND r.removed_at IS NULL
+         GROUP BY 1, 2, 3, 4
+         ORDER BY 1 NULLS LAST, 2 NULLS LAST, 3 NULLS LAST, 4 NULLS LAST`,
+        [examId]
+      );
+      paper_breakdown = {
+        has_extra_details: !!typeRows[0]?.has_details || breakdownRows.some(r => r.extra_detail),
+        rows: breakdownRows,
+      };
+    }
+
     res.json({
       success: true,
       data: {
         exam: examRows[0],
         payments,
+        paper_breakdown,
         registered_count: parseInt(countRows[0].count, 10),
         currently_inside: parseInt(insideRows[0].count, 10),
         recent_logs: recentLogs,
