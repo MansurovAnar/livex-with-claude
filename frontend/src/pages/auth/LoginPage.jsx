@@ -23,6 +23,7 @@ export default function LoginPage() {
       else if (user.role === 'security') navigate('/security');
       else if (user.role === 'reception') navigate('/reception');
       else if (user.role === 'partner') navigate('/partner');
+      else if (user.role === 'telesales') navigate('/telesales');
       else navigate('/monitor');
     } catch (err) {
       setError(tError(err, 'Login failed'));

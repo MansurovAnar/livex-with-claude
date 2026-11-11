@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import useIsMobile from '../../hooks/useIsMobile';
+import useDueCallbacks from '../../hooks/useDueCallbacks';
 import { useLanguage } from '../../i18n/LanguageContext';
 import LanguageSwitch from '../shared/LanguageSwitch';
 
@@ -12,6 +13,7 @@ export default function AdminLayout() {
   const isMobile = useIsMobile();
   const [open, setOpen] = useState(false);
   const { t } = useLanguage();
+  const dueCallbacks = useDueCallbacks([location.pathname]);
 
   const handleLogout = async () => { await logout(); navigate('/login'); };
 
@@ -33,6 +35,16 @@ export default function AdminLayout() {
         <NavLink to="/admin/users" style={navStyle}>{t('Users')}</NavLink>
         <NavLink to="/admin/partners" style={navStyle}>{t('Partners')}</NavLink>
         <NavLink to="/admin/schools" style={navStyle}>{t('Schools')}</NavLink>
+        <div style={{ marginTop: '0.75rem', padding: '0 0.5rem', fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase', color: '#64748b' }}>{t('Telesales')}</div>
+        <NavLink to="/admin/telesales/leads" style={subNavStyle}>{t('Leads')}</NavLink>
+        <NavLink to="/admin/telesales/callbacks" style={subNavStyle}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            {t('Callbacks')}
+            {dueCallbacks > 0 && <span style={countBadge} aria-label={t('{n} callbacks due', { n: dueCallbacks })}>{dueCallbacks}</span>}
+          </span>
+        </NavLink>
+        <NavLink to="/admin/telesales/reporting" style={subNavStyle}>{t('Reporting')}</NavLink>
+        <NavLink to="/admin/telesales/villages" style={subNavStyle}>{t('Villages')}</NavLink>
         <div style={{ marginTop: 'auto', fontSize: '0.85rem', color: '#94a3b8' }}>{user?.full_name}</div>
         <LanguageSwitch fullWidth />
         <button onClick={handleLogout} style={{ background: 'none', border: '1px solid #475569', color: '#fff', padding: '0.4rem', cursor: 'pointer', borderRadius: 4 }}>
@@ -46,6 +58,7 @@ export default function AdminLayout() {
   );
 }
 
+const countBadge = { marginLeft: 'auto', minWidth: 20, padding: '0 6px', borderRadius: 10, background: '#dc2626', color: '#fff', fontSize: '0.72rem', fontWeight: 700, lineHeight: '20px', textAlign: 'center' };
 const navStyle = ({ isActive }) => ({
   color: isActive ? '#38bdf8' : '#cbd5e1',
   textDecoration: 'none',
@@ -54,3 +67,5 @@ const navStyle = ({ isActive }) => ({
   background: isActive ? '#0f172a' : 'transparent',
   display: 'block',
 });
+
+const subNavStyle = (state) => ({ ...navStyle(state), paddingLeft: '1.25rem' });
