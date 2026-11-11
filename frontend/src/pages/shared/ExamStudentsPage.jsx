@@ -178,7 +178,7 @@ export default function ExamStudentsPage() {
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
-              {['#', 'Full Name', 'Student Number', 'Email', 'Mobile', 'Room', 'Seat', ...(showExtraDetail ? ['Extra Detail'] : []), 'Exam Cost', 'Registered At', 'Paid', ''].map(h => (
+              {['#', 'Full Name', 'Student Number', 'Email', 'Mobile', 'Class', 'Sector', 'Language', ...(showExtraDetail ? ['Extra Detail'] : []), 'Exam Cost', 'Registered At', 'Paid', ''].map(h => (
                 <th key={h} style={th}>{t(h)}</th>
               ))}
             </tr>
@@ -186,7 +186,7 @@ export default function ExamStudentsPage() {
           <tbody>
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={showExtraDetail ? 12 : 11} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>
+                <td colSpan={showExtraDetail ? 13 : 12} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>
                   {t('No students registered for this exam yet.')}
                 </td>
               </tr>
@@ -214,8 +214,9 @@ export default function ExamStudentsPage() {
                   </td>
                   <td style={td}>{r.email}</td>
                   <td style={td}>{r.mobile_number || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
-                  <td style={td}>{r.room_number || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
-                  <td style={td}>{r.seat_number || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
+                  <td style={{ ...td, textAlign: 'center' }}>{r.class_level ?? <span style={{ color: '#cbd5e1' }}>—</span>}</td>
+                  <td style={td}>{(r.sector && t(r.sector)) || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
+                  <td style={td}>{(r.language && t(r.language)) || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
                   {showExtraDetail && <td style={{ ...td, overflowWrap: 'anywhere' }}>{r.extra_detail || <span style={{ color: '#cbd5e1' }}>—</span>}</td>}
                   <td style={{ ...td, fontWeight: 600, color: '#15803d' }}>{examCost.toFixed(2)} AZN</td>
                   <td style={td}>{new Date(r.registered_at).toLocaleString()}</td>
