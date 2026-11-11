@@ -42,14 +42,14 @@ export default function ReceptionExamsPage() {
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
-                {['Exam Title', 'Subject Code', 'Location', 'Date & Time', 'Duration', 'Entry Opens', 'Entry Closes', 'Status'].map(h => (
+                {['Exam Title', 'Subject Code', 'Location', 'Date & Time', 'Duration', 'Entry Opens', 'Entry Closes', 'Status', 'Actions'].map(h => (
                   <th key={h} style={th}>{t(h)}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0 ? (
-                <tr><td colSpan={8} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>{t('No exams found.')}</td></tr>
+                <tr><td colSpan={9} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>{t('No exams found.')}</td></tr>
               ) : filtered.map((e, i) => (
                 <tr key={e.id} style={{ borderBottom: '1px solid #f1f5f9', background: i % 2 === 0 ? '#fff' : '#fafafa' }}>
                   <td style={td}>
@@ -69,6 +69,12 @@ export default function ReceptionExamsPage() {
                     <span style={{ background: STATUS_COLORS[e.status], color: '#fff', padding: '0.15rem 0.6rem', borderRadius: 12, fontSize: '0.75rem', fontWeight: 600 }}>
                       {t(e.status)}
                     </span>
+                  </td>
+                  <td style={td}>
+                    <button onClick={() => navigate(`/monitor/${e.id}`)}
+                      style={{ background: '#16a34a', color: '#fff', border: 'none', borderRadius: 4, padding: '0.25rem 0.6rem', cursor: 'pointer', fontSize: '0.75rem' }}>
+                      {t('Monitor')}
+                    </button>
                   </td>
                 </tr>
               ))}

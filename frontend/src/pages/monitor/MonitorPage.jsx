@@ -4,6 +4,7 @@ import { getExamMonitor } from '../../api/monitor.api';
 import { useSocket } from '../../contexts/SocketContext';
 import { useAuth } from '../../contexts/AuthContext';
 import ExamPaymentsSummary from '../../components/monitor/ExamPaymentsSummary';
+import ExamPapersTable from '../../components/monitor/ExamPapersTable';
 import { useLanguage } from '../../i18n/LanguageContext';
 import LanguageSwitch from '../../components/shared/LanguageSwitch';
 
@@ -43,8 +44,8 @@ export default function MonitorPage() {
   return (
     <div className="page-pad" style={{ padding: '2rem', maxWidth: 900, margin: '0 auto' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-        {user?.role === 'admin' && (
-          <button onClick={() => navigate('/admin/exams')} title={t('Back to Exams')} aria-label={t('Back to Exams')}
+        {(user?.role === 'admin' || user?.role === 'reception') && (
+          <button onClick={() => navigate(user.role === 'admin' ? '/admin/exams' : '/reception/exams')} title={t('Back to Exams')} aria-label={t('Back to Exams')}
             style={{ background: 'none', border: 'none', fontSize: '1.25rem', cursor: 'pointer', color: '#2563eb', minWidth: 44, minHeight: 44, padding: 0, flex: 'none' }}>
             &larr;
           </button>
@@ -63,6 +64,8 @@ export default function MonitorPage() {
         <StatCard label={t('Outside')} value={registered_count - insideCount} color="#dc2626" />
         <StatCard label={t('Capacity')} value={exam.capacity} color="#7e22ce" />
       </div>
+
+      {data.paper_breakdown && <ExamPapersTable breakdown={data.paper_breakdown} />}
 
       {data.payments && <ExamPaymentsSummary payments={data.payments} />}
 
