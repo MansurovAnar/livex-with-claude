@@ -15,6 +15,7 @@ const partnerRoutes = require('../routes/partners.routes');
 const partnerSelfRoutes = require('../routes/partner.routes');
 const schoolRoutes = require('../routes/schools.routes');
 const examTypeRoutes = require('../routes/examTypes.routes');
+const courseStudentRoutes = require('../routes/courseStudents.routes');
 const villageRoutes = require('../routes/villages.routes');
 const telesalesRoutes = require('../routes/telesales.routes');
 
@@ -37,6 +38,7 @@ app.use('/api/partners', partnerRoutes);
 app.use('/api/partner', partnerSelfRoutes);
 app.use('/api/schools', schoolRoutes);
 app.use('/api/exam-types', examTypeRoutes);
+app.use('/api/course-students', courseStudentRoutes);
 app.use('/api/villages', villageRoutes);
 app.use('/api/telesales', telesalesRoutes);
 

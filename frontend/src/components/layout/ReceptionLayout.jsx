@@ -29,9 +29,10 @@ export default function ReceptionLayout() {
           </div>
           {open && (
             <nav style={{ display: 'flex', flexDirection: 'column', padding: '0 12px 12px', gap: 4, borderTop: '1px solid rgba(255,255,255,0.2)' }}>
-              <NavLink to="/reception" end style={mobileNavStyle}>{t('Students')}</NavLink>
-              <NavLink to="/reception/exams" style={mobileNavStyle}>{t('Exams')}</NavLink>
-              <NavLink to="/reception/partners" style={mobileNavStyle}>{t('Partners')}</NavLink>
+              <NavLink to="/reception" end style={mobileNavStyle}>Students</NavLink>
+              <NavLink to="/reception/course-students" style={mobileNavStyle}>Course Students</NavLink>
+              <NavLink to="/reception/exams" style={mobileNavStyle}>Exams</NavLink>
+              <NavLink to="/reception/partners" style={mobileNavStyle}>Partners</NavLink>
               <div className="wrap-text" style={{ fontSize: '0.85rem', opacity: 0.85, padding: '8px 0 4px' }}>{user?.full_name}</div>
               <LanguageSwitch fullWidth />
               <button onClick={handleLogout}
@@ -44,10 +45,11 @@ export default function ReceptionLayout() {
       ) : (
         <header style={{ background: '#7e22ce', color: '#fff', padding: '0.75rem 1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
-            <span style={{ fontWeight: 'bold' }}>{t('Reception')}</span>
-            <NavLink to="/reception" end style={navStyle}>{t('Students')}</NavLink>
-            <NavLink to="/reception/exams" style={navStyle}>{t('Exams')}</NavLink>
-            <NavLink to="/reception/partners" style={navStyle}>{t('Partners')}</NavLink>
+            <span style={{ fontWeight: 'bold' }}>Reception</span>
+            <NavLink to="/reception" end style={navStyle}>Students</NavLink>
+            <NavLink to="/reception/course-students" style={navStyle}>Course Students</NavLink>
+            <NavLink to="/reception/exams" style={navStyle}>Exams</NavLink>
+            <NavLink to="/reception/partners" style={navStyle}>Partners</NavLink>
           </div>
           <span style={{ fontSize: '0.85rem' }}>{user?.full_name}
             <LanguageSwitch style={{ marginLeft: '1rem', verticalAlign: 'middle' }} />

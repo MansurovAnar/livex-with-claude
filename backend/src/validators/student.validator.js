@@ -19,6 +19,23 @@ exports.createStudentSchema = z.object({
   father_name: z.string().trim().max(50).nullish(),
 });
 
+exports.updateStudentSchema = exports.createStudentSchema.partial();
+
+// Course students (admin only): regular student fields plus a fixed AZN discount
+// per exam, or FREE (100% discount), and a note explaining the discount.
+const courseFields = {
+  discount_amount: z.number().min(0).max(100000),
+  is_free: z.boolean(),
+  discount_note: z.string().trim().max(500).nullish(),
+};
+
+exports.createCourseStudentSchema = exports.createStudentSchema.extend({
+  discount_amount: courseFields.discount_amount.default(0),
+  is_free: courseFields.is_free.default(false),
+  discount_note: courseFields.discount_note,
+});
+
+exports.updateCourseStudentSchema = exports.createStudentSchema.extend(courseFields).partial();
 exports.updateStudentSchema = z.object({
   ...studentFields,
   full_name: z.string().min(1).max(150),

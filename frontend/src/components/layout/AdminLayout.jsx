@@ -32,6 +32,7 @@ export default function AdminLayout() {
         <NavLink to="/admin" end style={navStyle}>{t('Dashboard')}</NavLink>
         <NavLink to="/admin/exams" style={navStyle}>{t('Exams')}</NavLink>
         <NavLink to="/admin/students" style={navStyle}>{t('Students')}</NavLink>
+        <NavLink to="/admin/course-students" style={navStyle}>Course Students</NavLink>
         <NavLink to="/admin/users" style={navStyle}>{t('Users')}</NavLink>
         <NavLink to="/admin/partners" style={navStyle}>{t('Partners')}</NavLink>
         <NavLink to="/admin/schools" style={navStyle}>{t('Schools')}</NavLink>
