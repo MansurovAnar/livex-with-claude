@@ -16,6 +16,9 @@ export default function ExamPaymentsSummary({ payments, title }) {
       ? [{ label: 'Method unspecified', value: payments.paid_unspecified, color: '#94a3b8' }]
       : []),
     { label: 'Commission', value: payments.commission_total, color: '#7e22ce' },
+    ...(payments.expenses_total !== undefined
+      ? [{ label: 'Expenses', value: payments.expenses_total, color: '#be123c' }]
+      : []),
     { label: 'Left in hand', value: payments.left_in_hand, color: '#0369a1' },
   ];
 

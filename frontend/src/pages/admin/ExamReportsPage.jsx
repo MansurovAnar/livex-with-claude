@@ -12,6 +12,7 @@ const MONEY_COLUMNS = [
   { key: 'paid_unspecified', label: 'Unspecified', optional: true },
   { key: 'outstanding_total', label: 'Outstanding' },
   { key: 'commission_total', label: 'Commission' },
+  { key: 'expenses_total', label: 'Expenses' },
   { key: 'left_in_hand', label: 'Left in hand' },
 ];
 
@@ -68,7 +69,7 @@ export default function ExamReportsPage() {
         )}
       </div>
       <p style={{ color: '#64748b', fontSize: '0.85rem', marginTop: 0 }}>
-        {from || to ? t('Completed exams only. Left in hand = paid − partner commissions.') : t('Completed exams only (all dates). Left in hand = paid − partner commissions.')}
+        {from || to ? t('Completed exams only. Left in hand = paid − partner commissions − expenses.') : t('Completed exams only (all dates). Left in hand = paid − partner commissions − expenses.')}
       </p>
 
       {error && (

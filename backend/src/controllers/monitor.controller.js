@@ -1,5 +1,5 @@
 const pool = require('../config/database');
-const { getExamPayments } = require('../services/examPayments.service');
+const { getExamPayments, listExamExpenses } = require('../services/examPayments.service');
 
 exports.examMonitor = async (req, res, next) => {
   try {
@@ -44,6 +44,7 @@ exports.examMonitor = async (req, res, next) => {
 
     // Money figures are admin-only; viewers get the same response without them
     const payments = req.user.role === 'admin' ? await getExamPayments(examId) : undefined;
+    const expenses = req.user.role === 'admin' ? await listExamExpenses(examId) : undefined;
 
     // Exam-paper breakdown (admin + reception): active registrants per (detail,) class, sector, language
     let paper_breakdown;
@@ -76,12 +77,28 @@ exports.examMonitor = async (req, res, next) => {
       data: {
         exam: examRows[0],
         payments,
+        expenses,
         paper_breakdown,
         registered_count: parseInt(countRows[0].count, 10),
         currently_inside: parseInt(insideRows[0].count, 10),
         recent_logs: recentLogs,
       },
     });
+  } catch (err) { next(err); }
+};
+
+// Admin: record an additional expense for the exam (subtracted from left in hand)
+exports.addExpense = async (req, res, next) => {
+  try {
+    const { amount, source, explanation } = req.body;
+    const { rows } = await pool.query(
+      `INSERT INTO exam_expenses (exam_id, amount, source, explanation, created_by)
+       SELECT e.id, $2, $3, $4, $5 FROM exams e WHERE e.id = $1
+       RETURNING id, amount, source, explanation, created_at`,
+      [req.params.examId, amount, source, explanation, req.user.id]
+    );
+    if (!rows[0]) return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Exam not found' } });
+    res.status(201).json({ success: true, data: { ...rows[0], amount: Number(rows[0].amount) } });
   } catch (err) { next(err); }
 };
 

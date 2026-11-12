@@ -18,3 +18,9 @@ exports.updateExamSchema = exports.createExamSchema.partial();
 exports.updateStatusSchema = z.object({
   status: z.enum(['scheduled', 'ongoing', 'completed', 'cancelled']),
 });
+
+exports.createExpenseSchema = z.object({
+  amount: z.number().min(0.01).max(9999999999.99),
+  source: z.enum(['cash', 'card']),
+  explanation: z.string().trim().min(1).max(500),
+});
