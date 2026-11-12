@@ -688,6 +688,15 @@ export const AZ = {
   'The start date must be before the end date': 'Başlanğıc tarixi son tarixdən əvvəl olmalıdır',
   'The date range can be at most 366 days': 'Tarix aralığı ən çox 366 gün ola bilər',
   'Unknown agent': 'Naməlum operator',
+
+  // ── Exam registrants filters ──
+  'Filter by:': 'Filtr:',
+  'All partners': 'Bütün tərəfdaşlar',
+  'Paid and not paid': 'Ödənilən və ödənilməyən',
+  'Not paid': 'Ödənilməyib',
+  'Clear filters': 'Filtrləri təmizlə',
+  'Showing {n} of {total}': '{total} nəticədən {n} göstərilir',
+  'No students match the search or filters.': 'Axtarışa və ya filtrlərə uyğun şagird yoxdur.',
 };
 
 // Server messages that contain runtime values. In the replacement, {1} inserts the
