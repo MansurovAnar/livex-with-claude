@@ -11,6 +11,12 @@ import { useLanguage } from '../../i18n/LanguageContext';
 // Price the student owes: course students get their discount (FREE = 0), see due_amount from the API
 const dueOf = (reg, examCost) => (reg.due_amount != null ? Number(reg.due_amount) : examCost);
 
+const CLASSES = Array.from({ length: 11 }, (_, i) => i + 1);
+const SECTORS = ['Azerbaijan', 'Rus'];
+const LANGUAGES = ['English', 'Russian', 'German', 'French'];
+const NO_PARTNER = '__none__';
+const EMPTY_FILTERS = { partner: '', classLevel: '', sector: '', language: '', payment: '' };
+
 export default function ExamStudentsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -20,6 +26,7 @@ export default function ExamStudentsPage() {
   const [registrations, setRegistrations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [filters, setFilters] = useState(EMPTY_FILTERS);
   const [paymentModal, setPaymentModal] = useState(null);
   const [payInput, setPayInput] = useState('');
   const [payMethod, setPayMethod] = useState('');
@@ -113,7 +120,7 @@ export default function ExamStudentsPage() {
   const examCost = Number(exam.exam_cost);
   // Show the Extra Detail column when the exam type defines extra details or any registration has one
   const showExtraDetail = (exam.exam_type_extra_details || []).length > 0 || registrations.some(r => r.extra_detail);
-  const filtered = search.trim()
+  const searched = search.trim()
     ? registrations.filter(r =>
         r.full_name.toLowerCase().includes(search.toLowerCase()) ||
         r.student_number.toLowerCase().includes(search.toLowerCase()) ||
@@ -121,6 +128,22 @@ export default function ExamStudentsPage() {
         (r.mobile_number || '').includes(search)
       )
     : registrations;
+  // Partner dropdown lists the partners who have students in this exam
+  const partnerNames = [...new Set(registrations.map(r => r.partner_name).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+  const hasNoPartner = registrations.some(r => !r.partner_name);
+  const filtersActive = Object.values(filters).some(Boolean);
+  const filtered = searched.filter(r => {
+    if (filters.partner && (filters.partner === NO_PARTNER ? !!r.partner_name : r.partner_name !== filters.partner)) return false;
+    if (filters.classLevel && String(r.class_level ?? '') !== filters.classLevel) return false;
+    if (filters.sector && r.sector !== filters.sector) return false;
+    if (filters.language && r.language !== filters.language) return false;
+    if (filters.payment) {
+      const fullyPaid = Number(r.amount_paid) >= dueOf(r, examCost);
+      if ((filters.payment === 'paid') !== fullyPaid) return false;
+    }
+    return true;
+  });
+  const setFilter = (key) => (e) => setFilters(f => ({ ...f, [key]: e.target.value }));
 
   return (
     <div>
@@ -177,6 +200,42 @@ export default function ExamStudentsPage() {
         )}
       </div>
 
+      {/* Filter by */}
+      <div className="toolbar" style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap', marginBottom: '1rem' }}>
+        <span style={{ fontWeight: 600, fontSize: '0.875rem', color: '#475569' }}>{t('Filter by:')}</span>
+        <select value={filters.partner} onChange={setFilter('partner')} aria-label={t('Partner')} style={filterSelect}>
+          <option value="">{t('All partners')}</option>
+          {partnerNames.map(n => <option key={n} value={n}>{n}</option>)}
+          {hasNoPartner && <option value={NO_PARTNER}>{t('No partner')}</option>}
+        </select>
+        <select value={filters.classLevel} onChange={setFilter('classLevel')} aria-label={t('Class')} style={filterSelect}>
+          <option value="">{t('All classes')}</option>
+          {CLASSES.map(c => <option key={c} value={String(c)}>{c}</option>)}
+        </select>
+        <select value={filters.sector} onChange={setFilter('sector')} aria-label={t('Sector')} style={filterSelect}>
+          <option value="">{t('All sectors')}</option>
+          {SECTORS.map(s => <option key={s} value={s}>{t(s)}</option>)}
+        </select>
+        <select value={filters.language} onChange={setFilter('language')} aria-label={t('Language')} style={filterSelect}>
+          <option value="">{t('All languages')}</option>
+          {LANGUAGES.map(l => <option key={l} value={l}>{t(l)}</option>)}
+        </select>
+        <select value={filters.payment} onChange={setFilter('payment')} aria-label={t('Paid')} style={filterSelect}>
+          <option value="">{t('Paid and not paid')}</option>
+          <option value="paid">{t('Paid')}</option>
+          <option value="unpaid">{t('Not paid')}</option>
+        </select>
+        {filtersActive && (
+          <button onClick={() => setFilters(EMPTY_FILTERS)}
+            style={{ padding: '0.45rem 0.75rem', background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: 6, cursor: 'pointer', color: '#64748b' }}>
+            {t('Clear filters')}
+          </button>
+        )}
+        {(filtersActive || search.trim()) && (
+          <span style={{ fontSize: '0.85rem', color: '#64748b' }}>{t('Showing {n} of {total}', { n: filtered.length, total: registrations.length })}</span>
+        )}
+      </div>
+
       {/* Students table */}
       <div className="table-scroll" style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, overflow: 'hidden' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -191,7 +250,7 @@ export default function ExamStudentsPage() {
             {filtered.length === 0 ? (
               <tr>
                 <td colSpan={showExtraDetail ? 13 : 12} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>
-                  {t('No students registered for this exam yet.')}
+                  {registrations.length === 0 ? t('No students registered for this exam yet.') : t('No students match the search or filters.')}
                 </td>
               </tr>
             ) : filtered.map((r, i) => {
@@ -462,5 +521,6 @@ export default function ExamStudentsPage() {
   );
 }
 
+const filterSelect = { padding: '0.45rem 0.6rem', border: '1px solid #cbd5e1', borderRadius: 6, fontSize: '0.875rem', background: '#fff' };
 const th = { padding: '0.65rem 1rem', textAlign: 'left', fontSize: '0.78rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.03em', whiteSpace: 'nowrap' };
 const td = { padding: '0.65rem 1rem', fontSize: '0.875rem', color: '#1e293b' };
