@@ -1,7 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "mcp__trello__add_comment",
+      "mcp__trello__move_card",
+      "mcp__trello__attach_file_to_card"
     ]
   },
   "enabledMcpjsonServers": [

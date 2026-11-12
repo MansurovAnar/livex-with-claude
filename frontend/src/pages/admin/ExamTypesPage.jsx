@@ -3,8 +3,10 @@ import { Link } from 'react-router-dom';
 import { listExamTypes, deleteExamType } from '../../api/examTypes.api';
 import ExamTypeModal from '../../components/exams/ExamTypeModal';
 import SuccessBanner from '../../components/shared/SuccessBanner';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 export default function ExamTypesPage() {
+  const { t, tError } = useLanguage();
   const [types, setTypes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -16,7 +18,7 @@ export default function ExamTypesPage() {
     setLoading(true);
     listExamTypes()
       .then(res => setTypes(res.data.data))
-      .catch(err => setError(err.response?.data?.error?.message || 'Failed to load exam types'))
+      .catch(err => setError(tError(err, 'Failed to load exam types')))
       .finally(() => setLoading(false));
   };
 
@@ -26,33 +28,33 @@ export default function ExamTypesPage() {
     const wasEdit = !!modal?.id;
     setModal(null);
     setError('');
-    setSuccess(`Exam type "${saved.name}" ${wasEdit ? 'updated' : 'added'} successfully.`);
+    setSuccess(t(wasEdit ? 'Exam type "{name}" updated successfully.' : 'Exam type "{name}" added successfully.', { name: saved.name }));
     load();
   };
 
-  const handleDelete = async (t) => {
-    if (!confirm(`Delete exam type "${t.name}"?`)) return;
+  const handleDelete = async (et) => {
+    if (!confirm(t('Delete exam type "{name}"?', { name: et.name }))) return;
     try {
-      await deleteExamType(t.id);
+      await deleteExamType(et.id);
       setError('');
-      setSuccess(`Exam type "${t.name}" deleted.`);
+      setSuccess(t('Exam type "{name}" deleted.', { name: et.name }));
       load();
     } catch (err) {
       setSuccess('');
-      setError(err.response?.data?.error?.message || 'Failed to delete exam type');
+      setError(tError(err, 'Failed to delete exam type'));
     }
   };
 
   return (
     <div>
       <div style={{ marginBottom: '0.5rem' }}>
-        <Link to="/admin/exams" style={{ color: '#64748b', fontSize: '0.875rem', textDecoration: 'none' }}>← Exams</Link>
+        <Link to="/admin/exams" style={{ color: '#64748b', fontSize: '0.875rem', textDecoration: 'none' }}>{t('← Exams')}</Link>
       </div>
       <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-        <h2 style={{ margin: 0 }}>Exam Types</h2>
+        <h2 style={{ margin: 0 }}>{t('Exam Types')}</h2>
         <button onClick={() => setModal({})}
           style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.25rem', cursor: 'pointer', fontWeight: 500 }}>
-          + New Exam Type
+          {t('+ New Exam Type')}
         </button>
       </div>
 
@@ -63,40 +65,40 @@ export default function ExamTypesPage() {
         </div>
       )}
 
-      {loading ? <p style={{ color: '#94a3b8' }}>Loading...</p> : (
+      {loading ? <p style={{ color: '#94a3b8' }}>{t('Loading...')}</p> : (
         <div className="table-scroll" style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8 }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
                 <th style={th} className="hide-mobile">#</th>
-                <th style={th}>Name</th>
-                <th style={th} className="hide-mobile">Description</th>
-                <th style={th}>Extra Details</th>
-                <th style={th}>Actions</th>
+                <th style={th}>{t('Name')}</th>
+                <th style={th} className="hide-mobile">{t('Description')}</th>
+                <th style={th}>{t('Extra Details')}</th>
+                <th style={th}>{t('Actions')}</th>
               </tr>
             </thead>
             <tbody>
               {types.length === 0 ? (
-                <tr><td colSpan={5} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>No exam types yet.</td></tr>
-              ) : types.map((t, i) => (
-                <tr key={t.id} style={{ borderBottom: '1px solid #f1f5f9', background: i % 2 === 0 ? '#fff' : '#fafafa' }}>
+                <tr><td colSpan={5} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>{t('No exam types yet.')}</td></tr>
+              ) : types.map((et, i) => (
+                <tr key={et.id} style={{ borderBottom: '1px solid #f1f5f9', background: i % 2 === 0 ? '#fff' : '#fafafa' }}>
                   <td style={{ ...td, color: '#94a3b8' }} className="hide-mobile">{i + 1}</td>
-                  <td style={{ ...td, fontWeight: 600 }} className="wrap-text">{t.name}</td>
+                  <td style={{ ...td, fontWeight: 600 }} className="wrap-text">{et.name}</td>
                   <td style={{ ...td, color: '#475569' }} className="hide-mobile wrap-text">
-                    {t.description || <span style={{ color: '#cbd5e1' }}>—</span>}
+                    {et.description || <span style={{ color: '#cbd5e1' }}>—</span>}
                   </td>
                   <td style={td}>
-                    {t.extra_details?.length
+                    {et.extra_details?.length
                       ? <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3rem' }}>
-                          {t.extra_details.map(d => (
+                          {et.extra_details.map(d => (
                             <span key={d} className="wrap-text" style={{ background: '#eff6ff', color: '#1d4ed8', padding: '0.15rem 0.6rem', borderRadius: 12, fontSize: '0.78rem', fontWeight: 500 }}>{d}</span>
                           ))}
                         </div>
                       : <span style={{ color: '#cbd5e1' }}>—</span>}
                   </td>
                   <td style={{ ...td, whiteSpace: 'nowrap' }}>
-                    <button onClick={() => setModal(t)} style={actionBtn('#475569')}>Edit</button>
-                    <button onClick={() => handleDelete(t)} style={actionBtn('#dc2626')}>Delete</button>
+                    <button onClick={() => setModal(et)} style={actionBtn('#475569')}>{t('Edit')}</button>
+                    <button onClick={() => handleDelete(et)} style={actionBtn('#dc2626')}>{t('Delete')}</button>
                   </td>
                 </tr>
               ))}

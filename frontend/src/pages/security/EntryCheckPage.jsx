@@ -2,10 +2,12 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { verifyAndLog } from '../../api/entry.api';
 import { getExam } from '../../api/exams.api';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 export default function EntryCheckPage() {
   const { id: examId } = useParams();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [exam, setExam] = useState(null);
   const [studentNumber, setStudentNumber] = useState('');
   const [eventType, setEventType] = useState('entry');
@@ -46,15 +48,15 @@ export default function EntryCheckPage() {
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
         <button onClick={() => navigate('/security')} style={backBtn}>&larr;</button>
         <div>
-          <h2 style={{ margin: 0 }}>{exam?.title || 'Loading...'}</h2>
+          <h2 style={{ margin: 0 }}>{exam?.title || t('Loading...')}</h2>
           <div style={{ color: '#64748b', fontSize: '0.875rem' }}>{exam?.exam_location}</div>
         </div>
       </div>
 
       <form onSubmit={handleCheck} style={{ background: '#fff', padding: '1.5rem', borderRadius: 8, border: '1px solid #e2e8f0', marginBottom: '1rem' }}>
         <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem' }}>
-          <button type="button" onClick={() => setEventType('entry')} style={{ ...toggleBtn, background: eventType === 'entry' ? '#16a34a' : '#f1f5f9', color: eventType === 'entry' ? '#fff' : '#334155' }}>Entry</button>
-          <button type="button" onClick={() => setEventType('exit')} style={{ ...toggleBtn, background: eventType === 'exit' ? '#dc2626' : '#f1f5f9', color: eventType === 'exit' ? '#fff' : '#334155' }}>Exit</button>
+          <button type="button" onClick={() => setEventType('entry')} style={{ ...toggleBtn, background: eventType === 'entry' ? '#16a34a' : '#f1f5f9', color: eventType === 'entry' ? '#fff' : '#334155' }}>{t('Entry')}</button>
+          <button type="button" onClick={() => setEventType('exit')} style={{ ...toggleBtn, background: eventType === 'exit' ? '#dc2626' : '#f1f5f9', color: eventType === 'exit' ? '#fff' : '#334155' }}>{t('Exit')}</button>
         </div>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
           <input
@@ -62,11 +64,11 @@ export default function EntryCheckPage() {
             type="text"
             value={studentNumber}
             onChange={e => setStudentNumber(e.target.value)}
-            placeholder="Scan barcode or type student number..."
+            placeholder={t('Scan barcode or type student number...')}
             style={{ flex: 1, padding: '0.6rem', border: '2px solid #3b82f6', borderRadius: 6, fontSize: '1rem' }}
           />
           <button type="submit" disabled={loading} style={{ padding: '0.6rem 1.2rem', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: '1rem' }}>
-            {loading ? '...' : 'Check'}
+            {loading ? '...' : t('Check')}
           </button>
         </div>
       </form>
@@ -75,10 +77,10 @@ export default function EntryCheckPage() {
 
       {recentFeed.length > 0 && (
         <div style={{ marginTop: '1.5rem' }}>
-          <h4 style={{ marginBottom: '0.5rem', color: '#475569' }}>Recent</h4>
+          <h4 style={{ marginBottom: '0.5rem', color: '#475569' }}>{t('Recent')}</h4>
           {recentFeed.map((item, i) => (
             <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.4rem 0.75rem', background: item.event_type === 'entry' ? '#f0fdf4' : '#fff1f2', borderRadius: 4, marginBottom: '0.25rem', fontSize: '0.875rem' }}>
-              <span>{item.full_name} — Seat {item.seat_number}</span>
+              <span>{item.full_name} — {t('Seat')} {item.seat_number}</span>
               <span style={{ color: '#94a3b8' }}>{new Date(item.logged_at).toLocaleTimeString()}</span>
             </div>
           ))}
@@ -89,6 +91,7 @@ export default function EntryCheckPage() {
 }
 
 function ResultCard({ result }) {
+  const { t } = useLanguage();
   const color = result.allowed ? '#16a34a' : '#dc2626';
   const bg = result.allowed ? '#f0fdf4' : '#fef2f2';
   const reasonLabels = {
@@ -100,19 +103,20 @@ function ResultCard({ result }) {
     EXAM_CANCELLED: 'Exam Cancelled',
     EXAM_NOT_FOUND: 'Exam Not Found',
     REMOVED_FROM_EXAM: 'Removed From This Exam',
+    ERROR: 'ERROR',
   };
 
   return (
     <div style={{ background: bg, border: `2px solid ${color}`, borderRadius: 8, padding: '1.25rem' }}>
       <div style={{ color, fontWeight: 'bold', fontSize: '1.25rem', marginBottom: '0.5rem' }}>
-        {reasonLabels[result.reason] || result.reason}
+        {reasonLabels[result.reason] ? t(reasonLabels[result.reason]) : result.reason}
       </div>
       {result.student && (
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
           {result.student.photo_url && <img src={result.student.photo_url} alt="" style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover' }} />}
           <div>
             <div style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>{result.student.full_name}</div>
-            <div style={{ color: '#64748b' }}>Seat: {result.student.seat_number || '—'}</div>
+            <div style={{ color: '#64748b' }}>{t('Seat:')} {result.student.seat_number || '—'}</div>
           </div>
         </div>
       )}

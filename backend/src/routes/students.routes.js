@@ -10,6 +10,7 @@ router.use(authenticate);
 // reception + admin can read and create
 router.get('/', authorize('admin', 'reception'), ctrl.list);
 router.post('/', authorize('admin', 'reception'), validate(createStudentSchema), ctrl.create);
+router.get('/email-preview', authorize('admin', 'reception'), ctrl.emailPreview);
 router.get('/:id', authorize('admin', 'reception'), ctrl.get);
 
 // admin only can update/delete

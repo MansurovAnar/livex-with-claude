@@ -12,6 +12,7 @@ exports.listByExam = async (req, res, next) => {
               s.id AS student_id, s.student_number, s.full_name, s.email, s.mobile_number, s.photo_url,
               s.is_course_student, s.is_free, s.discount_amount, s.discount_note,
               ${dueAmountSql('e', 's')} AS due_amount,
+              s.class_level, s.sector, s.language,
               -- Partner who registered the student; falls back to the student's own partner
               COALESCE(rb.full_name, sp.full_name) AS partner_name
        FROM registrations r JOIN students s ON s.id = r.student_id
@@ -19,7 +20,7 @@ exports.listByExam = async (req, res, next) => {
        LEFT JOIN users rb ON rb.id = r.registered_by AND rb.role = 'partner'
        LEFT JOIN users sp ON sp.id = s.partner_id
        WHERE r.exam_id = $1 AND r.removed_at IS NULL
-       ORDER BY r.room_number NULLS LAST, r.seat_number NULLS LAST`,
+       ORDER BY r.room_number NULLS LAST, r.seat_number NULLS LAST, r.registered_at`,
       [req.params.examId]
     );
     res.json({ success: true, data: rows });

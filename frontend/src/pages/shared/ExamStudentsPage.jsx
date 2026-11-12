@@ -6,6 +6,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import StudentTicket from '../../components/shared/StudentTicket';
 import PaymentMethodRadio, { paymentMethodLabel } from '../../components/shared/PaymentMethodRadio';
 import CourseDiscountBadge from '../../components/shared/CourseDiscountBadge';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 // Price the student owes: course students get their discount (FREE = 0), see due_amount from the API
 const dueOf = (reg, examCost) => (reg.due_amount != null ? Number(reg.due_amount) : examCost);
@@ -14,6 +15,7 @@ export default function ExamStudentsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t, tError } = useLanguage();
   const [exam, setExam] = useState(null);
   const [registrations, setRegistrations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -58,7 +60,7 @@ export default function ExamStudentsPage() {
   const handleSavePayment = async () => {
     const amt = parseFloat(payInput);
     if (isNaN(amt) || amt < 0) return;
-    if (amt > 0 && !payMethod) { setPayError('Select Card or Cash.'); return; }
+    if (amt > 0 && !payMethod) { setPayError(t('Select Card or Cash.')); return; }
     const method = amt > 0 ? payMethod : null;
     setSaving(true);
     setPayError('');
@@ -67,7 +69,7 @@ export default function ExamStudentsPage() {
       setRegistrations(prev => prev.map(r => r.id === paymentModal.id ? { ...r, amount_paid: amt, payment_method: method } : r));
       closeModal();
     } catch (err) {
-      setPayError(err.response?.data?.error?.message || 'Failed to save payment');
+      setPayError(tError(err, 'Failed to save payment'));
     } finally {
       setSaving(false);
     }
@@ -78,7 +80,7 @@ export default function ExamStudentsPage() {
 
   const handleRemove = async () => {
     const reason = removeReason.trim();
-    if (!reason) { setRemoveError('Please explain why the student is removed.'); return; }
+    if (!reason) { setRemoveError(t('Please explain why the student is removed.')); return; }
     setRemoving(true);
     setRemoveError('');
     try {
@@ -86,27 +88,27 @@ export default function ExamStudentsPage() {
       closeRemoveModal();
       load();
     } catch (err) {
-      setRemoveError(err.response?.data?.error?.message || 'Failed to remove student');
+      setRemoveError(tError(err, 'Failed to remove student'));
     } finally {
       setRemoving(false);
     }
   };
 
   const handleRestore = async (reg) => {
-    if (!window.confirm(`Restore ${reg.full_name} to this exam? Room and seat will be empty.`)) return;
+    if (!window.confirm(t('Restore {name} to this exam? Room and seat will be empty.', { name: reg.full_name }))) return;
     setRestoringId(reg.id);
     try {
       await restoreToExam(reg.id);
       load();
     } catch (err) {
-      window.alert(err.response?.data?.error?.message || 'Failed to restore student');
+      window.alert(tError(err, 'Failed to restore student'));
     } finally {
       setRestoringId(null);
     }
   };
 
-  if (loading) return <p style={{ padding: '1rem', color: '#94a3b8' }}>Loading...</p>;
-  if (!exam) return <p style={{ padding: '1rem', color: '#dc2626' }}>Exam not found.</p>;
+  if (loading) return <p style={{ padding: '1rem', color: '#94a3b8' }}>{t('Loading...')}</p>;
+  if (!exam) return <p style={{ padding: '1rem', color: '#dc2626' }}>{t('Exam not found.')}</p>;
 
   const examCost = Number(exam.exam_cost);
   // Show the Extra Detail column when the exam type defines extra details or any registration has one
@@ -139,21 +141,21 @@ export default function ExamStudentsPage() {
           </div>
           <div style={{ color: '#64748b', fontSize: '0.875rem', marginTop: '0.2rem' }}>
             {exam.subject_code && <span>{exam.subject_code} &bull; </span>}
-            {exam.exam_location} &bull; {new Date(exam.scheduled_at).toLocaleString()} &bull; {exam.duration_mins} min
+            {exam.exam_location} &bull; {new Date(exam.scheduled_at).toLocaleString()} &bull; {exam.duration_mins} {t('min')}
           </div>
         </div>
       </div>
 
       {/* Exam info strip */}
       <div style={{ display: 'flex', gap: '1.5rem', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8, padding: '0.75rem 1.25rem', marginBottom: '1.5rem', flexWrap: 'wrap', fontSize: '0.875rem' }}>
-        <span><strong>Entry opens:</strong> {new Date(exam.entry_opens_at).toLocaleString()}</span>
-        <span><strong>Entry closes:</strong> {new Date(exam.entry_closes_at).toLocaleString()}</span>
-        <span><strong>Exam Cost:</strong> <span style={{ color: '#15803d', fontWeight: 700 }}>{examCost.toFixed(2)} AZN</span></span>
-        <span><strong>Registered:</strong> {registrations.length}</span>
-        <span><strong>Removed from exam:</strong> <span style={{ color: removed.length ? '#dc2626' : undefined, fontWeight: 600 }}>{removed.length}</span></span>
+        <span><strong>{t('Entry opens:')}</strong> {new Date(exam.entry_opens_at).toLocaleString()}</span>
+        <span><strong>{t('Entry closes:')}</strong> {new Date(exam.entry_closes_at).toLocaleString()}</span>
+        <span><strong>{t('Exam Cost:')}</strong> <span style={{ color: '#15803d', fontWeight: 700 }}>{examCost.toFixed(2)} AZN</span></span>
+        <span><strong>{t('Registered:')}</strong> {registrations.length}</span>
+        <span><strong>{t('Removed from exam:')}</strong> <span style={{ color: removed.length ? '#dc2626' : undefined, fontWeight: 600 }}>{removed.length}</span></span>
         <span style={{ marginLeft: 'auto' }}>
           <span style={{ background: exam.status === 'ongoing' ? '#16a34a' : exam.status === 'scheduled' ? '#2563eb' : '#64748b', color: '#fff', padding: '0.15rem 0.75rem', borderRadius: 12, fontSize: '0.78rem', fontWeight: 600 }}>
-            {exam.status}
+            {t(exam.status)}
           </span>
         </span>
       </div>
@@ -164,13 +166,13 @@ export default function ExamStudentsPage() {
           type="text"
           value={search}
           onChange={e => setSearch(e.target.value)}
-          placeholder="Search by name, number, email or mobile..."
+          placeholder={t('Search by name, number, email or mobile...')}
           style={{ flex: 1, padding: '0.5rem 0.75rem', border: '1px solid #cbd5e1', borderRadius: 6, fontSize: '0.95rem' }}
         />
         {search && (
           <button onClick={() => setSearch('')}
             style={{ padding: '0.5rem 0.75rem', background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: 6, cursor: 'pointer', color: '#64748b' }}>
-            Clear
+            {t('Clear')}
           </button>
         )}
       </div>
@@ -180,16 +182,16 @@ export default function ExamStudentsPage() {
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
-              {['#', 'Full Name', 'Student Number', 'Email', 'Mobile', 'Room', 'Seat', ...(showExtraDetail ? ['Extra Detail'] : []), 'Exam Cost', 'Registered At', 'Paid', ''].map(h => (
-                <th key={h} style={th}>{h}</th>
+              {['#', 'Full Name', 'Student Number', 'Email', 'Mobile', 'Class', 'Sector', 'Language', ...(showExtraDetail ? ['Extra Detail'] : []), 'Exam Cost', 'Registered At', 'Paid', ''].map(h => (
+                <th key={h} style={th}>{t(h)}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={showExtraDetail ? 12 : 11} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>
-                  No students registered for this exam yet.
+                <td colSpan={showExtraDetail ? 13 : 12} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>
+                  {t('No students registered for this exam yet.')}
                 </td>
               </tr>
             ) : filtered.map((r, i) => {
@@ -210,15 +212,16 @@ export default function ExamStudentsPage() {
                   </td>
                   <td style={td}>
                     <span
-                      title={r.partner_name ? `Partner: ${r.partner_name}` : 'No partner'}
+                      title={r.partner_name ? t('Partner: {name}', { name: r.partner_name }) : t('No partner')}
                       style={{ cursor: 'help', borderBottom: '1px dotted #94a3b8' }}>
                       {r.student_number}
                     </span>
                   </td>
                   <td style={td}>{r.email}</td>
                   <td style={td}>{r.mobile_number || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
-                  <td style={td}>{r.room_number || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
-                  <td style={td}>{r.seat_number || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
+                  <td style={{ ...td, textAlign: 'center' }}>{r.class_level ?? <span style={{ color: '#cbd5e1' }}>—</span>}</td>
+                  <td style={td}>{(r.sector && t(r.sector)) || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
+                  <td style={td}>{(r.language && t(r.language)) || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
                   {showExtraDetail && <td style={{ ...td, overflowWrap: 'anywhere' }}>{r.extra_detail || <span style={{ color: '#cbd5e1' }}>—</span>}</td>}
                   <td style={{ ...td, fontWeight: 600, color: '#15803d', whiteSpace: 'nowrap' }}>
                     {due.toFixed(2)} AZN
@@ -230,7 +233,7 @@ export default function ExamStudentsPage() {
                       {fullyPaid ? (
                         <button
                           onClick={() => openModal(r)}
-                          title={`Paid: ${paid.toFixed(2)} AZN${r.payment_method ? ` (${paymentMethodLabel(r.payment_method)})` : ''}`}
+                          title={`${t('Paid')}: ${paid.toFixed(2)} AZN${r.payment_method ? ` (${t(paymentMethodLabel(r.payment_method))})` : ''}`}
                           style={{ background: '#16a34a', border: 'none', borderRadius: 6, width: 32, height: 32, cursor: 'pointer', fontSize: '1rem', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                           ✓
                         </button>
@@ -238,12 +241,12 @@ export default function ExamStudentsPage() {
                         <button
                           onClick={() => openModal(r)}
                           style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: 6, padding: '0.25rem 0.7rem', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600 }}>
-                          {paid > 0 ? `${paid.toFixed(2)} AZN` : 'Pay'}
+                          {paid > 0 ? `${paid.toFixed(2)} AZN` : t('Pay')}
                         </button>
                       )}
                       {paid > 0 && r.payment_method && (
                         <span style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 600 }}>
-                          {paymentMethodLabel(r.payment_method)}
+                          {t(paymentMethodLabel(r.payment_method))}
                         </span>
                       )}
                       {!fullyPaid && due > 0 && (
@@ -255,12 +258,12 @@ export default function ExamStudentsPage() {
                   </td>
                   <td style={{ ...td, whiteSpace: 'nowrap' }}>
                     {paid > 0 ? (
-                      <span title="Students with a recorded payment cannot be removed" style={{ color: '#cbd5e1' }}>—</span>
+                      <span title={t('Students with a recorded payment cannot be removed')} style={{ color: '#cbd5e1' }}>—</span>
                     ) : (
                       <button
                         onClick={() => openRemoveModal(r)}
                         style={{ background: '#fff', color: '#dc2626', border: '1px solid #fecaca', borderRadius: 6, padding: '0.25rem 0.7rem', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600 }}>
-                        Remove
+                        {t('Remove')}
                       </button>
                     )}
                   </td>
@@ -280,7 +283,7 @@ export default function ExamStudentsPage() {
           className="btn-block"
           style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, padding: '0.6rem 1rem', cursor: 'pointer', color: '#b91c1c', fontWeight: 600, fontSize: '0.9rem' }}>
           <span>{removedOpen ? '▾' : '▸'}</span>
-          Removed students ({removed.length})
+          {t('Removed students ({n})', { n: removed.length })}
         </button>
         {removedOpen && (
           <div className="table-scroll" style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, overflow: 'hidden', marginTop: '0.5rem' }}>
@@ -288,7 +291,7 @@ export default function ExamStudentsPage() {
               <thead>
                 <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
                   {['#', 'Full Name', 'Student Number', 'Mobile', 'Reason', 'Removed By', 'Removed At', ''].map(h => (
-                    <th key={h} style={th}>{h}</th>
+                    <th key={h} style={th}>{t(h)}</th>
                   ))}
                 </tr>
               </thead>
@@ -296,7 +299,7 @@ export default function ExamStudentsPage() {
                 {removed.length === 0 ? (
                   <tr>
                     <td colSpan={8} style={{ padding: '1.5rem', textAlign: 'center', color: '#94a3b8' }}>
-                      No students removed from this exam.
+                      {t('No students removed from this exam.')}
                     </td>
                   </tr>
                 ) : removed.map((r, i) => (
@@ -313,7 +316,7 @@ export default function ExamStudentsPage() {
                         onClick={() => handleRestore(r)}
                         disabled={restoringId === r.id}
                         style={{ background: '#16a34a', color: '#fff', border: 'none', borderRadius: 6, padding: '0.25rem 0.7rem', cursor: restoringId === r.id ? 'not-allowed' : 'pointer', opacity: restoringId === r.id ? 0.7 : 1, fontSize: '0.8rem', fontWeight: 600 }}>
-                        {restoringId === r.id ? 'Restoring...' : 'Restore'}
+                        {restoringId === r.id ? t('Restoring...') : t('Restore')}
                       </button>
                     </td>
                   </tr>
@@ -329,19 +332,19 @@ export default function ExamStudentsPage() {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}
           onClick={(e) => { if (e.target === e.currentTarget) closeRemoveModal(); }}>
           <div className="modal-card" style={{ '--modal-w': '420px', background: '#fff', borderRadius: 12, padding: '1.75rem', width: 420, boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
-            <h3 style={{ margin: '0 0 0.25rem' }}>Remove from Exam</h3>
+            <h3 style={{ margin: '0 0 0.25rem' }}>{t('Remove from Exam')}</h3>
             <p style={{ margin: '0 0 1.25rem', color: '#64748b', fontSize: '0.875rem', overflowWrap: 'anywhere' }}>
-              {removeModal.full_name} ({removeModal.student_number}) will be removed from {exam.title}. Their room and seat will be freed.
+              {t('{name} ({number}) will be removed from {exam}. Their room and seat will be freed.', { name: removeModal.full_name, number: removeModal.student_number, exam: exam.title })}
             </p>
             <label style={{ display: 'block', fontWeight: 500, fontSize: '0.875rem', marginBottom: '0.3rem', color: '#374151' }}>
-              Reason <span style={{ color: '#dc2626' }}>*</span>
+              {t('Reason')} <span style={{ color: '#dc2626' }}>*</span>
             </label>
             <textarea
               value={removeReason}
               onChange={e => { setRemoveReason(e.target.value); setRemoveError(''); }}
               autoFocus
               rows={4}
-              placeholder="Why is this student removed from the exam?"
+              placeholder={t('Why is this student removed from the exam?')}
               style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #cbd5e1', borderRadius: 6, fontSize: '0.95rem', boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit', marginBottom: '1rem' }}
             />
             {removeError && (
@@ -350,11 +353,11 @@ export default function ExamStudentsPage() {
             <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
               <button onClick={closeRemoveModal}
                 style={{ padding: '0.5rem 1.25rem', background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: 6, cursor: 'pointer' }}>
-                Cancel
+                {t('Cancel')}
               </button>
               <button onClick={handleRemove} disabled={removing}
                 style={{ padding: '0.5rem 1.5rem', background: '#dc2626', color: '#fff', border: 'none', borderRadius: 6, cursor: removing ? 'not-allowed' : 'pointer', opacity: removing ? 0.7 : 1, fontWeight: 600 }}>
-                {removing ? 'Removing...' : 'Remove'}
+                {removing ? t('Removing...') : t('Remove')}
               </button>
             </div>
           </div>
@@ -384,13 +387,13 @@ export default function ExamStudentsPage() {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}
           onClick={(e) => { if (e.target === e.currentTarget) closeModal(); }}>
           <div className="modal-card" style={{ '--modal-w': '360px', background: '#fff', borderRadius: 12, padding: '1.75rem', width: 360, boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
-            <h3 style={{ margin: '0 0 0.25rem' }}>Record Payment</h3>
+            <h3 style={{ margin: '0 0 0.25rem' }}>{t('Record Payment')}</h3>
             <p style={{ margin: '0 0 1.25rem', color: '#64748b', fontSize: '0.875rem' }}>
               {paymentModal.full_name}
             </p>
 
             <div style={{ background: '#f8fafc', borderRadius: 8, padding: '0.75rem 1rem', marginBottom: '1.25rem', fontSize: '0.875rem', display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: '#475569' }}>Exam Cost</span>
+              <span style={{ color: '#475569' }}>{t('Exam Cost')}</span>
               <span style={{ fontWeight: 700 }}>{examCost.toFixed(2)} AZN</span>
             </div>
             {paymentModal.is_course_student && (
@@ -406,7 +409,7 @@ export default function ExamStudentsPage() {
             )}
 
             <label style={{ display: 'block', fontWeight: 500, fontSize: '0.875rem', marginBottom: '0.3rem', color: '#374151' }}>
-              Amount Paid (AZN)
+              {t('Amount Paid (AZN)')}
             </label>
             <div style={{ position: 'relative', marginBottom: '1.5rem' }}>
               <input
@@ -427,11 +430,11 @@ export default function ExamStudentsPage() {
               const rem = dueOf(paymentModal, examCost) - amt;
               return rem > 0 ? (
                 <div style={{ marginBottom: '1.25rem', color: '#dc2626', fontSize: '0.875rem', fontWeight: 600 }}>
-                  Remaining: {rem.toFixed(2)} AZN
+                  {t('Remaining:')} {rem.toFixed(2)} AZN
                 </div>
               ) : (
                 <div style={{ marginBottom: '1.25rem', color: '#16a34a', fontSize: '0.875rem', fontWeight: 600 }}>
-                  ✓ Fully paid
+                  {t('✓ Fully paid')}
                 </div>
               );
             })()}
@@ -445,11 +448,11 @@ export default function ExamStudentsPage() {
             <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
               <button onClick={closeModal}
                 style={{ padding: '0.5rem 1.25rem', background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: 6, cursor: 'pointer' }}>
-                Cancel
+                {t('Cancel')}
               </button>
               <button onClick={handleSavePayment} disabled={saving}
                 style={{ padding: '0.5rem 1.5rem', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 6, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1, fontWeight: 600 }}>
-                {saving ? 'Saving...' : 'Save'}
+                {saving ? t('Saving...') : t('Save')}
               </button>
             </div>
           </div>

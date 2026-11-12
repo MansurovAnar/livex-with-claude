@@ -1,4 +1,5 @@
 import React from 'react';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 export const PAYMENT_METHODS = [
   { value: 'card', label: 'Card' },
@@ -10,10 +11,11 @@ export const paymentMethodLabel = (value) =>
 
 // Required Card / Cash radio group used in the Record Payment modals
 export default function PaymentMethodRadio({ value, onChange, name = 'payment_method' }) {
+  const { t } = useLanguage();
   return (
     <div style={{ marginBottom: '1.25rem' }}>
       <span style={{ display: 'block', fontWeight: 500, fontSize: '0.875rem', marginBottom: '0.3rem', color: '#374151' }}>
-        Payment Method <span style={{ color: '#dc2626' }}>*</span>
+        {t('Payment Method')} <span style={{ color: '#dc2626' }}>*</span>
       </span>
       <div className="radio-row" role="radiogroup" style={{ display: 'flex', gap: '1.5rem' }}>
         {PAYMENT_METHODS.map(m => (
@@ -26,7 +28,7 @@ export default function PaymentMethodRadio({ value, onChange, name = 'payment_me
               onChange={() => onChange(m.value)}
               style={{ accentColor: '#2563eb', width: 16, height: 16 }}
             />
-            {m.label}
+            {t(m.label)}
           </label>
         ))}
       </div>

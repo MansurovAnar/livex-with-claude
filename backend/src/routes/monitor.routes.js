@@ -3,8 +3,8 @@ const ctrl = require('../controllers/monitor.controller');
 const authenticate = require('../middleware/authenticate');
 const authorize = require('../middleware/authorize');
 
-router.use(authenticate, authorize('admin', 'viewer'));
-router.get('/today', ctrl.todayDashboard);
-router.get('/exams/:examId', ctrl.examMonitor);
+router.use(authenticate);
+router.get('/today', authorize('admin', 'viewer'), ctrl.todayDashboard);
+router.get('/exams/:examId', authorize('admin', 'viewer', 'reception'), ctrl.examMonitor);
 
 module.exports = router;

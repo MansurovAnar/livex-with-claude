@@ -2,10 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import apiClient from '../../api/apiClient';
 import StudentTicket from '../../components/shared/StudentTicket';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 export default function PartnerMyExamStudentsPage() {
   const { examId } = useParams();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [rows, setRows] = useState([]);
   const [examInfo, setExamInfo] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -40,7 +42,7 @@ export default function PartnerMyExamStudentsPage() {
     <div>
       <button onClick={() => navigate('/partner/register')}
         style={{ background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer', padding: '0 0 0.25rem', fontSize: '0.875rem', marginBottom: '0.5rem' }}>
-        ← Back to Register
+        {t('← Back to Register')}
       </button>
 
       {examInfo && (
@@ -55,7 +57,7 @@ export default function PartnerMyExamStudentsPage() {
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
         <input
           type="text"
-          placeholder="Search by name or student number..."
+          placeholder={t('Search by name or student number...')}
           value={search}
           onChange={e => setSearch(e.target.value)}
           style={{ padding: '0.5rem 0.75rem', border: '1px solid #cbd5e1', borderRadius: 6, fontSize: '0.875rem', width: 280 }}
@@ -63,36 +65,36 @@ export default function PartnerMyExamStudentsPage() {
         {search && (
           <button onClick={() => setSearch('')}
             style={{ background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: 6, padding: '0.4rem 0.75rem', cursor: 'pointer', fontSize: '0.875rem', color: '#64748b' }}>
-            Clear
+            {t('Clear')}
           </button>
         )}
         <span style={{ color: '#64748b', fontSize: '0.875rem', marginLeft: 'auto' }}>
-          {filtered.length} student{filtered.length !== 1 ? 's' : ''}
+          {filtered.length === 1 ? t('1 student') : t('{n} students', { n: filtered.length })}
         </span>
       </div>
 
       {loading ? (
-        <p style={{ color: '#94a3b8' }}>Loading...</p>
+        <p style={{ color: '#94a3b8' }}>{t('Loading...')}</p>
       ) : (
         <div className="table-scroll" style={{ overflowX: 'auto', borderRadius: 10, border: '1px solid #e2e8f0' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', background: '#fff', fontSize: '0.9rem' }}>
             <thead>
               <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
                 <th style={thStyle}>#</th>
-                <th style={thStyle}>Full Name</th>
-                <th style={thStyle}>Student Number</th>
-                <th style={thStyle}>Class</th>
-                <th style={thStyle}>Sector</th>
-                <th style={thStyle}>Language</th>
-                <th style={thStyle}>Room</th>
-                <th style={thStyle}>Seat</th>
-                {showExtraDetail && <th style={thStyle}>Extra Detail</th>}
-                <th style={thStyle}>Registered At</th>
+                <th style={thStyle}>{t('Full Name')}</th>
+                <th style={thStyle}>{t('Student Number')}</th>
+                <th style={thStyle}>{t('Class')}</th>
+                <th style={thStyle}>{t('Sector')}</th>
+                <th style={thStyle}>{t('Language')}</th>
+                <th style={thStyle}>{t('Room')}</th>
+                <th style={thStyle}>{t('Seat')}</th>
+                {showExtraDetail && <th style={thStyle}>{t('Extra Detail')}</th>}
+                <th style={thStyle}>{t('Registered At')}</th>
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0 ? (
-                <tr><td colSpan={showExtraDetail ? 10 : 9} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>No students found.</td></tr>
+                <tr><td colSpan={showExtraDetail ? 10 : 9} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>{t('No students found.')}</td></tr>
               ) : (
                 filtered.map((r, i) => (
                   <tr key={r.id} style={{ borderBottom: '1px solid #f1f5f9' }}
@@ -107,8 +109,8 @@ export default function PartnerMyExamStudentsPage() {
                     </td>
                     <td style={tdStyle}>{r.student_number}</td>
                     <td style={tdStyle}>{r.class_level ?? '—'}</td>
-                    <td style={tdStyle}>{r.sector ?? '—'}</td>
-                    <td style={tdStyle}>{r.language ?? '—'}</td>
+                    <td style={tdStyle}>{r.sector ? t(r.sector) : '—'}</td>
+                    <td style={tdStyle}>{r.language ? t(r.language) : '—'}</td>
                     <td style={tdStyle}>{r.room_number ?? '—'}</td>
                     <td style={tdStyle}>{r.seat_number ?? '—'}</td>
                     {showExtraDetail && <td style={{ ...tdStyle, overflowWrap: 'anywhere' }}>{r.extra_detail ?? '—'}</td>}

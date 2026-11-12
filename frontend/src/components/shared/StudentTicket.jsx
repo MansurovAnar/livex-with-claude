@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { toBlob } from 'html-to-image';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 /**
  * Printable exam entry ticket (1/3 A4 = 210mm × 99mm).
@@ -11,6 +12,7 @@ const TICKET_H = 374;
 
 export default function StudentTicket({ data, onClose }) {
   const [sharing, setSharing] = useState(false);
+  const { t } = useLanguage();
   // On screens narrower than the ticket, zoom it out to fit (print/share keep full size)
   const [scale, setScale] = useState(1);
   useEffect(() => {
@@ -54,7 +56,7 @@ export default function StudentTicket({ data, onClose }) {
       const fileName = `ticket-${data.studentNumber || 'student'}.png`;
       const file = new File([blob], fileName, { type: 'image/png' });
       if (navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ files: [file], title: `${data.examTitle} — exam ticket` });
+        await navigator.share({ files: [file], title: `${data.examTitle} — ${t('exam ticket')}` });
       } else {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -63,7 +65,7 @@ export default function StudentTicket({ data, onClose }) {
         URL.revokeObjectURL(url);
       }
     } catch (err) {
-      if (err?.name !== 'AbortError') alert('Could not share the ticket. Please try Print instead.');
+      if (err?.name !== 'AbortError') alert(t('Could not share the ticket. Please try Print instead.'));
     } finally {
       setSharing(false);
     }
@@ -122,16 +124,16 @@ export default function StudentTicket({ data, onClose }) {
             </div>
             {/* Number and LIVEX email share one row so the fixed-height ticket doesn't overflow */}
             <div style={{ fontSize: 12, color: '#475569', marginTop: 3, display: 'flex', flexWrap: 'wrap', columnGap: '6mm' }}>
-              <span><span style={{ fontWeight: 700 }}>Student number:</span> {data.studentNumber}</span>
+              <span><span style={{ fontWeight: 700 }}>{t('Student number:')}</span> {data.studentNumber}</span>
               {data.studentEmail && (
                 <span style={{ overflowWrap: 'anywhere' }}>
-                  <span style={{ fontWeight: 700 }}>LIVEX email:</span> {data.studentEmail}
+                  <span style={{ fontWeight: 700 }}>{t('LIVEX email:')}</span> {data.studentEmail}
                 </span>
               )}
             </div>
             {data.extraDetail && (
               <div style={{ fontSize: 12, color: '#475569', marginTop: 2 }}>
-                <span style={{ fontWeight: 700 }}>Extra detail:</span> {data.extraDetail}
+                <span style={{ fontWeight: 700 }}>{t('Extra detail:')}</span> {data.extraDetail}
               </div>
             )}
           </div>
@@ -141,12 +143,12 @@ export default function StudentTicket({ data, onClose }) {
 
           {/* Exam details grid */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2mm 6mm', flex: 1 }}>
-            <Field label="Exam" value={data.examTitle} />
-            <Field label="Date & Time" value={dateStr} />
-            <Field label="Location" value={data.examLocation} />
+            <Field label={t('Exam')} value={data.examTitle} />
+            <Field label={t('Date & Time')} value={dateStr} />
+            <Field label={t('Location')} value={data.examLocation} />
             <div style={{ display: 'flex', gap: '6mm' }}>
-              {data.roomNumber && <Field label="Room" value={data.roomNumber} />}
-              {data.seatNumber && <Field label="Seat" value={data.seatNumber} />}
+              {data.roomNumber && <Field label={t('Room')} value={data.roomNumber} />}
+              {data.seatNumber && <Field label={t('Seat')} value={data.seatNumber} />}
             </div>
           </div>
 
@@ -178,13 +180,13 @@ export default function StudentTicket({ data, onClose }) {
             padding: '0.6rem 1.75rem', background: '#00bcd4', color: '#fff',
             border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600, fontSize: '0.9rem',
           }}>
-          🖨 Print
+          {t('🖨 Print')}
         </button>
         <button
           onClick={handleShare}
           disabled={sharing}
-          aria-label="Share ticket"
-          title="Share ticket"
+          aria-label={t('Share ticket')}
+          title={t('Share ticket')}
           style={{
             padding: '0.6rem 0.9rem', background: '#00bcd4', color: '#fff',
             border: 'none', borderRadius: 6, cursor: sharing ? 'wait' : 'pointer',
@@ -198,7 +200,7 @@ export default function StudentTicket({ data, onClose }) {
             padding: '0.6rem 1.25rem', background: '#f1f5f9',
             border: '1px solid #e2e8f0', borderRadius: 6, cursor: 'pointer', color: '#475569',
           }}>
-          Close
+          {t('Close')}
         </button>
       </div>
     </div>

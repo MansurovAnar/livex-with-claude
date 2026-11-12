@@ -4,10 +4,12 @@ import { listExams } from '../../api/exams.api';
 import { listStudents } from '../../api/students.api';
 import { registerStudent } from '../../api/registrations.api';
 import StudentTicket from '../../components/shared/StudentTicket';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 export default function RegisterToExamPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { t, tError } = useLanguage();
   // Pre-filled student passed via navigation state
   const prefilledStudent = location.state?.student || null;
 
@@ -63,9 +65,9 @@ export default function RegisterToExamPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!selectedStudent) { setError('Please select a student.'); return; }
-    if (!selectedExam) { setError('Please select an exam.'); return; }
-    if (extraDetailOptions.length > 0 && !extraDetail) { setError('Please select an extra detail.'); return; }
+    if (!selectedStudent) { setError(t('Please select a student.')); return; }
+    if (!selectedExam) { setError(t('Please select an exam.')); return; }
+    if (extraDetailOptions.length > 0 && !extraDetail) { setError(t('Please select an extra detail.')); return; }
     setError(''); setRemovedFrom(null); setTicket(null); setSubmitting(true);
     try {
       await registerStudent(selectedExam, { student_id: selectedStudent.id, seat_number: seat || undefined, room_number: roomNumber || undefined, extra_detail: extraDetailOptions.length ? extraDetail : undefined });
@@ -92,7 +94,7 @@ export default function RegisterToExamPage() {
       if (apiError?.code === 'REMOVED_FROM_EXAM') {
         setRemovedFrom(apiError.details);
       } else {
-        setError(apiError?.message || 'Registration failed');
+        setError(tError(err, 'Registration failed'));
       }
     } finally {
       setSubmitting(false);
@@ -106,7 +108,7 @@ export default function RegisterToExamPage() {
           style={{ background: 'none', border: 'none', fontSize: '1.25rem', cursor: 'pointer', color: '#7e22ce' }}>
           &larr;
         </button>
-        <h2 style={{ margin: 0 }}>Register Student to Exam</h2>
+        <h2 style={{ margin: 0 }}>{t('Register Student to Exam')}</h2>
       </div>
 
       {ticket && (
@@ -114,7 +116,7 @@ export default function RegisterToExamPage() {
       )}
       {removedFrom && (
         <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', padding: '0.75rem 1rem', borderRadius: 6, marginBottom: '1rem', overflowWrap: 'anywhere' }}>
-          This student is removed from {removedFrom.exam_title} exam. You can restore this student from{' '}
+          {t('This student is removed from {exam} exam. You can restore this student from', { exam: removedFrom.exam_title })}{' '}
           <Link to={`/reception/exams/${removedFrom.exam_id}/students`} style={{ color: '#7e22ce', fontWeight: 600 }}>
             {removedFrom.exam_title}
           </Link>.
@@ -130,7 +132,7 @@ export default function RegisterToExamPage() {
 
         {/* Student searchable dropdown */}
         <div style={{ marginBottom: '1.25rem' }}>
-          <label style={labelStyle}>Student <span style={{ color: '#dc2626' }}>*</span></label>
+          <label style={labelStyle}>{t('Student')} <span style={{ color: '#dc2626' }}>*</span></label>
           <div style={{ position: 'relative' }}>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <input
@@ -139,7 +141,7 @@ export default function RegisterToExamPage() {
                 value={studentQuery}
                 onChange={e => { setStudentQuery(e.target.value); setSelectedStudent(null); }}
                 onFocus={() => studentResults.length > 0 && setDropdownOpen(true)}
-                placeholder="Search by name, number or email..."
+                placeholder={t('Search by name, number or email...')}
                 disabled={!!selectedStudent}
                 style={{ ...inputStyle, flex: 1, background: selectedStudent ? '#f8fafc' : '#fff' }}
               />
@@ -174,9 +176,9 @@ export default function RegisterToExamPage() {
 
         {/* Exam dropdown */}
         <div style={{ marginBottom: '1.25rem' }}>
-          <label style={labelStyle}>Exam <span style={{ color: '#dc2626' }}>*</span></label>
+          <label style={labelStyle}>{t('Exam')} <span style={{ color: '#dc2626' }}>*</span></label>
           <select value={selectedExam} onChange={e => { setSelectedExam(e.target.value); setExtraDetail(''); }} required style={inputStyle}>
-            <option value="">Select exam...</option>
+            <option value="">{t('Select exam...')}</option>
             {exams.map(ex => (
               <option key={ex.id} value={ex.id}>
                 {ex.title} — {new Date(ex.scheduled_at).toLocaleDateString()} {new Date(ex.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -184,13 +186,13 @@ export default function RegisterToExamPage() {
             ))}
           </select>
           {exams.length === 0 && (
-            <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '0.25rem' }}>No scheduled exams found.</div>
+            <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '0.25rem' }}>{t('No scheduled exams found.')}</div>
           )}
           {selectedExam && (() => {
             const ex = exams.find(e => e.id === selectedExam);
             return ex ? (
               <div style={{ marginTop: '0.5rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 6, padding: '0.35rem 0.75rem', fontSize: '0.875rem' }}>
-                <span style={{ color: '#15803d', fontWeight: 600 }}>Exam Cost:</span>
+                <span style={{ color: '#15803d', fontWeight: 600 }}>{t('Exam Cost:')}</span>
                 <span style={{ color: '#166534', fontWeight: 700 }}>{Number(ex.exam_cost).toFixed(2)} AZN</span>
               </div>
             ) : null;
@@ -200,9 +202,9 @@ export default function RegisterToExamPage() {
         {/* Extra detail (required when the exam's type defines extra details) */}
         {extraDetailOptions.length > 0 && (
           <div style={{ marginBottom: '1.25rem' }}>
-            <label style={labelStyle}>Extra Detail <span style={{ color: '#dc2626' }}>*</span></label>
+            <label style={labelStyle}>{t('Extra Detail')} <span style={{ color: '#dc2626' }}>*</span></label>
             <select value={extraDetail} onChange={e => setExtraDetail(e.target.value)} required style={inputStyle}>
-              <option value="">Select extra detail...</option>
+              <option value="">{t('Select extra detail...')}</option>
               {extraDetailOptions.map(d => <option key={d} value={d}>{d}</option>)}
             </select>
           </div>
@@ -211,23 +213,23 @@ export default function RegisterToExamPage() {
         {/* Room + Seat */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
           <div>
-            <label style={labelStyle}>Room Number <span style={{ color: '#94a3b8', fontWeight: 400 }}>(optional)</span></label>
-            <input type="text" value={roomNumber} onChange={e => setRoomNumber(e.target.value)} placeholder="e.g. 101" style={inputStyle} />
+            <label style={labelStyle}>{t('Room Number')} <span style={{ color: '#94a3b8', fontWeight: 400 }}>{t('(optional)')}</span></label>
+            <input type="text" value={roomNumber} onChange={e => setRoomNumber(e.target.value)} placeholder={t('e.g. 101')} style={inputStyle} />
           </div>
           <div>
-            <label style={labelStyle}>Seat Number <span style={{ color: '#94a3b8', fontWeight: 400 }}>(optional)</span></label>
-            <input type="text" value={seat} onChange={e => setSeat(e.target.value)} placeholder="e.g. A12" style={inputStyle} />
+            <label style={labelStyle}>{t('Seat Number')} <span style={{ color: '#94a3b8', fontWeight: 400 }}>{t('(optional)')}</span></label>
+            <input type="text" value={seat} onChange={e => setSeat(e.target.value)} placeholder={t('e.g. A12')} style={inputStyle} />
           </div>
         </div>
 
         <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
           <button type="button" onClick={() => navigate('/reception')}
             style={{ padding: '0.55rem 1.25rem', background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: 6, cursor: 'pointer' }}>
-            Cancel
+            {t('Cancel')}
           </button>
           <button type="submit" disabled={submitting}
             style={{ padding: '0.55rem 1.5rem', background: '#7e22ce', color: '#fff', border: 'none', borderRadius: 6, cursor: submitting ? 'not-allowed' : 'pointer', opacity: submitting ? 0.7 : 1 }}>
-            {submitting ? 'Registering...' : 'Register'}
+            {submitting ? t('Registering...') : t('Register')}
           </button>
         </div>
       </form>
