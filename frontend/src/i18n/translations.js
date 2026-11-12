@@ -429,6 +429,12 @@ export const AZ = {
   'Cancelled': 'Ləğv edilib',
   'All': 'Hamısı',
 
+  // ── Student exams modal (Admin › Students, Reception › Students) ──
+  'Student exams': 'Şagirdin imtahanları',
+  'Due': 'Ödənilməli',
+  'Failed to load exams': 'İmtahanları yükləmək alınmadı',
+  'This student is not registered for any exam.': 'Bu şagird heç bir imtahana qeydiyyatdan keçməyib.',
+
   // ── S. Messages from the server ──
   'Invalid email or password': 'Email və ya Şifrə yanlışdır',
   'Insufficient permissions': 'Əməliyyat üçün icazəniz yoxdur',

@@ -3,6 +3,7 @@ import { listStudents, updateStudent, deleteStudent } from '../../api/students.a
 import { useAuth } from '../../contexts/AuthContext';
 import { PageSizeSelect, PaginationBar } from '../../components/shared/Pagination';
 import CourseDiscountBadge from '../../components/shared/CourseDiscountBadge';
+import StudentExamsModal from '../../components/shared/StudentExamsModal';
 import { useLanguage } from '../../i18n/LanguageContext';
 
 const CLASSES = Array.from({ length: 11 }, (_, i) => i + 1);
@@ -16,6 +17,7 @@ export default function StudentsPage() {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [editingStudent, setEditingStudent] = useState(null);
+  const [examsStudent, setExamsStudent] = useState(null);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [total, setTotal] = useState(0);
@@ -73,6 +75,7 @@ export default function StudentsPage() {
                 <td className="hide-mobile" style={td}>{(s.sector && t(s.sector)) || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
                 <td className="hide-mobile" style={td}>{(s.language && t(s.language)) || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
                 <td style={{ ...td, whiteSpace: 'nowrap' }}>
+                  <button onClick={() => setExamsStudent(s)} style={actionBtn('#ea580c')}>{t('Exams')}</button>
                   {user?.role === 'admin' && (
                     <button onClick={() => setEditingStudent(s)} style={actionBtn('#475569')}>{t('Edit')}</button>
                   )}
@@ -86,6 +89,8 @@ export default function StudentsPage() {
         <PaginationBar page={page} limit={limit} total={total} onPageChange={p => load(search, p)} />
         </>
       )}
+
+      {examsStudent && <StudentExamsModal student={examsStudent} onClose={() => setExamsStudent(null)} />}
 
       {editingStudent && (
         <EditStudentModal

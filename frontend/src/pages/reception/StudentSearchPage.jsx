@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { listStudents } from '../../api/students.api';
 import { PageSizeSelect, PaginationBar } from '../../components/shared/Pagination';
 import CourseDiscountBadge from '../../components/shared/CourseDiscountBadge';
+import StudentExamsModal from '../../components/shared/StudentExamsModal';
 import { useLanguage } from '../../i18n/LanguageContext';
 
 export default function StudentSearchPage() {
@@ -14,6 +15,7 @@ export default function StudentSearchPage() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
+  const [examsStudent, setExamsStudent] = useState(null);
 
   const load = (q = '', p = 1, l = limit) => {
     setLoading(true);
@@ -92,12 +94,13 @@ export default function StudentSearchPage() {
                   <th className="hide-mobile" style={th}>{t('Sector')}</th>
                   <th className="hide-mobile" style={th}>{t('Language')}</th>
                   <th className="hide-mobile" style={th}>{t('Registered')}</th>
+                  <th style={th}></th>
                 </tr>
               </thead>
               <tbody>
                 {students.length === 0 ? (
                   <tr>
-                    <td colSpan={8}style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>
+                    <td colSpan={9} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>
                       {t('No students found.')}
                     </td>
                   </tr>
@@ -119,6 +122,12 @@ export default function StudentSearchPage() {
                       <td className="hide-mobile" style={td}>{(s.sector && t(s.sector)) || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
                       <td className="hide-mobile" style={td}>{(s.language && t(s.language)) || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
                       <td className="hide-mobile" style={td}>{new Date(s.created_at).toLocaleDateString()}</td>
+                      <td style={{ ...td, whiteSpace: 'nowrap' }}>
+                        <button onClick={() => setExamsStudent(s)}
+                          style={{ background: '#ea580c', color: '#fff', border: 'none', borderRadius: 4, padding: '0.25rem 0.75rem', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 500 }}>
+                          {t('Exams')}
+                        </button>
+                      </td>
                     </tr>
                   ))
                 )}
@@ -128,6 +137,8 @@ export default function StudentSearchPage() {
           <PaginationBar page={page} limit={limit} total={total} onPageChange={p => load(search, p)} />
         </>
       )}
+
+      {examsStudent && <StudentExamsModal student={examsStudent} onClose={() => setExamsStudent(null)} />}
     </div>
   );
 }
