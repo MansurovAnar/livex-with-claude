@@ -35,7 +35,13 @@ exports.createCourseStudentSchema = exports.createStudentSchema.extend({
   discount_note: courseFields.discount_note,
 });
 
-exports.updateCourseStudentSchema = exports.createStudentSchema.extend(courseFields).partial();
+// Edit works on the stored full_name/email (as the regular student update does)
+exports.updateCourseStudentSchema = z.object({
+  ...studentFields,
+  full_name: z.string().trim().min(1).max(150),
+  email: z.string().email(),
+  ...courseFields,
+}).partial();
 exports.updateStudentSchema = z.object({
   ...studentFields,
   full_name: z.string().min(1).max(150),
