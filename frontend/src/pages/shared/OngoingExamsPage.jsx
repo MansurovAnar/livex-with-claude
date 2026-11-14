@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { listExams } from '../../api/exams.api';
-import { listRegistrations } from '../../api/registrations.api';
+import { listRegistrations, updatePayment } from '../../api/registrations.api';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../i18n/LanguageContext';
+import PaymentMethodRadio, { paymentMethodLabel } from '../../components/shared/PaymentMethodRadio';
+import CourseDiscountBadge from '../../components/shared/CourseDiscountBadge';
 
 // Price the student owes: course students get their discount (FREE = 0), see due_amount from the API
 const dueOf = (reg, examCost) => (reg.due_amount != null ? Number(reg.due_amount) : examCost);
@@ -17,12 +19,17 @@ const EMPTY_FILTERS = { exam: '', partner: '', classLevel: '', sector: '', langu
 export default function OngoingExamsPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, tError } = useLanguage();
   const [exams, setExams] = useState([]);
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filters, setFilters] = useState(EMPTY_FILTERS);
+  const [paymentModal, setPaymentModal] = useState(null);
+  const [payInput, setPayInput] = useState('');
+  const [payMethod, setPayMethod] = useState('');
+  const [payError, setPayError] = useState('');
+  const [saving, setSaving] = useState(false);
 
   const isReception = user?.role === 'reception';
   const base = isReception ? '/reception' : '/admin';
@@ -39,11 +46,39 @@ export default function OngoingExamsPage() {
           ...r,
           exam_id: e.id,
           exam_title: e.title,
+          exam_cost: Number(e.exam_cost),
           due: dueOf(r, Number(e.exam_cost)),
         }))));
       })
       .finally(() => setLoading(false));
   }, []);
+
+  const openModal = (reg) => {
+    setPaymentModal(reg);
+    setPayInput(Number(reg.amount_paid) > 0 ? String(Number(reg.amount_paid)) : '');
+    setPayMethod(reg.payment_method || '');
+    setPayError('');
+  };
+
+  const closeModal = () => { setPaymentModal(null); setPayInput(''); setPayMethod(''); setPayError(''); };
+
+  const handleSavePayment = async () => {
+    const amt = parseFloat(payInput);
+    if (isNaN(amt) || amt < 0) return;
+    if (amt > 0 && !payMethod) { setPayError(t('Select Card or Cash.')); return; }
+    const method = amt > 0 ? payMethod : null;
+    setSaving(true);
+    setPayError('');
+    try {
+      await updatePayment(paymentModal.id, amt, method);
+      setRows(prev => prev.map(r => r.id === paymentModal.id ? { ...r, amount_paid: amt, payment_method: method } : r));
+      closeModal();
+    } catch (err) {
+      setPayError(tError(err, 'Failed to save payment'));
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const q = search.trim().toLowerCase();
   const searched = q
@@ -195,16 +230,33 @@ export default function OngoingExamsPage() {
                       <td style={td}>{(r.sector && t(r.sector)) || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
                       <td style={td}>{(r.language && t(r.language)) || <span style={{ color: '#cbd5e1' }}>—</span>}</td>
                       <td style={{ ...td, whiteSpace: 'nowrap' }}>
-                        {fullyPaid ? (
-                          <span title={`${t('Paid')}: ${paid.toFixed(2)} AZN`}
-                            style={{ background: '#16a34a', color: '#fff', padding: '0.15rem 0.6rem', borderRadius: 12, fontSize: '0.75rem', fontWeight: 600 }}>
-                            ✓ {t('Paid')}
-                          </span>
-                        ) : (
-                          <span style={{ color: '#dc2626', fontSize: '0.8rem', fontWeight: 600 }}>
-                            {paid > 0 ? `${paid.toFixed(2)} AZN · ` : ''}-{(r.due - paid).toFixed(2)} AZN
-                          </span>
-                        )}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          {fullyPaid ? (
+                            <button
+                              onClick={() => openModal(r)}
+                              title={`${t('Paid')}: ${paid.toFixed(2)} AZN${r.payment_method ? ` (${t(paymentMethodLabel(r.payment_method))})` : ''}`}
+                              aria-label={t('Paid')}
+                              style={{ background: '#16a34a', border: 'none', borderRadius: 6, width: 32, height: 32, cursor: 'pointer', fontSize: '1rem', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              ✓
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => openModal(r)}
+                              style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: 6, padding: '0.25rem 0.7rem', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600 }}>
+                              {paid > 0 ? `${paid.toFixed(2)} AZN` : t('Pay')}
+                            </button>
+                          )}
+                          {paid > 0 && r.payment_method && (
+                            <span style={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 600 }}>
+                              {t(paymentMethodLabel(r.payment_method))}
+                            </span>
+                          )}
+                          {!fullyPaid && r.due > 0 && (
+                            <span style={{ color: '#dc2626', fontSize: '0.8rem', fontWeight: 600 }}>
+                              -{(r.due - paid).toFixed(2)} AZN
+                            </span>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );
@@ -213,6 +265,82 @@ export default function OngoingExamsPage() {
             </table>
           </div>
         </>
+      )}
+
+      {/* Payment Modal */}
+      {paymentModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}
+          onClick={(e) => { if (e.target === e.currentTarget) closeModal(); }}>
+          <div className="modal-card" style={{ '--modal-w': '360px', background: '#fff', borderRadius: 12, padding: '1.75rem', width: 360, boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
+            <h3 style={{ margin: '0 0 0.25rem' }}>{t('Record Payment')}</h3>
+            <p style={{ margin: '0 0 1.25rem', color: '#64748b', fontSize: '0.875rem', overflowWrap: 'anywhere' }}>
+              {paymentModal.full_name} · {paymentModal.exam_title}
+            </p>
+
+            <div style={{ background: '#f8fafc', borderRadius: 8, padding: '0.75rem 1rem', marginBottom: '1.25rem', fontSize: '0.875rem', display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ color: '#475569' }}>{t('Exam Cost')}</span>
+              <span style={{ fontWeight: 700 }}>{paymentModal.exam_cost.toFixed(2)} AZN</span>
+            </div>
+            {paymentModal.is_course_student && (
+              <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 8, padding: '0.75rem 1rem', marginTop: '-0.75rem', marginBottom: '1.25rem', fontSize: '0.875rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem' }}>
+                  <span style={{ color: '#475569' }}>Course student <CourseDiscountBadge student={paymentModal} /></span>
+                  <span style={{ fontWeight: 700 }}>{paymentModal.due.toFixed(2)} AZN</span>
+                </div>
+                {paymentModal.discount_note && (
+                  <div style={{ color: '#92400e', marginTop: '0.35rem', overflowWrap: 'anywhere' }}>{paymentModal.discount_note}</div>
+                )}
+              </div>
+            )}
+
+            <label style={{ display: 'block', fontWeight: 500, fontSize: '0.875rem', marginBottom: '0.3rem', color: '#374151' }}>
+              {t('Amount Paid (AZN)')}
+            </label>
+            <div style={{ position: 'relative', marginBottom: '1.5rem' }}>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={payInput}
+                onChange={e => setPayInput(e.target.value)}
+                autoFocus
+                onKeyDown={e => e.key === 'Enter' && handleSavePayment()}
+                style={{ width: '100%', padding: '0.5rem 3rem 0.5rem 0.75rem', border: '1px solid #cbd5e1', borderRadius: 6, fontSize: '1rem', boxSizing: 'border-box' }}
+              />
+              <span style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#64748b', fontWeight: 600, fontSize: '0.875rem' }}>AZN</span>
+            </div>
+
+            {payInput !== '' && !isNaN(parseFloat(payInput)) && (() => {
+              const rem = paymentModal.due - parseFloat(payInput);
+              return rem > 0 ? (
+                <div style={{ marginBottom: '1.25rem', color: '#dc2626', fontSize: '0.875rem', fontWeight: 600 }}>
+                  {t('Remaining:')} {rem.toFixed(2)} AZN
+                </div>
+              ) : (
+                <div style={{ marginBottom: '1.25rem', color: '#16a34a', fontSize: '0.875rem', fontWeight: 600 }}>
+                  {t('✓ Fully paid')}
+                </div>
+              );
+            })()}
+
+            <PaymentMethodRadio value={payMethod} onChange={(m) => { setPayMethod(m); setPayError(''); }} />
+
+            {payError && (
+              <div style={{ marginBottom: '1rem', color: '#dc2626', fontSize: '0.875rem' }}>{payError}</div>
+            )}
+
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+              <button onClick={closeModal}
+                style={{ padding: '0.5rem 1.25rem', background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: 6, cursor: 'pointer' }}>
+                {t('Cancel')}
+              </button>
+              <button onClick={handleSavePayment} disabled={saving}
+                style={{ padding: '0.5rem 1.5rem', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 6, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1, fontWeight: 600 }}>
+                {saving ? t('Saving...') : t('Save')}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
