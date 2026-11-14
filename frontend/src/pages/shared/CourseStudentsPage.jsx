@@ -3,12 +3,12 @@ import { listCourseStudents, createCourseStudent, updateCourseStudent } from '..
 import { useAuth } from '../../contexts/AuthContext';
 import { PageSizeSelect, PaginationBar } from '../../components/shared/Pagination';
 import CourseDiscountBadge from '../../components/shared/CourseDiscountBadge';
+import useStudentEmailPreview from '../../hooks/useStudentEmailPreview';
 
 const PREFIXES = ['010', '050', '051', '055', '070', '077', '099'];
 const CLASSES = Array.from({ length: 11 }, (_, i) => i + 1);
 const SECTORS = ['Azerbaijan', 'Rus'];
 const LANGUAGES = ['English', 'Russian', 'German', 'French'];
-const EMAIL_DOMAIN = '@livex.hedef';
 
 // Course students: added and edited by admin, read-only for reception.
 // Each one pays the exam cost minus a fixed AZN discount, or nothing when FREE.
@@ -131,8 +131,12 @@ function CourseStudentModal({ student, onClose, onSaved }) {
   const isEdit = !!student;
   const [form, setForm] = useState(() => ({
     student_number: student?.student_number || '',
+    // New students: name parts, the server builds full_name and the email (LV#7).
+    // Existing students: full_name and email are edited directly.
+    first_name: '',
+    last_name: '',
+    father_name: '',
     full_name: student?.full_name || '',
-    // New students get the fixed @livex.hedef domain; existing emails are edited in full
     email: student?.email || '',
     ...splitMobile(student?.mobile_number),
     class_level: student?.class_level ?? '',
@@ -144,6 +148,8 @@ function CourseStudentModal({ student, onClose, onSaved }) {
   }));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const emailPreview = useStudentEmailPreview('/students/email-preview',
+    isEdit ? '' : form.first_name, isEdit ? '' : form.last_name);
 
   const handleChange = e => setForm(f => ({ ...f, [e.target.name]: e.target.value }));
 
@@ -157,8 +163,13 @@ function CourseStudentModal({ student, onClose, onSaved }) {
 
     const payload = {
       student_number: form.student_number,
-      full_name: form.full_name,
-      email: isEdit ? form.email : `${form.email}${EMAIL_DOMAIN}`,
+      ...(isEdit
+        ? { full_name: form.full_name, email: form.email }
+        : {
+          first_name: form.first_name,
+          last_name: form.last_name,
+          ...(form.father_name.trim() && { father_name: form.father_name }),
+        }),
       mobile_number: form.mobile_number ? `${form.mobile_prefix}${form.mobile_number}` : null,
       class_level: form.class_level ? Number(form.class_level) : null,
       sector: form.sector || null,
@@ -199,23 +210,39 @@ function CourseStudentModal({ student, onClose, onSaved }) {
             <label style={labelStyle}>Student Number <span style={{ color: '#dc2626' }}>*</span></label>
             <input name="student_number" value={form.student_number} onChange={handleChange} required maxLength={7} inputMode="numeric" pattern="\d{1,7}" title="1-7 digits" style={inputStyle} />
           </div>
-          <div style={fieldStyle}>
-            <label style={labelStyle}>Full Name <span style={{ color: '#dc2626' }}>*</span></label>
-            <input name="full_name" value={form.full_name} onChange={handleChange} required style={inputStyle} />
-          </div>
-          <div style={fieldStyle}>
-            <label style={labelStyle}>Email <span style={{ color: '#dc2626' }}>*</span></label>
-            {isEdit ? (
-              <input name="email" type="email" value={form.email} onChange={handleChange} required style={inputStyle} />
-            ) : (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <input name="email" value={form.email} required placeholder="namesurname"
-                  onChange={e => setForm(f => ({ ...f, email: e.target.value.replace(/[@\s]/g, '') }))}
-                  style={{ ...inputStyle, minWidth: 0 }} />
-                <span style={{ color: '#475569', fontSize: '0.9rem', whiteSpace: 'nowrap' }}>{EMAIL_DOMAIN}</span>
+          {isEdit ? (
+            <>
+              <div style={fieldStyle}>
+                <label style={labelStyle}>Full Name <span style={{ color: '#dc2626' }}>*</span></label>
+                <input name="full_name" value={form.full_name} onChange={handleChange} required maxLength={150} style={inputStyle} />
               </div>
-            )}
-          </div>
+              <div style={fieldStyle}>
+                <label style={labelStyle}>Email <span style={{ color: '#dc2626' }}>*</span></label>
+                <input name="email" type="email" value={form.email} onChange={handleChange} required style={inputStyle} />
+              </div>
+            </>
+          ) : (
+            <>
+              <div style={fieldStyle}>
+                <label style={labelStyle}>Name <span style={{ color: '#dc2626' }}>*</span></label>
+                <input name="first_name" value={form.first_name} onChange={handleChange} required maxLength={50} style={inputStyle} />
+              </div>
+              <div style={fieldStyle}>
+                <label style={labelStyle}>Surname <span style={{ color: '#dc2626' }}>*</span></label>
+                <input name="last_name" value={form.last_name} onChange={handleChange} required maxLength={50} style={inputStyle} />
+              </div>
+              <div style={fieldStyle}>
+                <label style={labelStyle}>Father Name</label>
+                <input name="father_name" value={form.father_name} onChange={handleChange} maxLength={50} style={inputStyle} />
+              </div>
+              {/* Email — generated by the server from name + first letter of surname */}
+              <div style={fieldStyle}>
+                <label style={labelStyle}>Email</label>
+                <input type="text" value={emailPreview} readOnly placeholder="Generated from name and surname" title="Generated automatically"
+                  style={{ ...inputStyle, background: '#f1f5f9', color: '#475569', cursor: 'not-allowed' }} />
+              </div>
+            </>
+          )}
           <div style={fieldStyle}>
             <label style={labelStyle}>Mobile Number</label>
             <div className="mobile-row" style={{ display: 'flex', gap: '0.5rem' }}>

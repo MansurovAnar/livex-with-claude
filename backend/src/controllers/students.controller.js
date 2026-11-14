@@ -109,21 +109,30 @@ exports.update = async (req, res, next) => {
 // FREE overrides the discount amount, so store 0 to keep the two consistent
 const normalizeDiscount = (body) => (body.is_free === true ? { ...body, discount_amount: 0 } : body);
 
+// Like create: full_name and email are built by the server from the name parts
 exports.createCourse = async (req, res, next) => {
+  const { student_number, first_name, last_name, father_name, mobile_number, class_level, sector, language, photo_url,
+    discount_amount, is_free, discount_note } = normalizeDiscount(req.body);
+  const full_name = buildFullName(first_name, last_name, father_name);
+  const client = await pool.connect();
   try {
-    const { student_number, full_name, email, mobile_number, class_level, sector, language, photo_url,
-      discount_amount, is_free, discount_note } = normalizeDiscount(req.body);
-    const { rows } = await pool.query(
+    await client.query('BEGIN');
+    const email = await generateStudentEmail(client, first_name, last_name, { lock: true });
+    const { rows } = await client.query(
       `INSERT INTO students (student_number, full_name, email, mobile_number, class_level, sector, language, photo_url,
                              is_course_student, discount_amount, is_free, discount_note)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, true, $9, $10, $11) RETURNING ${STUDENT_COLS}`,
       [student_number, full_name, email, mobile_number || null, class_level || null, sector || null, language || null,
         photo_url || null, discount_amount, is_free, discount_note || null]
     );
+    await client.query('COMMIT');
     res.status(201).json({ success: true, data: rows[0] });
   } catch (err) {
+    await client.query('ROLLBACK');
     if (err.code === '23505') return res.status(409).json({ success: false, error: { code: 'DUPLICATE', message: 'Student number or email already exists' } });
     next(err);
+  } finally {
+    client.release();
   }
 };
 
