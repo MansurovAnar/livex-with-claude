@@ -27,7 +27,11 @@ export default function ReceptionExamsPage() {
     <div>
       <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
         <h2 style={{ margin: 0 }}>{t('Exams')}</h2>
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
+        <div className="wrap-mobile" style={{ display: 'flex', gap: '0.5rem' }}>
+          <button onClick={() => navigate('/reception/exams/ongoing')}
+            style={{ padding: '0.35rem 0.9rem', borderRadius: 6, border: '1px solid #86efac', cursor: 'pointer', fontWeight: 600, background: '#fff', color: '#16a34a', fontSize: '0.85rem' }}>
+            {t('Ongoing Exams')}
+          </button>
           {['all', 'ongoing', 'scheduled'].map(f => (
             <button key={f} onClick={() => setFilter(f)}
               style={{ padding: '0.35rem 0.9rem', borderRadius: 6, border: '1px solid #e2e8f0', cursor: 'pointer', fontWeight: filter === f ? 700 : 400, background: filter === f ? '#7e22ce' : '#fff', color: filter === f ? '#fff' : '#475569', fontSize: '0.85rem' }}>

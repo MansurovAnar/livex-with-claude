@@ -706,6 +706,14 @@ export const AZ = {
   'Clear filters': 'Filtrləri təmizlə',
   'Showing {n} of {total}': '{total} nəticədən {n} göstərilir',
   'No students match the search or filters.': 'Axtarışa və ya filtrlərə uyğun şagird yoxdur.',
+
+  // ── Ongoing exams (all registrants together) ──
+  'Ongoing Exams': 'Davam edən imtahanlar',
+  'All exams': 'Bütün imtahanlar',
+  'Exam Name': 'İmtahanın adı',
+  '{exams} ongoing exams • {students} registered students': '{exams} davam edən imtahan • {students} qeydiyyatlı şagird',
+  'No exams are ongoing right now.': 'Hazırda davam edən imtahan yoxdur.',
+  'No students registered for the ongoing exams yet.': 'Davam edən imtahanlara hələ şagird qeydiyyatdan keçməyib.',
 };
 
 // Server messages that contain runtime values. In the replacement, {1} inserts the
