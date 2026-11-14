@@ -116,6 +116,17 @@ erDiagram
         BOOLEAN bonus_awarded
     }
 
+    %% ── Exam expenses ────────────────────────────────────────────────
+    exam_expenses {
+        UUID    id PK
+        UUID    exam_id FK
+        NUMERIC amount
+        VARCHAR source "cash|card"
+        TEXT    explanation
+        UUID    created_by FK
+        TSTZ    created_at
+    }
+
     %% ── Entry logs ───────────────────────────────────────────────────
     entry_logs {
         UUID id PK
@@ -242,6 +253,8 @@ erDiagram
     exams          ||--o{ registrations : "exam_id (CASCADE)"
     students       ||--o{ registrations : "student_id (CASCADE)"
     exams          ||--o{ entry_logs    : "exam_id"
+    exams          ||--o{ exam_expenses : "exam_id (CASCADE)"
+    users          ||--o{ exam_expenses : "created_by (SET NULL)"
     students       ||--o{ entry_logs    : "student_id"
     registrations  ||--o{ entry_logs    : "registration_id"
 
@@ -282,6 +295,8 @@ erDiagram
 | `entry_logs.student_id` | `students.id` | *(restrict)* |
 | `entry_logs.registration_id` | `registrations.id` | *(restrict)* |
 | `entry_logs.checked_by` | `users.id` | *(restrict)* |
+| `exam_expenses.exam_id` | `exams.id` | CASCADE |
+| `exam_expenses.created_by` | `users.id` | SET NULL |
 | `partner_bonus_payments.partner_id` | `users.id` | CASCADE |
 | `partner_bonus_payments.paid_by` | `users.id` | SET NULL |
 | `telesales_leads.school_id` | `schools.id` | *(restrict)* |
