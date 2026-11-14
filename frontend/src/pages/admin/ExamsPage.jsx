@@ -42,6 +42,10 @@ export default function ExamsPage() {
       <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1.25rem' }}>
         <h2 style={{ margin: 0 }}>{t('Exams')}</h2>
         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          <button onClick={() => navigate('/admin/exams/ongoing')}
+            style={{ background: '#fff', color: '#16a34a', border: '1px solid #86efac', borderRadius: 6, padding: '0.5rem 1.25rem', cursor: 'pointer', fontWeight: 500 }}>
+            {t('Ongoing Exams')}
+          </button>
           <button onClick={() => navigate('/admin/exams/reports')}
             style={{ background: '#fff', color: '#475569', border: '1px solid #cbd5e1', borderRadius: 6, padding: '0.5rem 1.25rem', cursor: 'pointer', fontWeight: 500 }}>
             {t('Reports')}
