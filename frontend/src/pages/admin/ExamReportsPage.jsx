@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getExamPaymentsReport } from '../../api/exams.api';
 import ExamPaymentsSummary, { formatAzn } from '../../components/monitor/ExamPaymentsSummary';
@@ -44,6 +44,7 @@ export default function ExamReportsPage() {
   const [selectedIds, setSelectedIds] = useState([]);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [examSearch, setExamSearch] = useState('');
+  const pickerRef = useRef(null);
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -66,6 +67,21 @@ export default function ExamReportsPage() {
       .catch(err => setError(tError(err, 'Failed to load report')))
       .finally(() => setLoading(false));
   }, [from, to, statuses]);
+
+  // Exam picker opens as an overlay; close it on outside click or Escape
+  useEffect(() => {
+    if (!pickerOpen) return undefined;
+    const onPointer = (e) => { if (pickerRef.current && !pickerRef.current.contains(e.target)) setPickerOpen(false); };
+    const onKey = (e) => { if (e.key === 'Escape') setPickerOpen(false); };
+    document.addEventListener('mousedown', onPointer);
+    document.addEventListener('touchstart', onPointer);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onPointer);
+      document.removeEventListener('touchstart', onPointer);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [pickerOpen]);
 
   const allExams = report?.exams || [];
   const exams = selectedIds.length ? allExams.filter(e => selectedIds.includes(e.id)) : allExams;
@@ -135,7 +151,7 @@ export default function ExamReportsPage() {
           </div>
         </div>
 
-        <div className="report-exam-picker" style={{ minWidth: 0, width: 'min(420px, 100%)' }}>
+        <div ref={pickerRef} className="report-exam-picker" style={{ position: 'relative', minWidth: 0, width: 'min(420px, 100%)' }}>
           <label style={labelStyle}>{t('Exams')}</label>
           <button type="button" onClick={() => setPickerOpen(o => !o)} disabled={!report}
             style={{ ...inputStyle, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem', background: '#fff', cursor: 'pointer', textAlign: 'left' }}>
@@ -143,7 +159,7 @@ export default function ExamReportsPage() {
             <span style={{ color: '#94a3b8' }}>{pickerOpen ? '▲' : '▼'}</span>
           </button>
           {pickerOpen && (
-            <div style={{ marginTop: '0.4rem', background: '#fff', border: '1px solid #e2e8f0', borderRadius: 6, padding: '0.5rem' }}>
+            <div className="report-exam-picker-panel" style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 50, marginTop: '0.4rem', background: '#fff', border: '1px solid #e2e8f0', borderRadius: 6, padding: '0.5rem', boxShadow: '0 10px 25px rgba(15, 23, 42, 0.15)' }}>
               <input type="text" value={examSearch} onChange={e => setExamSearch(e.target.value)} placeholder={t('Search exams...')} style={inputStyle} />
               <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', margin: '0.5rem 0' }}>
                 <button type="button" onClick={() => setSelectedIds(prev => [...new Set([...prev, ...pickerExams.map(e => e.id)])])} disabled={pickerExams.length === 0} style={smallBtn}>

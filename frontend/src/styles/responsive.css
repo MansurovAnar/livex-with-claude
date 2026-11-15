@@ -96,7 +96,7 @@ select { max-width: 100%; min-width: 0; text-overflow: ellipsis; }
   .report-filters { flex-direction: column !important; align-items: stretch !important; }
   .report-exam-picker { width: 100% !important; }
   .report-status-chips > label { flex: 1 1 130px; min-height: 44px; justify-content: center; }
-  .report-exam-picker > div label, .report-exam-picker button { min-height: 44px; }
+  .report-exam-picker-panel label, .report-exam-picker button { min-height: 44px; }
   /* Payment summary tiles: two per line */
   .pay-grid     { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 8px !important; }
 }
