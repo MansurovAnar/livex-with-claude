@@ -55,17 +55,27 @@ export default function ExamReportsPage() {
       return;
     }
     setError('');
+    // No exam state selected: nothing to report, every value shows 0
+    if (statuses.length === 0) {
+      setReport({ exams: [] });
+      setSelectedIds([]);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
+    let stale = false;
     getExamPaymentsReport({ from: from || undefined, to: to || undefined, status: statuses.join(',') })
       .then(res => {
+        if (stale) return;
         const data = res.data.data;
         setReport(data);
         // Keep only selections that are still in the filtered list
         const ids = new Set(data.exams.map(e => e.id));
         setSelectedIds(prev => prev.filter(id => ids.has(id)));
       })
-      .catch(err => setError(tError(err, 'Failed to load report')))
-      .finally(() => setLoading(false));
+      .catch(err => { if (!stale) setError(tError(err, 'Failed to load report')); })
+      .finally(() => { if (!stale) setLoading(false); });
+    return () => { stale = true; };
   }, [from, to, statuses]);
 
   // Exam picker opens as an overlay; close it on outside click or Escape
@@ -95,7 +105,7 @@ export default function ExamReportsPage() {
 
   const toggleStatus = (value) => {
     setStatuses(prev => {
-      if (prev.includes(value)) return prev.length === 1 ? prev : prev.filter(s => s !== value);
+      if (prev.includes(value)) return prev.filter(s => s !== value);
       return STATUS_OPTIONS.map(o => o.value).filter(s => s === value || prev.includes(s));
     });
   };
@@ -103,7 +113,7 @@ export default function ExamReportsPage() {
     setSelectedIds(prev => (prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]));
   };
 
-  const statusLabels = STATUS_OPTIONS.filter(o => statuses.includes(o.value)).map(o => t(o.label)).join(', ');
+  const statusLabels = STATUS_OPTIONS.filter(o => statuses.includes(o.value)).map(o => t(o.label)).join(', ') || t('None');
   const examsLabel = selectedIds.length
     ? t('{n} of {total} exams selected', { n: selectedIds.length, total: allExams.length })
     : t('All exams ({n})', { n: allExams.length });
