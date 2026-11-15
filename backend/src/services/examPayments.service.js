@@ -58,11 +58,12 @@ exports.getExamPayments = async (examId) => {
   return rows[0] ? toNumbers(rows[0]) : null;
 };
 
-// Completed, active exams whose exam date falls within [from, to] (both optional, YYYY-MM-DD).
-exports.getCompletedExamsReport = async ({ from, to }) => {
-  const conditions = [`e.is_active = true`, `e.status = 'completed'`];
-  const values = [];
-  let i = 1;
+// Active exams in the given statuses (LV#71, default completed) whose exam date
+// falls within [from, to] (both optional, YYYY-MM-DD).
+exports.getExamsReport = async ({ from, to, statuses = ['completed'] }) => {
+  const conditions = [`e.is_active = true`, `e.status = ANY($1::exam_status[])`];
+  const values = [statuses];
+  let i = 2;
   if (from) { conditions.push(`e.scheduled_at::date >= $${i++}`); values.push(from); }
   if (to) { conditions.push(`e.scheduled_at::date <= $${i++}`); values.push(to); }
 

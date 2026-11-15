@@ -1,6 +1,6 @@
 const pool = require('../config/database');
 const parsePagination = require('../utils/pagination');
-const { getCompletedExamsReport } = require('../services/examPayments.service');
+const { getExamsReport } = require('../services/examPayments.service');
 
 exports.list = async (req, res, next) => {
   try {
@@ -98,6 +98,7 @@ exports.updateStatus = async (req, res, next) => {
 };
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const REPORT_STATUSES = ['scheduled', 'ongoing', 'completed', 'cancelled'];
 
 exports.paymentsReport = async (req, res, next) => {
   try {
@@ -109,7 +110,11 @@ exports.paymentsReport = async (req, res, next) => {
     if (from && to && from > to) {
       return res.status(400).json({ success: false, error: { code: 'VALIDATION_ERROR', message: "'from' date must not be after 'to' date" } });
     }
-    const data = await getCompletedExamsReport({ from, to });
+    const statuses = String(req.query.status || 'completed').split(',').map(v => v.trim()).filter(Boolean);
+    if (statuses.length === 0 || statuses.some(v => !REPORT_STATUSES.includes(v))) {
+      return res.status(400).json({ success: false, error: { code: 'VALIDATION_ERROR', message: `status must be a comma-separated list of: ${REPORT_STATUSES.join(', ')}` } });
+    }
+    const data = await getExamsReport({ from, to, statuses: [...new Set(statuses)] });
     res.json({ success: true, data });
   } catch (err) { next(err); }
 };
