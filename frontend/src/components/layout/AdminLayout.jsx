@@ -27,7 +27,7 @@ export default function AdminLayout() {
         <span style={{ fontWeight: 'bold' }}>{t('Exam Control')}</span>
       </div>
       {open && isMobile && <div className="app-backdrop" onClick={() => setOpen(false)} />}
-      <nav className={`app-sidebar${open ? ' open' : ''}`} style={{ width: 220, background: '#1e293b', color: '#fff', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+      <nav className={`app-sidebar${open ? ' open' : ''}`} style={{ width: 220, flexShrink: 0, background: '#1e293b', color: '#fff', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
         <div style={{ fontWeight: 'bold', fontSize: '1.1rem', marginBottom: '1rem' }}>{t('Exam Control')}</div>
         <NavLink to="/admin" end style={navStyle}>{t('Dashboard')}</NavLink>
         <NavLink to="/admin/exams" style={navStyle}>{t('Exams')}</NavLink>
@@ -52,7 +52,7 @@ export default function AdminLayout() {
           {t('Logout')}
         </button>
       </nav>
-      <main className="app-main" style={{ flex: 1, padding: '2rem', background: '#f8fafc' }}>
+      <main className="app-main" style={{ flex: 1, minWidth: 0, padding: '2rem', background: '#f8fafc' }}>
         <Outlet />
       </main>
     </div>
