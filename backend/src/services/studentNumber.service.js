@@ -38,4 +38,4 @@ async function getNextStudentNumber(db, partnerId, { lock = false } = {}) {
   return String(next).padStart(initial.length, '0');
 }
 
-module.exports = { STUDENT_NUMBER_RE, isValidStudentNumber, getNextStudentNumber };
+module.exports = { STUDENT_NUMBER_RE, MAX_STUDENT_NUMBER, isValidStudentNumber, getNextStudentNumber };
