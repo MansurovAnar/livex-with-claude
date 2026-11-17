@@ -401,7 +401,7 @@ export const AZ = {
   'Registrations': 'Qeydiyyatlar',
   'Photo': 'Şəkil',
   'you': 'siz',
-  'No partners yet.': 'Hələ tərəfdaş yoxdur.',
+  'You do not have any registrations': 'Sizin heç qeydiyyatınız yoxdur',
   'Failed to load leaderboard': 'Reytinqi yükləmək alınmadı',
 
   // ── O. Security gate ──
