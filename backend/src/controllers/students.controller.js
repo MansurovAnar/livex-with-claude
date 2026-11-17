@@ -1,5 +1,6 @@
 const pool = require('../config/database');
 const { buildFullName, generateStudentEmail } = require('../services/studentEmail.service');
+const { dueAmountSql } = require('../services/coursePrice.service');
 
 const ALLOWED_PAGE_SIZES = [10, 25, 50];
 const DEFAULT_PAGE_SIZE = 10;
@@ -44,6 +45,30 @@ exports.get = async (req, res, next) => {
     );
     if (!rows[0]) return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Student not found' } });
     res.json({ success: true, data: rows[0] });
+  } catch (err) { next(err); }
+};
+
+// Every exam the student is registered for, newest exam first. Removed registrations
+// are included (removed_at / removal_reason set) so the history is complete.
+exports.listExams = async (req, res, next) => {
+  try {
+    const { rows: students } = await pool.query(
+      'SELECT id FROM students WHERE id = $1 AND is_active = true',
+      [req.params.id]
+    );
+    if (!students[0]) return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Student not found' } });
+    const { rows } = await pool.query(
+      `SELECT r.id, r.amount_paid, r.payment_method, r.registered_at, r.removed_at, r.removal_reason,
+              e.id AS exam_id, e.title, e.scheduled_at, e.exam_cost,
+              ${dueAmountSql('e', 's')} AS due_amount
+       FROM registrations r
+       JOIN exams e ON e.id = r.exam_id
+       JOIN students s ON s.id = r.student_id
+       WHERE r.student_id = $1
+       ORDER BY e.scheduled_at DESC, r.registered_at DESC`,
+      [req.params.id]
+    );
+    res.json({ success: true, data: rows });
   } catch (err) { next(err); }
 };
 

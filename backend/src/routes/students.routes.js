@@ -12,6 +12,7 @@ router.get('/', authorize('admin', 'reception'), ctrl.list);
 router.post('/', authorize('admin', 'reception'), validate(createStudentSchema), ctrl.create);
 router.get('/email-preview', authorize('admin', 'reception'), ctrl.emailPreview);
 router.get('/:id', authorize('admin', 'reception'), ctrl.get);
+router.get('/:id/exams', authorize('admin', 'reception'), ctrl.listExams);
 
 // admin only can update/delete
 router.put('/:id', authorize('admin'), validate(updateStudentSchema), ctrl.update);
