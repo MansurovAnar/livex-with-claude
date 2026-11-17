@@ -264,6 +264,10 @@ export const AZ = {
   'Failed to load next student number': 'Növbəti şagird nömrəsini yükləmək alınmadı',
   '1 student': '1 şagird',
   '{n} students': '{n} şagird',
+  'Your students with similar names:': 'Oxşar adlı şagirdləriniz:',
+  'This student already exists in your list:': 'Bu şagird artıq siyahınızda var:',
+  'This student already exists in your list': 'Bu şagird artıq siyahınızda var',
+  'Add anyway': 'Yenə də əlavə et',
 
   // ── J. Users (admin) ──
   'Create User': 'İstifadəçi yarat',

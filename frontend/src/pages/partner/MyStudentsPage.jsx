@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import apiClient from '../../api/apiClient';
 import useStudentEmailPreview from '../../hooks/useStudentEmailPreview';
 import { useLanguage } from '../../i18n/LanguageContext';
@@ -14,10 +15,14 @@ const emptyForm = {
 
 export default function MyStudentsPage() {
   const { t, tError } = useLanguage();
+  const location = useLocation();
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [showForm, setShowForm] = useState(false);
+  // "Add New Student" on the Register to Exam page opens this page with the form already open
+  const [showForm, setShowForm] = useState(!!location.state?.openAddForm);
+  const [duplicates, setDuplicates] = useState(null);
+  const [similar, setSimilar] = useState([]);
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -43,11 +48,27 @@ export default function MyStudentsPage() {
   useEffect(() => { load(); }, []);
   useEffect(() => { if (showForm) loadNextNumber(); }, [showForm]);
 
-  const handleSearch = (e) => { e.preventDefault(); load(search); };
-  const handleChange = e => setForm(f => ({ ...f, [e.target.name]: e.target.value }));
+  // Information only: own students with similar names while Name / Surname are typed (2+ letters)
+  useEffect(() => {
+    const first = form.first_name.trim();
+    const last = form.last_name.trim();
+    if (!showForm || (first.length < 2 && last.length < 2)) { setSimilar([]); return undefined; }
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      apiClient.get('/partner/students/similar', { params: { first_name: first, last_name: last } })
+        .then(res => { if (!cancelled) setSimilar(res.data.data); })
+        .catch(() => { if (!cancelled) setSimilar([]); });
+    }, 300);
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [showForm, form.first_name, form.last_name, previewKey]);
 
-  const handleAddStudent = async (e) => {
-    e.preventDefault();
+  const handleSearch = (e) => { e.preventDefault(); load(search); };
+  const handleChange = e => {
+    setForm(f => ({ ...f, [e.target.name]: e.target.value }));
+    setDuplicates(null);
+  };
+
+  const saveStudent = async (confirmDuplicate) => {
     setError(''); setSuccess(''); setSaving(true);
     try {
       const mobile = form.mobile_number ? `${form.mobile_prefix}${form.mobile_number}` : undefined;
@@ -59,26 +80,35 @@ export default function MyStudentsPage() {
         ...(form.class_level && { class_level: Number(form.class_level) }),
         ...(form.sector && { sector: form.sector }),
         ...(form.language && { language: form.language }),
+        ...(confirmDuplicate && { confirm_duplicate: true }),
       });
+      setDuplicates(null);
       setSuccess(t('{name} added successfully with number {number} and email {email}.', { name: res.data.data.full_name, number: res.data.data.student_number, email: res.data.data.email }));
       setForm(emptyForm);
       setPreviewKey(k => k + 1);
       load(search);
       loadNextNumber();
     } catch (err) {
-      setError(tError(err, 'Failed to add student'));
+      const apiError = err?.response?.data?.error;
+      if (apiError?.code === 'DUPLICATE_STUDENT') {
+        setDuplicates(apiError.students || []);
+      } else {
+        setError(tError(err, 'Failed to add student'));
+      }
       loadNextNumber();
     } finally {
       setSaving(false);
     }
   };
 
+  const handleAddStudent = (e) => { e.preventDefault(); saveStudent(false); };
+
   return (
     <div>
       <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
         <h2 style={{ margin: 0 }}>{t('My Students')}</h2>
         <button
-          onClick={() => { setShowForm(f => !f); setError(''); setSuccess(''); }}
+          onClick={() => { setShowForm(f => !f); setError(''); setSuccess(''); setDuplicates(null); }}
           style={{ background: '#059669', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.25rem', cursor: 'pointer', fontWeight: 500 }}>
           {showForm ? `✕ ${t('Cancel')}` : t('+ Add Student')}
         </button>
@@ -113,6 +143,15 @@ export default function MyStudentsPage() {
                 <label style={labelStyle}>{t('Father Name')}</label>
                 <input type="text" name="father_name" value={form.father_name} onChange={handleChange} maxLength={50} style={inputStyle} />
               </div>
+              {/* Similar names among own students — information only */}
+              {similar.length > 0 && (
+                <div className="wrap-text" style={{ gridColumn: '1 / -1', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 6, padding: '0.5rem 0.75rem', fontSize: '0.8rem', color: '#475569' }}>
+                  <div style={{ fontWeight: 600, marginBottom: '0.25rem' }}>{t('Your students with similar names:')}</div>
+                  {similar.map(s => (
+                    <div key={s.id}>{s.full_name} · #{s.student_number}{s.mobile_number ? ` · ${s.mobile_number}` : ''}</div>
+                  ))}
+                </div>
+              )}
               {/* Email — generated by the server from name + first letter of surname */}
               <div>
                 <label style={labelStyle}>{t('Email')}</label>
@@ -171,10 +210,29 @@ export default function MyStudentsPage() {
                 )}
               </div>
             </div>
-            <button type="submit" disabled={saving} className="btn-block"
-              style={{ background: '#059669', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.5rem', cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1, fontWeight: 600 }}>
-              {saving ? t('Adding...') : t('Add Student')}
-            </button>
+            {duplicates ? (
+              <div className="wrap-text" style={{ background: '#fffbeb', border: '1px solid #fcd34d', color: '#92400e', borderRadius: 6, padding: '0.75rem', fontSize: '0.875rem' }}>
+                <div style={{ fontWeight: 600, marginBottom: '0.35rem' }}>{t('This student already exists in your list:')}</div>
+                {duplicates.map(s => (
+                  <div key={s.id}>{s.full_name}, #{s.student_number}{s.mobile_number ? `, ${s.mobile_number}` : ''}</div>
+                ))}
+                <div className="duplicate-actions" style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
+                  <button type="button" onClick={() => setDuplicates(null)} disabled={saving}
+                    style={{ background: '#fff', color: '#374151', border: '1px solid #cbd5e1', borderRadius: 6, padding: '0.5rem 1.25rem', cursor: 'pointer', fontWeight: 500 }}>
+                    {t('Cancel')}
+                  </button>
+                  <button type="button" onClick={() => saveStudent(true)} disabled={saving}
+                    style={{ background: '#d97706', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.25rem', cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1, fontWeight: 600 }}>
+                    {saving ? t('Adding...') : t('Add anyway')}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button type="submit" disabled={saving} className="btn-block"
+                style={{ background: '#059669', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.5rem', cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1, fontWeight: 600 }}>
+                {saving ? t('Adding...') : t('Add Student')}
+              </button>
+            )}
           </form>
         </div>
       )}

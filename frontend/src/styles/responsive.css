@@ -99,4 +99,7 @@ select { max-width: 100%; min-width: 0; text-overflow: ellipsis; }
   .report-exam-picker-panel label, .report-exam-picker button { min-height: 44px; }
   /* Payment summary tiles: two per line */
   .pay-grid     { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 8px !important; }
+  /* Partner Add Student duplicate warning (LV#31): Cancel / Add anyway share the row */
+  .duplicate-actions { flex-wrap: wrap !important; }
+  .duplicate-actions > button { flex: 1 1 120px; }
 }

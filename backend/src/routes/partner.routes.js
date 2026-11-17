@@ -47,9 +47,37 @@ router.get('/students/email-preview', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// student_number, full_name and email are built by the server; any client-sent values are ignored
+// Own active students whose full name contains every typed name part (2+ letters) — shown
+// as information while the partner fills the Add Student form
+router.get('/students/similar', async (req, res, next) => {
+  try {
+    const terms = [req.query.first_name, req.query.last_name]
+      .map(cleanNamePart)
+      .filter(v => v.length >= 2 && v.length <= 50);
+    if (!terms.length) return res.json({ success: true, data: [] });
+    const params = [req.user.id];
+    const conditions = terms.map(term => {
+      params.push(`%${term.replace(/[\\%_]/g, ch => `\\${ch}`)}%`);
+      return `full_name ILIKE $${params.length}`;
+    });
+    const { rows } = await pool.query(
+      `SELECT id, full_name, student_number, mobile_number
+       FROM students
+       WHERE partner_id = $1 AND is_active = true AND ${conditions.join(' AND ')}
+       ORDER BY full_name
+       LIMIT 5`,
+      params
+    );
+    res.json({ success: true, data: rows });
+  } catch (err) { next(err); }
+});
+
+// student_number, full_name and email are built by the server; any client-sent values are ignored.
+// If the partner already has an active student with the same Name + Surname + Father name
+// (case-insensitive, extra spaces ignored) the add is refused with DUPLICATE_STUDENT and the
+// matches; the partner resends with confirm_duplicate: true to add the student anyway.
 router.post('/students', async (req, res, next) => {
-  const { first_name, last_name, father_name, mobile_number, class_level, sector, language } = req.body;
+  const { first_name, last_name, father_name, mobile_number, class_level, sector, language, confirm_duplicate } = req.body;
   if (!cleanNamePart(first_name) || !cleanNamePart(last_name)) {
     return res.status(400).json({ success: false, error: { code: 'VALIDATION', message: 'Name and surname are required' } });
   }
@@ -63,6 +91,23 @@ router.post('/students', async (req, res, next) => {
     await client.query('BEGIN');
     // lock the partner row so concurrent adds get sequential numbers
     student_number = await getNextStudentNumber(client, req.user.id, { lock: true });
+    if (confirm_duplicate !== true) {
+      const { rows: duplicates } = await client.query(
+        `SELECT id, full_name, student_number, mobile_number
+         FROM students
+         WHERE partner_id = $1 AND is_active = true
+           AND lower(regexp_replace(btrim(full_name), '\\s+', ' ', 'g')) = lower($2)
+         ORDER BY created_at`,
+        [req.user.id, full_name]
+      );
+      if (duplicates.length) {
+        await client.query('ROLLBACK');
+        return res.status(409).json({
+          success: false,
+          error: { code: 'DUPLICATE_STUDENT', message: 'This student already exists in your list', students: duplicates },
+        });
+      }
+    }
     const email = await generateStudentEmail(client, first_name, last_name, { lock: true });
     const { rows } = await client.query(
       `INSERT INTO students (student_number, full_name, email, mobile_number, class_level, sector, language, partner_id)
