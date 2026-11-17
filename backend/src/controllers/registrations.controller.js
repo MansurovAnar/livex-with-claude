@@ -20,7 +20,8 @@ exports.listByExam = async (req, res, next) => {
        LEFT JOIN users rb ON rb.id = r.registered_by AND rb.role = 'partner'
        LEFT JOIN users sp ON sp.id = s.partner_id
        WHERE r.exam_id = $1 AND r.removed_at IS NULL
-       ORDER BY r.room_number NULLS LAST, r.seat_number NULLS LAST, r.registered_at`,
+       -- Registration order (earliest first), so the first partner to invite a student is listed first
+       ORDER BY r.registered_at, r.id`,
       [req.params.examId]
     );
     res.json({ success: true, data: rows });
