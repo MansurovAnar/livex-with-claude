@@ -278,7 +278,7 @@ export default function ExamStudentsPage() {
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
-              {['#', ...(showAttendance ? ['Attended'] : []), 'Full Name', 'Student Number', 'Email', 'Mobile', 'Class', 'Sector', 'Language', ...(showExtraDetail ? ['Extra Detail'] : []), 'Exam Cost', 'Registered At', 'Paid', ''].map(h => (
+              {['#', 'Full Name', 'Student Number', 'Email', 'Mobile', 'Class', 'Sector', 'Language', ...(showExtraDetail ? ['Extra Detail'] : []), 'Exam Cost', 'Registered At', 'Paid', ...(showAttendance ? ['Attended'] : []), ''].map(h => (
                 <th key={h} style={th}>{t(h)}</th>
               ))}
             </tr>
@@ -299,19 +299,6 @@ export default function ExamStudentsPage() {
               return (
                 <tr key={r.id} style={{ borderBottom: '1px solid #f1f5f9', background: i % 2 === 0 ? '#fff' : '#fafafa' }}>
                   <td style={{ ...td, color: '#94a3b8' }}>{i + 1}</td>
-                  {showAttendance && <td style={{ ...td, textAlign: 'center' }}>
-                    {attendanceEditable ? (
-                      <AttendanceCheckbox
-                        checked={isAttended(r)}
-                        disabled={paid > 0}
-                        busy={attendanceSavingId === r.id}
-                        title={paid > 0 ? t('Students with a recorded payment count as attended') : undefined}
-                        onChange={(value) => handleAttendance(r, value)}
-                      />
-                    ) : (
-                      <AttendanceStatus attended={isAttended(r)} examStatus={exam.status} />
-                    )}
-                  </td>}
                   <td style={td}>
                     <button
                       onClick={() => setTicketReg(r)}
@@ -365,6 +352,19 @@ export default function ExamStudentsPage() {
                       )}
                     </div>
                   </td>
+                  {showAttendance && <td style={{ ...td, textAlign: 'center' }}>
+                    {attendanceEditable ? (
+                      <AttendanceCheckbox
+                        checked={isAttended(r)}
+                        disabled={paid > 0}
+                        busy={attendanceSavingId === r.id}
+                        title={paid > 0 ? t('Students with a recorded payment count as attended') : undefined}
+                        onChange={(value) => handleAttendance(r, value)}
+                      />
+                    ) : (
+                      <AttendanceStatus attended={isAttended(r)} examStatus={exam.status} />
+                    )}
+                  </td>}
                   <td style={{ ...td, whiteSpace: 'nowrap' }}>
                     {paid > 0 ? (
                       <span title={t('Students with a recorded payment cannot be removed')} style={{ color: '#cbd5e1' }}>—</span>

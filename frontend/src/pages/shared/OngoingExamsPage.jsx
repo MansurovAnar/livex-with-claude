@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { listExams } from '../../api/exams.api';
-import { listRegistrations, updatePayment } from '../../api/registrations.api';
+import { listRegistrations, updatePayment, updateAttendance } from '../../api/registrations.api';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../i18n/LanguageContext';
 import PaymentMethodRadio, { paymentMethodLabel } from '../../components/shared/PaymentMethodRadio';
 import CourseDiscountBadge from '../../components/shared/CourseDiscountBadge';
+import { AttendanceCheckbox, isAttended } from '../../components/shared/AttendanceMark';
 
 // Price the student owes: course students get their discount (FREE = 0), see due_amount from the API
 const dueOf = (reg, examCost) => (reg.due_amount != null ? Number(reg.due_amount) : examCost);
@@ -14,7 +15,7 @@ const CLASSES = Array.from({ length: 11 }, (_, i) => i + 1);
 const SECTORS = ['Azerbaijan', 'Rus'];
 const LANGUAGES = ['English', 'Russian', 'German', 'French'];
 const NO_PARTNER = '__none__';
-const EMPTY_FILTERS = { exam: '', partner: '', classLevel: '', sector: '', language: '', payment: '' };
+const EMPTY_FILTERS = { exam: '', partner: '', classLevel: '', sector: '', language: '', payment: '', attendance: '' };
 
 export default function OngoingExamsPage() {
   const navigate = useNavigate();
@@ -30,6 +31,7 @@ export default function OngoingExamsPage() {
   const [payMethod, setPayMethod] = useState('');
   const [payError, setPayError] = useState('');
   const [saving, setSaving] = useState(false);
+  const [attendanceSavingId, setAttendanceSavingId] = useState(null);
 
   const isReception = user?.role === 'reception';
   const base = isReception ? '/reception' : '/admin';
@@ -71,12 +73,32 @@ export default function OngoingExamsPage() {
     setPayError('');
     try {
       await updatePayment(paymentModal.id, amt, method);
-      setRows(prev => prev.map(r => r.id === paymentModal.id ? { ...r, amount_paid: amt, payment_method: method } : r));
+      // Any recorded payment counts as attended (LV#32)
+      setRows(prev => prev.map(r => r.id === paymentModal.id
+        ? { ...r, amount_paid: amt, payment_method: method, is_attended: !!r.attended || amt > 0 }
+        : r));
       closeModal();
     } catch (err) {
       setPayError(tError(err, 'Failed to save payment'));
     } finally {
       setSaving(false);
+    }
+  };
+
+  // LV#32: tick / untick "attended" (all exams here are ongoing); optimistic, reverted on error
+  const handleAttendance = async (reg, attended) => {
+    const apply = (value) => setRows(prev => prev.map(r => r.id === reg.id
+      ? { ...r, attended: value, is_attended: value || Number(r.amount_paid) > 0 }
+      : r));
+    apply(attended);
+    setAttendanceSavingId(reg.id);
+    try {
+      await updateAttendance(reg.id, attended);
+    } catch (err) {
+      apply(!!reg.attended);
+      window.alert(tError(err, 'Failed to save attendance'));
+    } finally {
+      setAttendanceSavingId(null);
     }
   };
 
@@ -102,6 +124,7 @@ export default function OngoingExamsPage() {
       const fullyPaid = Number(r.amount_paid) >= r.due;
       if ((filters.payment === 'paid') !== fullyPaid) return false;
     }
+    if (filters.attendance && (filters.attendance === 'attended') !== isAttended(r)) return false;
     return true;
   });
   const setFilter = (key) => (e) => setFilters(f => ({ ...f, [key]: e.target.value }));
@@ -172,6 +195,11 @@ export default function OngoingExamsPage() {
               <option value="paid">{t('Paid')}</option>
               <option value="unpaid">{t('Not paid')}</option>
             </select>
+            <select value={filters.attendance} onChange={setFilter('attendance')} aria-label={t('Attended')} style={filterSelect}>
+              <option value="">{t('Attended and not attended')}</option>
+              <option value="attended">{t('Attended')}</option>
+              <option value="not_attended">{t('Not attended')}</option>
+            </select>
             {filtersActive && (
               <button onClick={() => setFilters(EMPTY_FILTERS)}
                 style={{ padding: '0.45rem 0.75rem', background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: 6, cursor: 'pointer', color: '#64748b' }}>
@@ -188,7 +216,7 @@ export default function OngoingExamsPage() {
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
-                  {['#', 'Exam Name', 'Full Name', 'Student Number', 'Mobile', 'Class', 'Sector', 'Language', 'Paid'].map(h => (
+                  {['#', 'Exam Name', 'Full Name', 'Student Number', 'Mobile', 'Class', 'Sector', 'Language', 'Paid', 'Attended'].map(h => (
                     <th key={h} style={th}>{t(h)}</th>
                   ))}
                 </tr>
@@ -196,7 +224,7 @@ export default function OngoingExamsPage() {
               <tbody>
                 {filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={9} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>
+                    <td colSpan={10}style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>
                       {exams.length === 0
                         ? t('No exams are ongoing right now.')
                         : rows.length === 0
@@ -257,6 +285,15 @@ export default function OngoingExamsPage() {
                             </span>
                           )}
                         </div>
+                      </td>
+                      <td style={{ ...td, textAlign: 'center' }}>
+                        <AttendanceCheckbox
+                          checked={isAttended(r)}
+                          disabled={paid > 0}
+                          busy={attendanceSavingId === r.id}
+                          title={paid > 0 ? t('Students with a recorded payment count as attended') : undefined}
+                          onChange={(value) => handleAttendance(r, value)}
+                        />
                       </td>
                     </tr>
                   );
