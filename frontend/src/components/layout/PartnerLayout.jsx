@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth, LEADERBOARD_FLAG } from '../../contexts/AuthContext';
 import useIsMobile from '../../hooks/useIsMobile';
 import { useLanguage } from '../../i18n/LanguageContext';
 import LanguageSwitch from '../shared/LanguageSwitch';
+import PartnerLeaderboardModal from '../shared/PartnerLeaderboardModal';
 
 export default function PartnerLayout() {
   const { user, logout } = useAuth();
@@ -11,10 +12,13 @@ export default function PartnerLayout() {
   const location = useLocation();
   const isMobile = useIsMobile();
   const [open, setOpen] = useState(false);
+  // Leaderboard pops up once right after login, not on refresh or navigation (LV#38)
+  const [showLeaderboard, setShowLeaderboard] = useState(() => sessionStorage.getItem(LEADERBOARD_FLAG) === '1');
   const { t } = useLanguage();
   const handleLogout = async () => { await logout(); navigate('/login'); };
 
   useEffect(() => { setOpen(false); }, [location.pathname]);
+  useEffect(() => { if (showLeaderboard) sessionStorage.removeItem(LEADERBOARD_FLAG); }, [showLeaderboard]);
 
   return (
     <div className="app-shell" style={{ display: 'flex', minHeight: '100vh' }}>
@@ -43,6 +47,7 @@ export default function PartnerLayout() {
       <main className="app-main" style={{ flex: 1, padding: '2rem', background: '#f0fdf4' }}>
         <Outlet />
       </main>
+      {showLeaderboard && <PartnerLeaderboardModal onClose={() => setShowLeaderboard(false)} />}
     </div>
   );
 }

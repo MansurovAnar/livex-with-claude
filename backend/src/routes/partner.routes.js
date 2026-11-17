@@ -6,6 +6,7 @@ const { getNextStudentNumber } = require('../services/studentNumber.service');
 const { cleanNamePart, buildFullName, generateStudentEmail } = require('../services/studentEmail.service');
 const { resolveExtraDetail } = require('../services/examExtraDetail.service');
 const { removedRegistrationError } = require('../services/registrationRemoval.service');
+const { dueAmountSql } = require('../services/coursePrice.service');
 
 router.use(authenticate, authorize('partner'));
 
@@ -187,6 +188,31 @@ router.get('/payments', async (req, res, next) => {
       data: paymentsResult.rows,
       meta: { bonus_balance: Number(profileResult.rows[0]?.bonus_balance ?? 0) },
     });
+  } catch (err) { next(err); }
+});
+
+// ── Leaderboard (LV#38): all active partners ranked by paid registrations ─────
+// Counts registrations of each partner's students in completed exams that are
+// actually and fully paid (amount_paid > 0 and >= the price owed). Removed
+// registrations and inactive exams don't count. Only names and counts are exposed.
+
+const DUE = dueAmountSql('e', 's');
+
+router.get('/leaderboard', async (req, res, next) => {
+  try {
+    const { rows } = await pool.query(`
+      SELECT u.full_name, (u.id = $1) AS is_me,
+             COUNT(e.id)::int AS paid_registrations
+      FROM users u
+      LEFT JOIN students s ON s.partner_id = u.id
+      LEFT JOIN registrations r ON r.student_id = s.id AND r.removed_at IS NULL
+      LEFT JOIN exams e ON e.id = r.exam_id AND e.status = 'completed' AND e.is_active = true
+                       AND r.amount_paid > 0 AND r.amount_paid >= ${DUE}
+      WHERE u.role = 'partner' AND u.is_active = true
+      GROUP BY u.id
+      ORDER BY paid_registrations DESC, u.full_name
+    `, [req.user.id]);
+    res.json({ success: true, data: rows });
   } catch (err) { next(err); }
 });
 
