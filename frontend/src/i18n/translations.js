@@ -736,6 +736,9 @@ export const AZ = {
   '{exams} ongoing exams • {students} registered students': '{exams} davam edən imtahan • {students} qeydiyyatlı şagird',
   'No exams are ongoing right now.': 'Hazırda davam edən imtahan yoxdur.',
   'No students registered for the ongoing exams yet.': 'Davam edən imtahanlara hələ şagird qeydiyyatdan keçməyib.',
+
+  // ── Last reception student number (LV#10) ──
+  'Last Student # added by reception:': 'Qeydiyyatçının əlavə etdiyi son şagird nömrəsi:',
 };
 
 // Server messages that contain runtime values. In the replacement, {1} inserts the

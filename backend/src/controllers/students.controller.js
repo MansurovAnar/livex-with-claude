@@ -1,6 +1,7 @@
 const pool = require('../config/database');
 const { buildFullName, generateStudentEmail } = require('../services/studentEmail.service');
 const { dueAmountSql } = require('../services/coursePrice.service');
+const { STUDENT_NUMBER_RE, MAX_STUDENT_NUMBER } = require('../services/studentNumber.service');
 
 const ALLOWED_PAGE_SIZES = [10, 25, 50];
 const DEFAULT_PAGE_SIZE = 10;
@@ -72,6 +73,28 @@ exports.listExams = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
+// Latest student added by a reception user (LV#10) and the suggested next number
+// (last + 1, keeping leading zeros). Both are null if reception hasn't added one yet.
+exports.lastReceptionNumber = async (req, res, next) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT s.student_number
+       FROM students s
+       JOIN users u ON u.id = s.created_by
+       WHERE u.role = 'reception' AND s.is_active = true
+       ORDER BY s.created_at DESC
+       LIMIT 1`
+    );
+    const last = rows[0] ? rows[0].student_number : null;
+    let nextNumber = null;
+    if (last && STUDENT_NUMBER_RE.test(last)) {
+      const n = Number(last) + 1;
+      if (n <= MAX_STUDENT_NUMBER) nextNumber = String(n).padStart(last.length, '0');
+    }
+    res.json({ success: true, data: { student_number: last, next_student_number: nextNumber } });
+  } catch (err) { next(err); }
+};
+
 // Preview of the email the next student with this name will get
 exports.emailPreview = async (req, res, next) => {
   try {
@@ -89,9 +112,10 @@ exports.create = async (req, res, next) => {
     await client.query('BEGIN');
     const email = await generateStudentEmail(client, first_name, last_name, { lock: true });
     const { rows } = await client.query(
-      `INSERT INTO students (student_number, full_name, email, mobile_number, class_level, sector, language, photo_url)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING ${STUDENT_COLS}`,
-      [student_number, full_name, email, mobile_number || null, class_level || null, sector || null, language || null, photo_url || null]
+      `INSERT INTO students (student_number, full_name, email, mobile_number, class_level, sector, language, photo_url, created_by)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING ${STUDENT_COLS}`,
+      [student_number, full_name, email, mobile_number || null, class_level || null, sector || null, language || null, photo_url || null,
+        req.user.id]
     );
     await client.query('COMMIT');
     res.status(201).json({ success: true, data: rows[0] });
@@ -145,10 +169,10 @@ exports.createCourse = async (req, res, next) => {
     const email = await generateStudentEmail(client, first_name, last_name, { lock: true });
     const { rows } = await client.query(
       `INSERT INTO students (student_number, full_name, email, mobile_number, class_level, sector, language, photo_url,
-                             is_course_student, discount_amount, is_free, discount_note)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, true, $9, $10, $11) RETURNING ${STUDENT_COLS}`,
+                             is_course_student, discount_amount, is_free, discount_note, created_by)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, true, $9, $10, $11, $12) RETURNING ${STUDENT_COLS}`,
       [student_number, full_name, email, mobile_number || null, class_level || null, sector || null, language || null,
-        photo_url || null, discount_amount, is_free, discount_note || null]
+        photo_url || null, discount_amount, is_free, discount_note || null, req.user.id]
     );
     await client.query('COMMIT');
     res.status(201).json({ success: true, data: rows[0] });

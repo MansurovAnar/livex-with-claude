@@ -99,4 +99,6 @@ select { max-width: 100%; min-width: 0; text-overflow: ellipsis; }
   .report-exam-picker-panel label, .report-exam-picker button { min-height: 44px; }
   /* Payment summary tiles: two per line */
   .pay-grid     { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 8px !important; }
+  /* Reception Students page (LV#10): last-number pill wraps instead of overflowing */
+  .last-number-pill { max-width: 100%; overflow-wrap: anywhere; }
 }

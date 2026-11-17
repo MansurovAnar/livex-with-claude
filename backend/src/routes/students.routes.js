@@ -11,6 +11,7 @@ router.use(authenticate);
 router.get('/', authorize('admin', 'reception'), ctrl.list);
 router.post('/', authorize('admin', 'reception'), validate(createStudentSchema), ctrl.create);
 router.get('/email-preview', authorize('admin', 'reception'), ctrl.emailPreview);
+router.get('/last-reception-number', authorize('admin', 'reception'), ctrl.lastReceptionNumber);
 router.get('/:id', authorize('admin', 'reception'), ctrl.get);
 router.get('/:id/exams', authorize('admin', 'reception'), ctrl.listExams);
 
