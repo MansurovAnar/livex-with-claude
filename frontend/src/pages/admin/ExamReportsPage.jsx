@@ -15,7 +15,7 @@ const MONEY_COLUMNS = [
   { key: 'expenses_total', label: 'Expenses' },
   { key: 'left_in_hand', label: 'Left in hand' },
 ];
-const COUNT_FIELDS = ['registered_count', 'fully_paid_count', 'partly_paid_count', 'unpaid_count'];
+const COUNT_FIELDS = ['registered_count', 'fully_paid_count', 'partly_paid_count', 'unpaid_count', 'not_attended_count'];
 
 // Exam states selectable in the report (LV#71); completed only by default
 const STATUS_OPTIONS = [

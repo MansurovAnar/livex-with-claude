@@ -35,6 +35,9 @@ export default function ExamPaymentsSummary({ payments, title }) {
       </div>
       <div className="wrap-text" style={{ color: '#64748b', fontSize: '0.85rem', marginTop: '0.6rem' }}>
         {t('Students: {full} fully paid • {part} partly paid • {unpaid} unpaid', { full: payments.fully_paid_count, part: payments.partly_paid_count, unpaid: payments.unpaid_count })}
+        {payments.not_attended_count > 0 && (
+          <> • {t('{n} did not attend (not counted as expected)', { n: payments.not_attended_count })}</>
+        )}
         {payments.exam_cost !== undefined && (
           <> &nbsp;{t('(exam cost {cost}, commission {commission} per fully paid partner student)', { cost: formatAzn(payments.exam_cost), commission: formatAzn(payments.commission_amount) })}</>
         )}

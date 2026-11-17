@@ -15,6 +15,8 @@ router.get('/:examId/registrations/removed', authorize('admin', 'reception'), ct
 
 // PATCH /api/registrations/:id/payment
 router.patch('/:id/payment', authorize('admin', 'reception'), ctrl.updatePayment);
+// PATCH /api/registrations/:id/attendance  { attended }  — only while the exam is ongoing (LV#32)
+router.patch('/:id/attendance', authorize('admin', 'reception'), ctrl.updateAttendance);
 // POST /api/registrations/:id/remove  { reason }  — soft remove from the exam
 // POST /api/registrations/:id/restore
 router.post('/:id/remove', authorize('admin', 'reception'), ctrl.remove);

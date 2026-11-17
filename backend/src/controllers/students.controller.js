@@ -1,6 +1,7 @@
 const pool = require('../config/database');
 const { buildFullName, generateStudentEmail } = require('../services/studentEmail.service');
 const { dueAmountSql } = require('../services/coursePrice.service');
+const { attendedSql } = require('../services/attendance.service');
 
 const ALLOWED_PAGE_SIZES = [10, 25, 50];
 const DEFAULT_PAGE_SIZE = 10;
@@ -59,7 +60,8 @@ exports.listExams = async (req, res, next) => {
     if (!students[0]) return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Student not found' } });
     const { rows } = await pool.query(
       `SELECT r.id, r.amount_paid, r.payment_method, r.registered_at, r.removed_at, r.removal_reason,
-              e.id AS exam_id, e.title, e.scheduled_at, e.exam_cost,
+              ${attendedSql('r')} AS is_attended,
+              e.id AS exam_id, e.title, e.scheduled_at, e.exam_cost, e.status AS exam_status,
               ${dueAmountSql('e', 's')} AS due_amount
        FROM registrations r
        JOIN exams e ON e.id = r.exam_id
