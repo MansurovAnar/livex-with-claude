@@ -6,6 +6,7 @@ const { getNextStudentNumber } = require('../services/studentNumber.service');
 const { cleanNamePart, buildFullName, generateStudentEmail } = require('../services/studentEmail.service');
 const { resolveExtraDetail } = require('../services/examExtraDetail.service');
 const { removedRegistrationError } = require('../services/registrationRemoval.service');
+const { attendedSql } = require('../services/attendance.service');
 
 router.use(authenticate, authorize('partner'));
 
@@ -214,8 +215,9 @@ router.get('/payments', async (req, res, next) => {
     const [paymentsResult, profileResult] = await Promise.all([
       pool.query(`
         SELECT r.id, r.amount_paid, r.registered_at, r.seat_number, r.room_number,
+               ${attendedSql('r')} AS is_attended,
                s.full_name, s.student_number,
-               e.title AS exam_title, e.scheduled_at, e.exam_cost, e.exam_location
+               e.title AS exam_title, e.scheduled_at, e.exam_cost, e.exam_location, e.status AS exam_status
         FROM registrations r
         JOIN students s ON s.id = r.student_id
         JOIN exams e ON e.id = r.exam_id

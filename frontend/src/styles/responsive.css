@@ -6,6 +6,21 @@ img, video, canvas { max-width: 100%; height: auto; }
 /* Dropdowns never grow past their container to fit a long selected/option label */
 select { max-width: 100%; min-width: 0; text-overflow: ellipsis; }
 .form-grid > * { min-width: 0; }
+/* Attendance (LV#32): big animated checkbox with a green tick; red X for did-not-attend */
+.attend-check { width: 34px; height: 34px; padding: 0; border: 2px solid #94a3b8; border-radius: 8px; background: #fff;
+                display: inline-flex; align-items: center; justify-content: center; flex: none;
+                transition: background-color .2s ease, border-color .2s ease, transform .15s ease, box-shadow .2s ease; }
+.attend-check:hover:not(:disabled) { border-color: #16a34a; box-shadow: 0 0 0 3px rgba(22,163,74,.15); }
+.attend-check:active:not(:disabled) { transform: scale(.9); }
+.attend-check:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
+.attend-check-tick { color: #fff; font-size: 1.25rem; font-weight: 800; line-height: 1; opacity: 0; transform: scale(0); transition: opacity .2s ease, transform .2s ease; }
+.attend-check.is-checked { background: #16a34a; border-color: #16a34a; animation: attend-pop .3s ease; }
+.attend-check.is-checked .attend-check-tick { opacity: 1; transform: scale(1); }
+@keyframes attend-pop { 0% { transform: scale(1); } 50% { transform: scale(1.18); } 100% { transform: scale(1); } }
+.attend-tick, .attend-x { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px;
+                          border-radius: 50%; font-size: 0.95rem; font-weight: 800; line-height: 1; flex: none; }
+.attend-tick { background: #dcfce7; color: #16a34a; }
+.attend-x    { background: #fee2e2; color: #dc2626; }
 
 @media (max-width: 768px) {
   /* Layout (sidebar → top bar + drawer) */
@@ -97,9 +112,13 @@ select { max-width: 100%; min-width: 0; text-overflow: ellipsis; }
   .report-exam-picker { width: 100% !important; }
   .report-status-chips > label { flex: 1 1 130px; min-height: 44px; justify-content: center; }
   .report-exam-picker-panel label, .report-exam-picker button { min-height: 44px; }
+  /* Attendance checkbox (LV#32): 44px touch target */
+  .app-main button.attend-check { width: 44px; height: 44px; min-height: 44px; }
   /* Payment summary tiles: two per line */
   .pay-grid     { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 8px !important; }
   /* Partner Add Student duplicate warning (LV#31): Cancel / Add anyway share the row */
   .duplicate-actions { flex-wrap: wrap !important; }
   .duplicate-actions > button { flex: 1 1 120px; }
+  /* Reception Students page (LV#10): last-number pill wraps instead of overflowing */
+  .last-number-pill { max-width: 100%; overflow-wrap: anywhere; }
 }
