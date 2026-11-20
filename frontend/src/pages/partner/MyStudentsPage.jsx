@@ -145,7 +145,7 @@ export default function MyStudentsPage() {
               </div>
               {/* Similar names among own students — information only */}
               {similar.length > 0 && (
-                <div className="wrap-text" style={{ gridColumn: '1 / -1', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 6, padding: '0.5rem 0.75rem', fontSize: '0.8rem', color: '#475569' }}>
+                <div className="wrap-text" style={{ gridColumn: '1 / -1', background: '#ffedd5', border: '1px solid #fdba74', borderRadius: 6, padding: '0.5rem 0.75rem', fontSize: '0.8rem', color: '#7c2d12' }}>
                   <div style={{ fontWeight: 600, marginBottom: '0.25rem' }}>{t('Your students with similar names:')}</div>
                   {similar.map(s => (
                     <div key={s.id}>{s.full_name} · #{s.student_number}{s.mobile_number ? ` · ${s.mobile_number}` : ''}</div>
