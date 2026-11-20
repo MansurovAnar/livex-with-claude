@@ -3,8 +3,10 @@ import apiClient from '../../api/apiClient';
 import { useLanguage } from '../../i18n/LanguageContext';
 
 // Partner leaderboard (LV#38): active partners ranked by fully paid registrations
-// in completed exams. Places 1-3 with at least one registration get 3/2/1 stars;
-// the logged-in partner's row is highlighted. Fits the phone screen without
+// in completed exams. Partners with 0 registrations are not listed (the API
+// leaves them out); if the logged-in partner isn't listed, a note below the table
+// says they have no registrations. Places 1-3 get 3/2/1 stars; the logged-in
+// partner's row is highlighted. Fits the phone screen without
 // horizontal scroll: names wrap inside the name column.
 export default function PartnerLeaderboardModal({ onClose }) {
   const { t, tError } = useLanguage();
@@ -18,6 +20,8 @@ export default function PartnerLeaderboardModal({ onClose }) {
       .catch(err => setError(tError(err, 'Failed to load leaderboard')))
       .finally(() => setLoading(false));
   }, []);
+
+  const meHasNone = !rows.some(p => p.is_me);
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}
@@ -38,26 +42,24 @@ export default function PartnerLeaderboardModal({ onClose }) {
           <p style={{ color: '#94a3b8' }}>{t('Loading...')}</p>
         ) : error ? (
           <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', padding: '0.75rem 1rem', borderRadius: 6, fontSize: '0.875rem' }}>{error}</div>
-        ) : rows.length === 0 ? (
-          <p style={{ color: '#94a3b8', textAlign: 'center', padding: '1.5rem 0' }}>{t('No partners yet.')}</p>
-        ) : (
+        ) : rows.length === 0 ? null : (
           <div className="table-scroll" style={{ border: '1px solid #e2e8f0', borderRadius: 8 }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
               <colgroup>
                 <col style={{ width: 52 }} />
                 <col />
-                <col style={{ width: 96 }} />
+                <col style={{ width: '8rem' }} />
               </colgroup>
               <thead>
                 <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
                   <th style={th} aria-label={t('Photo')} />
                   <th style={th}>{t('Partner')}</th>
-                  <th style={{ ...th, textAlign: 'right' }}>{t('Registrations')}</th>
+                  <th style={{ ...th, textAlign: 'right', whiteSpace: 'nowrap', overflowWrap: 'normal' }}>{t('Registrations')}</th>
                 </tr>
               </thead>
               <tbody>
                 {rows.map((p, i) => {
-                  const stars = p.paid_registrations > 0 && i < 3 ? 3 - i : 0;
+                  const stars = i < 3 ? 3 - i : 0;
                   return (
                     <tr key={i} style={{ borderBottom: '1px solid #f1f5f9', background: p.is_me ? '#ecfdf5' : '#fff' }}>
                       <td style={td}>
@@ -80,6 +82,12 @@ export default function PartnerLeaderboardModal({ onClose }) {
                 })}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {!loading && !error && meHasNone && (
+          <div style={{ marginTop: rows.length ? '0.75rem' : 0, background: '#f8fafc', border: '1px solid #e2e8f0', color: '#475569', padding: '0.75rem 1rem', borderRadius: 6, fontSize: '0.875rem', textAlign: 'center' }}>
+            {t('You do not have any registrations')}
           </div>
         )}
 

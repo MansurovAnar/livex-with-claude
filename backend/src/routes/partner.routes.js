@@ -241,7 +241,8 @@ router.get('/payments', async (req, res, next) => {
 // ── Leaderboard (LV#38): all active partners ranked by paid registrations ─────
 // Counts registrations of each partner's students in completed exams that are
 // actually and fully paid (amount_paid > 0 and >= the price owed). Removed
-// registrations and inactive exams don't count. Only names and counts are exposed.
+// registrations and inactive exams don't count. Partners with 0 are left out.
+// Only names and counts are exposed.
 
 const DUE = dueAmountSql('e', 's');
 
@@ -257,6 +258,7 @@ router.get('/leaderboard', async (req, res, next) => {
                        AND r.amount_paid > 0 AND r.amount_paid >= ${DUE}
       WHERE u.role = 'partner' AND u.is_active = true
       GROUP BY u.id
+      HAVING COUNT(e.id) > 0
       ORDER BY paid_registrations DESC, u.full_name
     `, [req.user.id]);
     res.json({ success: true, data: rows });
