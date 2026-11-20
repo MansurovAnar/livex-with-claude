@@ -1,8 +1,14 @@
 const pool = require('../config/database');
 const { dueAmountSql } = require('./coursePrice.service');
+const { attendedSql } = require('./attendance.service');
 
 // Price owed per registration (course student discounts / FREE applied)
 const DUE = dueAmountSql('e', 's');
+
+// LV#32: once the exam is completed, students who did not attend (not ticked and nothing
+// paid) are not expected income: they are left out of expected / outstanding and the
+// unpaid count. Before completion every registered student is still expected.
+const EXPECTED = `(e.status <> 'completed' OR ${attendedSql('r')})`;
 
 // Additional expenses recorded for the exam (LV#33), subtracted from left in hand
 const EXPENSES = `(SELECT COALESCE(SUM(x.amount), 0) FROM exam_expenses x WHERE x.exam_id = e.id)`;
@@ -11,20 +17,22 @@ const EXPENSES = `(SELECT COALESCE(SUM(x.amount), 0) FROM exam_expenses x WHERE 
 // (amount_paid > 0, payment_method NULL) are reported as "unspecified", so
 // card + cash + unspecified = paid. Commission = partner bonuses earned on the exam.
 // Left in hand = paid - commission - expenses (exam_expenses, LV#33).
-// Students removed from the exam are left out of every figure.
+// Students removed from the exam are left out of every figure; students who did not
+// attend a completed exam are left out of expected / outstanding / unpaid (LV#32).
 // Course students owe their discounted price (FREE = 0), see coursePrice.service.
 const PAYMENT_COLUMNS = `
   e.id, e.title, e.scheduled_at, e.exam_location, e.status, e.exam_cost, e.commission_amount,
   COUNT(r.id)::int AS registered_count,
   COUNT(r.id) FILTER (WHERE r.amount_paid >= ${DUE})::int AS fully_paid_count,
   COUNT(r.id) FILTER (WHERE r.amount_paid > 0 AND r.amount_paid < ${DUE})::int AS partly_paid_count,
-  COUNT(r.id) FILTER (WHERE r.amount_paid = 0 AND ${DUE} > 0)::int AS unpaid_count,
-  COALESCE(SUM(${DUE}) FILTER (WHERE r.id IS NOT NULL), 0)::numeric(12,2) AS expected_total,
+  COUNT(r.id) FILTER (WHERE r.amount_paid = 0 AND ${DUE} > 0 AND ${EXPECTED})::int AS unpaid_count,
+  COUNT(r.id) FILTER (WHERE NOT ${EXPECTED})::int AS not_attended_count,
+  COALESCE(SUM(${DUE}) FILTER (WHERE r.id IS NOT NULL AND ${EXPECTED}), 0)::numeric(12,2) AS expected_total,
   COALESCE(SUM(r.amount_paid), 0)::numeric(12,2) AS paid_total,
   COALESCE(SUM(r.amount_paid) FILTER (WHERE r.payment_method = 'card'), 0)::numeric(12,2) AS paid_card,
   COALESCE(SUM(r.amount_paid) FILTER (WHERE r.payment_method = 'cash'), 0)::numeric(12,2) AS paid_cash,
   COALESCE(SUM(r.amount_paid) FILTER (WHERE r.payment_method IS NULL), 0)::numeric(12,2) AS paid_unspecified,
-  COALESCE(SUM(GREATEST(${DUE} - r.amount_paid, 0)) FILTER (WHERE r.id IS NOT NULL), 0)::numeric(12,2) AS outstanding_total,
+  COALESCE(SUM(GREATEST(${DUE} - r.amount_paid, 0)) FILTER (WHERE r.id IS NOT NULL AND ${EXPECTED}), 0)::numeric(12,2) AS outstanding_total,
   (e.commission_amount * COUNT(r.id) FILTER (WHERE r.bonus_awarded = true))::numeric(12,2) AS commission_total,
   ${EXPENSES}::numeric(12,2) AS expenses_total,
   (COALESCE(SUM(r.amount_paid), 0) - e.commission_amount * COUNT(r.id) FILTER (WHERE r.bonus_awarded = true)
@@ -35,7 +43,7 @@ const MONEY_FIELDS = [
   'expected_total', 'paid_total', 'paid_card', 'paid_cash', 'paid_unspecified',
   'outstanding_total', 'commission_total', 'expenses_total', 'left_in_hand',
 ];
-const COUNT_FIELDS = ['registered_count', 'fully_paid_count', 'partly_paid_count', 'unpaid_count'];
+const COUNT_FIELDS = ['registered_count', 'fully_paid_count', 'partly_paid_count', 'unpaid_count', 'not_attended_count'];
 
 function toNumbers(row) {
   const out = { ...row };

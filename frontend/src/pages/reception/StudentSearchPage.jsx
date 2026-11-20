@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { listStudents } from '../../api/students.api';
+import { listStudents, getLastReceptionNumber } from '../../api/students.api';
 import { PageSizeSelect, PaginationBar } from '../../components/shared/Pagination';
 import CourseDiscountBadge from '../../components/shared/CourseDiscountBadge';
 import StudentExamsModal from '../../components/shared/StudentExamsModal';
@@ -16,6 +16,7 @@ export default function StudentSearchPage() {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [examsStudent, setExamsStudent] = useState(null);
+  const [lastReceptionNumber, setLastReceptionNumber] = useState(null);
 
   const load = (q = '', p = 1, l = limit) => {
     setLoading(true);
@@ -28,6 +29,12 @@ export default function StudentSearchPage() {
 
   // Load first page on mount
   useEffect(() => { load(); }, []);
+
+  useEffect(() => {
+    getLastReceptionNumber()
+      .then(res => setLastReceptionNumber(res.data.data.student_number))
+      .catch(() => {});
+  }, []);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -77,6 +84,15 @@ export default function StudentSearchPage() {
       <div className="pagination-top" style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.5rem' }}>
         <PageSizeSelect limit={limit} onLimitChange={handleLimitChange} />
       </div>
+
+      {lastReceptionNumber && (
+        <div style={{ marginBottom: '0.5rem' }}>
+          <span className="last-number-pill"
+            style={{ display: 'inline-block', background: '#f97316', color: '#fff', borderRadius: 999, padding: '0.3rem 0.9rem', fontSize: '0.85rem', fontWeight: 600 }}>
+            {t('Last Student # added by reception:')} {lastReceptionNumber}
+          </span>
+        </div>
+      )}
 
       {loading ? (
         <p style={{ color: '#94a3b8' }}>{t('Loading...')}</p>

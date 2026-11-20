@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { createStudent } from '../../api/students.api';
+import React, { useEffect, useState } from 'react';
+import { createStudent, getLastReceptionNumber } from '../../api/students.api';
 import useStudentEmailPreview from '../../hooks/useStudentEmailPreview';
 import { useLanguage } from '../../i18n/LanguageContext';
 
@@ -17,6 +17,17 @@ export default function AddStudentPage() {
   const [loading, setLoading] = useState(false);
   const [previewKey, setPreviewKey] = useState(0);
   const emailPreview = useStudentEmailPreview('/students/email-preview', form.first_name, form.last_name, previewKey);
+
+  // Pre-fill Student Number with the last reception number + 1 (still editable); LV#10.
+  // Only fills an empty field, so a number the user already typed is kept.
+  const prefillNextNumber = () => getLastReceptionNumber()
+    .then(res => {
+      const next = res.data.data.next_student_number;
+      if (next) setForm(f => (f.student_number ? f : { ...f, student_number: next }));
+    })
+    .catch(() => {});
+
+  useEffect(() => { prefillNextNumber(); }, []);
 
   const handleChange = e => setForm(f => ({ ...f, [e.target.name]: e.target.value }));
 
@@ -39,6 +50,7 @@ export default function AddStudentPage() {
       setSuccess(res.data.data);
       setForm(emptyForm);
       setPreviewKey(k => k + 1);
+      prefillNextNumber();
     } catch (err) {
       setError(tError(err, 'Failed to add student'));
     } finally {

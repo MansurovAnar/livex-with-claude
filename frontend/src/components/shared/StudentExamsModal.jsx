@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { getStudentExams } from '../../api/students.api';
 import { paymentMethodLabel } from './PaymentMethodRadio';
+import { AttendanceStatus } from './AttendanceMark';
 import { useLanguage } from '../../i18n/LanguageContext';
 
 // Exams a student is registered for (newest first) with cost and payment.
@@ -49,6 +50,7 @@ export default function StudentExamsModal({ student, onClose }) {
                   <th style={th}>{t('Date')}</th>
                   <th style={th}>{t('Exam Cost')}</th>
                   <th style={th}>{t('Paid')}</th>
+                  <th style={th}>{t('Attended')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -86,6 +88,11 @@ export default function StudentExamsModal({ student, onClose }) {
                         ) : (
                           <span style={{ color: '#94a3b8' }}>{t('Unpaid')}</span>
                         )}
+                      </td>
+                      <td style={{ ...td, textAlign: 'center' }}>
+                        {removed
+                          ? <span style={{ color: '#cbd5e1' }}>—</span>
+                          : <AttendanceStatus attended={r.is_attended} examStatus={r.exam_status} />}
                       </td>
                     </tr>
                   );
