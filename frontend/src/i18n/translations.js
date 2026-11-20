@@ -739,6 +739,9 @@ export const AZ = {
   'Attendance can only be changed while the exam is ongoing': 'İştirak yalnız imtahan davam edərkən dəyişdirilə bilər',
   'attended must be true or false': 'attended dəyəri true və ya false olmalıdır',
   '{n} did not attend (not counted as expected)': '{n} iştirak etməyib (gözlənilən gəlirə daxil edilmir)',
+
+  // ── Last reception student number (LV#10) ──
+  'Last Student # added by reception:': 'Qeydiyyatçının əlavə etdiyi son şagird nömrəsi:',
 };
 
 // Server messages that contain runtime values. In the replacement, {1} inserts the
