@@ -1,11 +1,12 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import apiClient from '../../api/apiClient';
 import StudentTicket from '../../components/shared/StudentTicket';
 import { useLanguage } from '../../i18n/LanguageContext';
 
 export default function PartnerRegisterPage() {
   const { t, tError } = useLanguage();
+  const navigate = useNavigate();
   const [exams, setExams] = useState([]);
   const [students, setStudents] = useState([]);
   const [selectedExam, setSelectedExam] = useState('');
@@ -88,7 +89,13 @@ export default function PartnerRegisterPage() {
 
   return (
     <div style={{ maxWidth: 900 }}>
-      <h2 style={{ marginTop: 0 }}>{t('Register to Exam')}</h2>
+      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+        <h2 style={{ margin: 0 }}>{t('Register to Exam')}</h2>
+        <button type="button" onClick={() => navigate('/partner/students', { state: { openAddForm: true } })}
+          style={{ background: '#059669', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.25rem', cursor: 'pointer', fontWeight: 500 }}>
+          {t('+ Add New Student')}
+        </button>
+      </div>
 
       {ticket && <StudentTicket data={ticket} onClose={() => setTicket(null)} />}
 
