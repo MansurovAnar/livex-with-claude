@@ -726,6 +726,19 @@ export const AZ = {
   '{exams} ongoing exams • {students} registered students': '{exams} davam edən imtahan • {students} qeydiyyatlı şagird',
   'No exams are ongoing right now.': 'Hazırda davam edən imtahan yoxdur.',
   'No students registered for the ongoing exams yet.': 'Davam edən imtahanlara hələ şagird qeydiyyatdan keçməyib.',
+  // Attendance (LV#32)
+  'Attended': 'İştirak etdi',
+  'Attended:': 'İştirak edib:',
+  'Not attended': 'İştirak etmədi',
+  'Did not attend': 'İştirak etmədi',
+  'Attendance': 'İştirak',
+  'Mark as attended': 'İştirak etdi kimi qeyd et',
+  'Attended and not attended': 'İştirak edən və etməyən',
+  'Students with a recorded payment count as attended': 'Ödənişi qeydə alınmış şagirdlər iştirak etmiş sayılır',
+  'Failed to save attendance': 'İştirakı yadda saxlamaq alınmadı',
+  'Attendance can only be changed while the exam is ongoing': 'İştirak yalnız imtahan davam edərkən dəyişdirilə bilər',
+  'attended must be true or false': 'attended dəyəri true və ya false olmalıdır',
+  '{n} did not attend (not counted as expected)': '{n} iştirak etməyib (gözlənilən gəlirə daxil edilmir)',
 
   // ── Last reception student number (LV#10) ──
   'Last Student # added by reception:': 'Qeydiyyatçının əlavə etdiyi son şagird nömrəsi:',

@@ -2,6 +2,7 @@ const pool = require('../config/database');
 const { resolveExtraDetail } = require('../services/examExtraDetail.service');
 const { removedRegistrationError } = require('../services/registrationRemoval.service');
 const { dueAmountSql } = require('../services/coursePrice.service');
+const { attendedSql } = require('../services/attendance.service');
 
 const PAYMENT_METHODS = ['card', 'cash'];
 
@@ -9,6 +10,7 @@ exports.listByExam = async (req, res, next) => {
   try {
     const { rows } = await pool.query(
       `SELECT r.id, r.seat_number, r.room_number, r.amount_paid, r.payment_method, r.registered_at, r.extra_detail,
+              r.attended, ${attendedSql('r')} AS is_attended,
               s.id AS student_id, s.student_number, s.full_name, s.email, s.mobile_number, s.photo_url,
               s.is_course_student, s.is_free, s.discount_amount, s.discount_note,
               ${dueAmountSql('e', 's')} AS due_amount,
@@ -128,6 +130,40 @@ exports.updatePayment = async (req, res, next) => {
   } finally {
     client.release();
   }
+};
+
+// LV#32: tick / untick "attended". Only while the exam is ongoing; a student with a
+// recorded payment always counts as attended, so they can't be unticked.
+exports.updateAttendance = async (req, res, next) => {
+  try {
+    const { attended } = req.body;
+    if (typeof attended !== 'boolean') {
+      return res.status(400).json({ success: false, error: { code: 'VALIDATION', message: 'attended must be true or false' } });
+    }
+    const { rows: existing } = await pool.query(
+      `SELECT r.amount_paid, e.status
+       FROM registrations r JOIN exams e ON e.id = r.exam_id
+       WHERE r.id = $1 AND r.removed_at IS NULL`,
+      [req.params.id]
+    );
+    if (!existing[0]) return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Registration not found' } });
+    if (existing[0].status !== 'ongoing') {
+      return res.status(409).json({ success: false, error: { code: 'EXAM_NOT_ONGOING', message: 'Attendance can only be changed while the exam is ongoing' } });
+    }
+    if (!attended && Number(existing[0].amount_paid) > 0) {
+      return res.status(409).json({ success: false, error: { code: 'HAS_PAYMENT', message: 'Students with a recorded payment count as attended' } });
+    }
+    const { rows } = await pool.query(
+      `UPDATE registrations r
+       SET attended = $2,
+           attended_at = CASE WHEN $2 THEN NOW() ELSE NULL END,
+           attended_by = CASE WHEN $2 THEN $3::uuid ELSE NULL END
+       WHERE r.id = $1
+       RETURNING r.id, r.attended, r.attended_at, ${attendedSql('r')} AS is_attended`,
+      [req.params.id, attended, req.user.id]
+    );
+    res.json({ success: true, data: rows[0] });
+  } catch (err) { next(err); }
 };
 
 exports.deregister = async (req, res, next) => {

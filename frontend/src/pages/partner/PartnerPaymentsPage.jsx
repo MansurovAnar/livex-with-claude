@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import apiClient from '../../api/apiClient';
 import { useLanguage } from '../../i18n/LanguageContext';
+import { NotAttendedIcon } from '../../components/shared/AttendanceMark';
 
 export default function PartnerPaymentsPage() {
   const { t } = useLanguage();
@@ -69,14 +70,14 @@ export default function PartnerPaymentsPage() {
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
-              {['#', 'Student', 'Number', 'Exam', 'Exam Date', 'Cost', 'Paid', 'Remaining', 'Status', 'Registered'].map(h => (
+              {['#', 'Student', 'Number', 'Exam', 'Exam Date', 'Cost', 'Paid', 'Remaining', 'Status', 'Attendance', 'Registered'].map(h => (
                 <th key={h} style={th}>{t(h)}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 ? (
-              <tr><td colSpan={10} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>{t('No payments found.')}</td></tr>
+              <tr><td colSpan={11} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>{t('No payments found.')}</td></tr>
             ) : filtered.map((p, i) => {
               const cost = Number(p.exam_cost);
               const paid = Number(p.amount_paid);
@@ -102,6 +103,17 @@ export default function PartnerPaymentsPage() {
                         ? <span style={{ background: '#fef9c3', color: '#ca8a04', padding: '0.15rem 0.6rem', borderRadius: 12, fontSize: '0.75rem', fontWeight: 700 }}>{t('Partial')}</span>
                         : <span style={{ background: '#fee2e2', color: '#dc2626', padding: '0.15rem 0.6rem', borderRadius: 12, fontSize: '0.75rem', fontWeight: 700 }}>{t('Unpaid')}</span>
                     }
+                  </td>
+                  <td style={{ ...td, whiteSpace: 'nowrap' }}>
+                    {p.is_attended ? (
+                      <span style={{ background: '#dcfce7', color: '#16a34a', padding: '0.15rem 0.6rem', borderRadius: 12, fontSize: '0.75rem', fontWeight: 700 }}>✓ {t('Attended')}</span>
+                    ) : p.exam_status === 'completed' ? (
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', color: '#dc2626', fontSize: '0.75rem', fontWeight: 700 }}>
+                        <NotAttendedIcon /> {t('Not attended')}
+                      </span>
+                    ) : (
+                      <span style={{ color: '#cbd5e1' }}>—</span>
+                    )}
                   </td>
                   <td style={{ ...td, color: '#64748b' }}>{new Date(p.registered_at).toLocaleDateString()}</td>
                 </tr>

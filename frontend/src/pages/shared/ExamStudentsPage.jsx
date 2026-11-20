@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getExam } from '../../api/exams.api';
-import { listRegistrations, listRemovedRegistrations, updatePayment, removeFromExam, restoreToExam } from '../../api/registrations.api';
+import { listRegistrations, listRemovedRegistrations, updatePayment, updateAttendance, removeFromExam, restoreToExam } from '../../api/registrations.api';
 import { useAuth } from '../../contexts/AuthContext';
 import StudentTicket from '../../components/shared/StudentTicket';
 import PaymentMethodRadio, { paymentMethodLabel } from '../../components/shared/PaymentMethodRadio';
 import CourseDiscountBadge from '../../components/shared/CourseDiscountBadge';
+import { AttendanceCheckbox, AttendanceStatus, isAttended } from '../../components/shared/AttendanceMark';
 import { useLanguage } from '../../i18n/LanguageContext';
 
 // Price the student owes: course students get their discount (FREE = 0), see due_amount from the API
@@ -15,7 +16,7 @@ const CLASSES = Array.from({ length: 11 }, (_, i) => i + 1);
 const SECTORS = ['Azerbaijan', 'Rus'];
 const LANGUAGES = ['English', 'Russian', 'German', 'French'];
 const NO_PARTNER = '__none__';
-const EMPTY_FILTERS = { partner: '', classLevel: '', sector: '', language: '', payment: '' };
+const EMPTY_FILTERS = { partner: '', classLevel: '', sector: '', language: '', payment: '', attendance: '' };
 
 export default function ExamStudentsPage() {
   const { id } = useParams();
@@ -40,6 +41,7 @@ export default function ExamStudentsPage() {
   const [removeError, setRemoveError] = useState('');
   const [removing, setRemoving] = useState(false);
   const [restoringId, setRestoringId] = useState(null);
+  const [attendanceSavingId, setAttendanceSavingId] = useState(null);
 
   const backPath = user?.role === 'reception' ? '/reception/exams' : '/admin/exams';
 
@@ -73,12 +75,32 @@ export default function ExamStudentsPage() {
     setPayError('');
     try {
       await updatePayment(paymentModal.id, amt, method);
-      setRegistrations(prev => prev.map(r => r.id === paymentModal.id ? { ...r, amount_paid: amt, payment_method: method } : r));
+      // Any recorded payment counts as attended (LV#32)
+      setRegistrations(prev => prev.map(r => r.id === paymentModal.id
+        ? { ...r, amount_paid: amt, payment_method: method, is_attended: !!r.attended || amt > 0 }
+        : r));
       closeModal();
     } catch (err) {
       setPayError(tError(err, 'Failed to save payment'));
     } finally {
       setSaving(false);
+    }
+  };
+
+  // LV#32: tick / untick "attended" (ongoing exams only); optimistic, reverted on error
+  const handleAttendance = async (reg, attended) => {
+    const apply = (value) => setRegistrations(prev => prev.map(r => r.id === reg.id
+      ? { ...r, attended: value, is_attended: value || Number(r.amount_paid) > 0 }
+      : r));
+    apply(attended);
+    setAttendanceSavingId(reg.id);
+    try {
+      await updateAttendance(reg.id, attended);
+    } catch (err) {
+      apply(!!reg.attended);
+      window.alert(tError(err, 'Failed to save attendance'));
+    } finally {
+      setAttendanceSavingId(null);
     }
   };
 
@@ -118,6 +140,10 @@ export default function ExamStudentsPage() {
   if (!exam) return <p style={{ padding: '1rem', color: '#dc2626' }}>{t('Exam not found.')}</p>;
 
   const examCost = Number(exam.exam_cost);
+  // Attendance is ticked only while the exam is ongoing; shown once the exam has started
+  const attendanceEditable = exam.status === 'ongoing';
+  const showAttendance = exam.status === 'ongoing' || exam.status === 'completed';
+  const attendedCount = registrations.filter(isAttended).length;
   // Show the Extra Detail column when the exam type defines extra details or any registration has one
   const showExtraDetail = (exam.exam_type_extra_details || []).length > 0 || registrations.some(r => r.extra_detail);
   const searched = search.trim()
@@ -141,6 +167,7 @@ export default function ExamStudentsPage() {
       const fullyPaid = Number(r.amount_paid) >= dueOf(r, examCost);
       if ((filters.payment === 'paid') !== fullyPaid) return false;
     }
+    if (filters.attendance && (filters.attendance === 'attended') !== isAttended(r)) return false;
     return true;
   });
   const setFilter = (key) => (e) => setFilters(f => ({ ...f, [key]: e.target.value }));
@@ -175,6 +202,9 @@ export default function ExamStudentsPage() {
         <span><strong>{t('Entry closes:')}</strong> {new Date(exam.entry_closes_at).toLocaleString()}</span>
         <span><strong>{t('Exam Cost:')}</strong> <span style={{ color: '#15803d', fontWeight: 700 }}>{examCost.toFixed(2)} AZN</span></span>
         <span><strong>{t('Registered:')}</strong> {registrations.length}</span>
+        {showAttendance && (
+          <span><strong>{t('Attended:')}</strong> <span style={{ color: '#16a34a', fontWeight: 600 }}>{attendedCount}</span> / {registrations.length}</span>
+        )}
         <span><strong>{t('Removed from exam:')}</strong> <span style={{ color: removed.length ? '#dc2626' : undefined, fontWeight: 600 }}>{removed.length}</span></span>
         <span style={{ marginLeft: 'auto' }}>
           <span style={{ background: exam.status === 'ongoing' ? '#16a34a' : exam.status === 'scheduled' ? '#2563eb' : '#64748b', color: '#fff', padding: '0.15rem 0.75rem', borderRadius: 12, fontSize: '0.78rem', fontWeight: 600 }}>
@@ -225,6 +255,13 @@ export default function ExamStudentsPage() {
           <option value="paid">{t('Paid')}</option>
           <option value="unpaid">{t('Not paid')}</option>
         </select>
+        {showAttendance && (
+          <select value={filters.attendance} onChange={setFilter('attendance')} aria-label={t('Attended')} style={filterSelect}>
+            <option value="">{t('Attended and not attended')}</option>
+            <option value="attended">{t('Attended')}</option>
+            <option value="not_attended">{t('Not attended')}</option>
+          </select>
+        )}
         {filtersActive && (
           <button onClick={() => setFilters(EMPTY_FILTERS)}
             style={{ padding: '0.45rem 0.75rem', background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: 6, cursor: 'pointer', color: '#64748b' }}>
@@ -241,7 +278,7 @@ export default function ExamStudentsPage() {
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
-              {['#', 'Full Name', 'Student Number', 'Email', 'Mobile', 'Class', 'Sector', 'Language', ...(showExtraDetail ? ['Extra Detail'] : []), 'Exam Cost', 'Registered At', 'Paid', ''].map(h => (
+              {['#', 'Full Name', 'Student Number', 'Email', 'Mobile', 'Class', 'Sector', 'Language', ...(showExtraDetail ? ['Extra Detail'] : []), 'Exam Cost', 'Registered At', 'Paid', ...(showAttendance ? ['Attended'] : []), ''].map(h => (
                 <th key={h} style={th}>{t(h)}</th>
               ))}
             </tr>
@@ -249,7 +286,7 @@ export default function ExamStudentsPage() {
           <tbody>
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={showExtraDetail ? 13 : 12} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>
+                <td colSpan={12 + (showExtraDetail ? 1 : 0) + (showAttendance ? 1 : 0)} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>
                   {registrations.length === 0 ? t('No students registered for this exam yet.') : t('No students match the search or filters.')}
                 </td>
               </tr>
@@ -315,6 +352,19 @@ export default function ExamStudentsPage() {
                       )}
                     </div>
                   </td>
+                  {showAttendance && <td style={{ ...td, textAlign: 'center' }}>
+                    {attendanceEditable ? (
+                      <AttendanceCheckbox
+                        checked={isAttended(r)}
+                        disabled={paid > 0}
+                        busy={attendanceSavingId === r.id}
+                        title={paid > 0 ? t('Students with a recorded payment count as attended') : undefined}
+                        onChange={(value) => handleAttendance(r, value)}
+                      />
+                    ) : (
+                      <AttendanceStatus attended={isAttended(r)} examStatus={exam.status} />
+                    )}
+                  </td>}
                   <td style={{ ...td, whiteSpace: 'nowrap' }}>
                     {paid > 0 ? (
                       <span title={t('Students with a recorded payment cannot be removed')} style={{ color: '#cbd5e1' }}>—</span>
