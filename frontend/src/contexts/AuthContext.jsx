@@ -3,6 +3,8 @@ import { login as apiLogin, logout as apiLogout, getMe } from '../api/auth.api';
 
 const AuthContext = createContext(null);
 
+export const LEADERBOARD_FLAG = 'showPartnerLeaderboard';
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -23,6 +25,8 @@ export function AuthProvider({ children }) {
     const res = await apiLogin(email, password);
     const { accessToken, user: userData } = res.data.data;
     localStorage.setItem('accessToken', accessToken);
+    // Partner leaderboard (LV#38) pops up once per login; PartnerLayout consumes the flag
+    if (userData.role === 'partner') sessionStorage.setItem(LEADERBOARD_FLAG, '1');
     setUser(userData);
     return userData;
   };
@@ -30,6 +34,7 @@ export function AuthProvider({ children }) {
   const logout = async () => {
     await apiLogout().catch(() => {});
     localStorage.removeItem('accessToken');
+    sessionStorage.removeItem(LEADERBOARD_FLAG);
     setUser(null);
   };
 

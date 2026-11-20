@@ -398,6 +398,16 @@ export const AZ = {
   '1 bonus payment': '1 bonus ödənişi',
   '{n} bonus payments': '{n} bonus ödənişi',
 
+  // ── Partner leaderboard (LV#38) ──
+  'Partner Leaderboard': 'Tərəfdaşların reytinqi',
+  'Show Leaderboard': 'Reytinqi göstər',
+  'Paid registrations in completed exams': 'Bitmiş imtahanlarda ödənilmiş qeydiyyatlar',
+  'Registrations': 'Qeydiyyatlar',
+  'Photo': 'Şəkil',
+  'you': 'siz',
+  'No partners yet.': 'Hələ tərəfdaş yoxdur.',
+  'Failed to load leaderboard': 'Reytinqi yükləmək alınmadı',
+
   // ── O. Security gate ──
   'Entry': 'Giriş',
   'Exit': 'Çıxış',

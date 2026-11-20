@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import apiClient from '../../api/apiClient';
 import StudentTicket from '../../components/shared/StudentTicket';
+import PartnerLeaderboardModal from '../../components/shared/PartnerLeaderboardModal';
 import { useLanguage } from '../../i18n/LanguageContext';
 
 export default function PartnerRegisterPage() {
@@ -19,6 +20,7 @@ export default function PartnerRegisterPage() {
   const [submitting, setSubmitting] = useState(false);
   const [ticket, setTicket] = useState(null);
   const [error, setError] = useState('');
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
   const searchRef = useRef();
 
   useEffect(() => {
@@ -89,13 +91,19 @@ export default function PartnerRegisterPage() {
 
   return (
     <div style={{ maxWidth: 900 }}>
-      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+      <div className="page-header" style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.25rem' }}>
         <h2 style={{ margin: 0 }}>{t('Register to Exam')}</h2>
+        <button type="button" onClick={() => setShowLeaderboard(true)}
+          style={{ padding: '0.4rem 0.9rem', background: '#fff', color: '#064e3b', border: '1px solid #6ee7b7', borderRadius: 6, cursor: 'pointer', fontSize: '0.875rem', fontWeight: 600 }}>
+          ★ {t('Show Leaderboard')}
+        </button>
+
         <button type="button" onClick={() => navigate('/partner/students', { state: { openAddForm: true } })}
           style={{ background: '#059669', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.25rem', cursor: 'pointer', fontWeight: 500 }}>
           {t('+ Add New Student')}
         </button>
       </div>
+      {showLeaderboard && <PartnerLeaderboardModal onClose={() => setShowLeaderboard(false)} />}
 
       {ticket && <StudentTicket data={ticket} onClose={() => setTicket(null)} />}
 
