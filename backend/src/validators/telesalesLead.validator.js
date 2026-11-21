@@ -1,4 +1,5 @@
 const { z } = require('zod');
+const { capitalizeName } = require('../services/studentEmail.service');
 
 exports.EXTRA_INFO_FLAGS = [
   'birthday',
@@ -69,6 +70,9 @@ exports.leadSchema = z.object({
   })
   .transform(d => ({
     ...d,
+    first_name: capitalizeName(d.first_name),
+    last_name: capitalizeName(d.last_name),
+    father_name: capitalizeName(d.father_name),
     // Dependent fields are only kept when their switch is on
     another_student_class: d.extra_info.includes('another_student_at_home') ? d.another_student_class : null,
     hedef_student_name: d.knows_hedef_student ? d.hedef_student_name : null,

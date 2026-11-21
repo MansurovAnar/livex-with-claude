@@ -5,6 +5,7 @@ import { SchoolSelect, VillageSelect } from '../../components/shared/SchoolVilla
 import { useAuth } from '../../contexts/AuthContext';
 import useIsMobile from '../../hooks/useIsMobile';
 import { useLanguage } from '../../i18n/LanguageContext';
+import { nameInputValue } from '../../utils/nameCase';
 import { CLASSES, EXTRA_INFO, LANGUAGES, SECTORS } from './leadOptions';
 
 const PHONE_OWNERS = ['Self', 'Father', 'Mother', 'Grandmother', 'Grandfather', 'Brother', 'Sister', 'Relative'];
@@ -83,7 +84,7 @@ export default function LeadFormPage() {
   }, [id]);
 
   const set = (name, value) => setForm(f => ({ ...f, [name]: value }));
-  const handleChange = e => set(e.target.name, e.target.value);
+  const handleChange = e => set(e.target.name, nameInputValue(e.target));
 
   const toggleExtra = (value) => setForm(f => ({
     ...f,
