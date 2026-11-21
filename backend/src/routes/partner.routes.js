@@ -78,6 +78,7 @@ router.get('/students/similar', async (req, res, next) => {
 // If the partner already has an active student with the same Name + Surname + Father name
 // (case-insensitive, extra spaces ignored) the add is refused with DUPLICATE_STUDENT and the
 // matches; the partner resends with confirm_duplicate: true to add the student anyway.
+// A name matching an active course student is always refused with COURSE_STUDENT.
 router.post('/students', async (req, res, next) => {
   const { first_name, last_name, father_name, mobile_number, class_level, sector, language, confirm_duplicate } = req.body;
   if (!cleanNamePart(first_name) || !cleanNamePart(last_name)) {
@@ -93,6 +94,21 @@ router.post('/students', async (req, res, next) => {
     await client.query('BEGIN');
     // lock the partner row so concurrent adds get sequential numbers
     student_number = await getNextStudentNumber(client, req.user.id, { lock: true });
+    // Course students are registered by reception, never by partners — no override
+    const { rowCount: courseMatches } = await client.query(
+      `SELECT 1 FROM students
+       WHERE is_course_student = true AND is_active = true
+         AND lower(regexp_replace(btrim(full_name), '\\s+', ' ', 'g')) = lower($1)
+       LIMIT 1`,
+      [full_name]
+    );
+    if (courseMatches) {
+      await client.query('ROLLBACK');
+      return res.status(409).json({
+        success: false,
+        error: { code: 'COURSE_STUDENT', message: "This student is course's own student, so ask Reception to add this student to the exam" },
+      });
+    }
     if (confirm_duplicate !== true) {
       const { rows: duplicates } = await client.query(
         `SELECT id, full_name, student_number, mobile_number

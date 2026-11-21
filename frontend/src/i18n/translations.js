@@ -268,6 +268,7 @@ export const AZ = {
   'This student already exists in your list:': 'Bu şagird artıq siyahınızda var:',
   'This student already exists in your list': 'Bu şagird artıq siyahınızda var',
   'Add anyway': 'Yenə də əlavə et',
+  "This student is course's own student, so ask Reception to add this student to the exam": 'Bu şagird kursun şagirdidir. İmtahan qeydiyyatı üçün Resepşına məlumat verin.',
 
   // ── J. Users (admin) ──
   'Create User': 'İstifadəçi yarat',
