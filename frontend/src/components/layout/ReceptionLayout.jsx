@@ -32,6 +32,7 @@ export default function ReceptionLayout() {
               <NavLink to="/reception" end style={mobileNavStyle}>Students</NavLink>
               <NavLink to="/reception/course-students" style={mobileNavStyle}>Course Students</NavLink>
               <NavLink to="/reception/exams" style={mobileNavStyle}>Exams</NavLink>
+              <NavLink to="/reception/applications" style={mobileNavStyle}>{t('Applications for Exams')}</NavLink>
               <NavLink to="/reception/partners" style={mobileNavStyle}>Partners</NavLink>
               <div className="wrap-text" style={{ fontSize: '0.85rem', opacity: 0.85, padding: '8px 0 4px' }}>{user?.full_name}</div>
               <LanguageSwitch fullWidth />
@@ -49,6 +50,7 @@ export default function ReceptionLayout() {
             <NavLink to="/reception" end style={navStyle}>Students</NavLink>
             <NavLink to="/reception/course-students" style={navStyle}>Course Students</NavLink>
             <NavLink to="/reception/exams" style={navStyle}>Exams</NavLink>
+            <NavLink to="/reception/applications" style={navStyle}>{t('Applications for Exams')}</NavLink>
             <NavLink to="/reception/partners" style={navStyle}>Partners</NavLink>
           </div>
           <span style={{ fontSize: '0.85rem' }}>{user?.full_name}

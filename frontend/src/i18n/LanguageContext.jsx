@@ -67,7 +67,13 @@ export function LanguageProvider({ children }) {
     return tServer(typeof e === 'string' ? e : e?.message, fallback);
   }, [tServer]);
 
-  const value = useMemo(() => ({ lang, setLang, t, tServer, tError }), [lang, setLang, t, tServer, tError]);
+  // Public pages (landing page, LV#81) prefer a language for visitors who are not logged
+  // in and have not picked one yet. Not saved, so the visitor's own choice still wins.
+  const preferLang = useCallback((value) => {
+    if (!user && isLang(value) && !isLang(read(LAST_KEY))) setLangState(value);
+  }, [user?.id]);
+
+  const value = useMemo(() => ({ lang, setLang, preferLang, t, tServer, tError }), [lang, setLang, preferLang, t, tServer, tError]);
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
 }
 

@@ -18,8 +18,13 @@ const examTypeRoutes = require('../routes/examTypes.routes');
 const courseStudentRoutes = require('../routes/courseStudents.routes');
 const villageRoutes = require('../routes/villages.routes');
 const telesalesRoutes = require('../routes/telesales.routes');
+const publicRoutes = require('../routes/public.routes');
+const examApplicationRoutes = require('../routes/examApplications.routes');
 
 const app = express();
+
+// Behind a reverse proxy, set TRUST_PROXY (e.g. 1) so req.ip is the client IP for rate limiting
+if (process.env.TRUST_PROXY) app.set('trust proxy', /^\d+$/.test(process.env.TRUST_PROXY) ? Number(process.env.TRUST_PROXY) : process.env.TRUST_PROXY);
 
 app.use(cors({ origin: process.env.CLIENT_ORIGIN || 'http://localhost:5173', credentials: true }));
 app.use(express.json());
@@ -41,6 +46,8 @@ app.use('/api/exam-types', examTypeRoutes);
 app.use('/api/course-students', courseStudentRoutes);
 app.use('/api/villages', villageRoutes);
 app.use('/api/telesales', telesalesRoutes);
+app.use('/api/public', publicRoutes); // landing page, no login (LV#81)
+app.use('/api/exam-applications', examApplicationRoutes);
 
 app.use(errorHandler);
 

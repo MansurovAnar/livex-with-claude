@@ -756,6 +756,48 @@ export const AZ = {
 
   // ── Last reception student number (LV#10) ──
   'Last Student # added by reception:': 'Qeydiyyatçının əlavə etdiyi son şagird nömrəsi:',
+
+  // ── Landing page and exam applications (LV#81) ──
+  'Hədəf Kursları Exams': 'Hədəf Kursları Sınaqları',
+  'Exam Schedule': 'Sınaq Cədvəli',
+  'Registration': 'Qeydiyyat',
+  'Time': 'Vaxt',
+  'Login': 'Daxil ol',
+  'My panel': 'Panelim',
+  'Hədəf Kursları exams let students test their knowledge in real exam conditions. Check the schedule and register in a few minutes.':
+    'Hədəf Kursları sınaqları şagirdlərə biliklərini real imtahan şəraitində yoxlamaq imkanı verir. Cədvələ baxın və bir neçə dəqiqəyə qeydiyyatdan keçin.',
+  'Upcoming exams you can register for.': 'Qeydiyyat açıq olan qarşıdakı sınaqlar.',
+  'No upcoming exams at the moment.': 'Hazırda qarşıdakı sınaq yoxdur.',
+  'Failed to load exams': 'Sınaqları yükləmək alınmadı',
+  'Fill in the form and we will contact you on WhatsApp.': 'Formu doldurun, sizinlə WhatsApp vasitəsilə əlaqə saxlayacağıq.',
+  'Select Exam': 'Sınaq seçin',
+  'Section': 'Bölmə',
+  'Foreign Language': 'Xarici dil',
+  'Mobile number (with active WhatsApp)': 'Mobil nömrə (aktiv WhatsApp olan)',
+  'Enter 7 digits after the prefix': 'Prefiksdən sonra 7 rəqəm daxil edin',
+  'Register now': 'Qeydiyyatdan keç',
+  'Registering...': 'Qeydiyyat göndərilir...',
+  'Thank you! Your application has been received. We will contact you soon.': 'Təşəkkür edirik! Müraciətiniz qəbul edildi. Tezliklə sizinlə əlaqə saxlayacağıq.',
+  'Failed to send the application': 'Müraciəti göndərmək alınmadı',
+  'This exam is not open for registration': 'Bu sınağa qeydiyyat açıq deyil',
+  'You have already applied for this exam': 'Siz artıq bu sınağa müraciət etmisiniz',
+  'Invalid mobile number': 'Mobil nömrə düzgün deyil',
+  'Too many requests, please try again later': 'Həddindən çox sorğu göndərildi, bir az sonra yenidən cəhd edin',
+  'Please check the form fields.': 'Zəhmət olmasa, formun xanalarını yoxlayın.',
+  'Applications for Exams': 'İmtahan müraciətləri',
+  'Applications': 'Müraciətlər',
+  'Applied At': 'Müraciət tarixi',
+  'Added to Exam': 'İmtahana əlavə edildi',
+  'Students moved to exam ({n})': 'İmtahana keçirilmiş şagirdlər ({n})',
+  'Moved At': 'Keçirilmə tarixi',
+  'Moved By': 'Keçirən',
+  'No new applications.': 'Yeni müraciət yoxdur.',
+  'No students moved to exam yet.': 'Hələ imtahana keçirilmiş şagird yoxdur.',
+  'Failed to load applications': 'Müraciətləri yükləmək alınmadı',
+  'Failed to update the application': 'Müraciəti yeniləmək alınmadı',
+  'Application not found or already moved': 'Müraciət tapılmadı və ya artıq keçirilib',
+  'Open in WhatsApp': 'WhatsApp-da aç',
+  'New applications ({n})': 'Yeni müraciətlər ({n})',
 };
 
 // Server messages that contain runtime values. In the replacement, {1} inserts the
