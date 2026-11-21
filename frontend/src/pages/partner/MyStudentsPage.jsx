@@ -23,6 +23,10 @@ export default function MyStudentsPage() {
   // "Add New Student" on the Register to Exam page opens this page with the form already open
   const [showForm, setShowForm] = useState(!!location.state?.openAddForm);
   const [duplicates, setDuplicates] = useState(null);
+  // Set when the name matches a course student — partners can't add those
+  const [courseNotice, setCourseNotice] = useState('');
+  // Live result of the Name + Surname course-student check while the form is filled
+  const [courseMatch, setCourseMatch] = useState(false);
   const [similar, setSimilar] = useState([]);
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
@@ -63,15 +67,31 @@ export default function MyStudentsPage() {
     return () => { cancelled = true; clearTimeout(timer); };
   }, [showForm, form.first_name, form.last_name, previewKey]);
 
+  // As soon as Name and Surname are filled, warn if they match a course student (father name
+  // is not compared); the server refuses the add in that case anyway
+  useEffect(() => {
+    const first = form.first_name.trim();
+    const last = form.last_name.trim();
+    if (!showForm || !first || !last) { setCourseMatch(false); return undefined; }
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      apiClient.get('/partner/students/course-match', { params: { first_name: first, last_name: last } })
+        .then(res => { if (!cancelled) setCourseMatch(!!res.data.data.is_course_student); })
+        .catch(() => { if (!cancelled) setCourseMatch(false); });
+    }, 300);
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [showForm, form.first_name, form.last_name]);
+
   const handleSearch = (e) => { e.preventDefault(); load(search); };
   const handleChange = e => {
     const value = nameInputValue(e.target);
     setForm(f => ({ ...f, [e.target.name]: value }));
     setDuplicates(null);
+    setCourseNotice('');
   };
 
   const saveStudent = async (confirmDuplicate) => {
-    setError(''); setSuccess(''); setSaving(true);
+    setError(''); setSuccess(''); setCourseNotice(''); setSaving(true);
     try {
       const mobile = form.mobile_number ? `${form.mobile_prefix}${form.mobile_number}` : undefined;
       const res = await apiClient.post('/partner/students', {
@@ -94,6 +114,9 @@ export default function MyStudentsPage() {
       const apiError = err?.response?.data?.error;
       if (apiError?.code === 'DUPLICATE_STUDENT') {
         setDuplicates(apiError.students || []);
+      } else if (apiError?.code === 'COURSE_STUDENT') {
+        setDuplicates(null);
+        setCourseNotice(tError(err));
       } else {
         setError(tError(err, 'Failed to add student'));
       }
@@ -110,7 +133,7 @@ export default function MyStudentsPage() {
       <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
         <h2 style={{ margin: 0 }}>{t('My Students')}</h2>
         <button
-          onClick={() => { setShowForm(f => !f); setError(''); setSuccess(''); setDuplicates(null); }}
+          onClick={() => { setShowForm(f => !f); setError(''); setSuccess(''); setDuplicates(null); setCourseNotice(''); }}
           style={{ background: '#059669', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.25rem', cursor: 'pointer', fontWeight: 500 }}>
           {showForm ? `✕ ${t('Cancel')}` : t('+ Add Student')}
         </button>
@@ -212,6 +235,11 @@ export default function MyStudentsPage() {
                 )}
               </div>
             </div>
+            {(courseNotice || courseMatch) && (
+              <div className="wrap-text" role="alert" style={{ background: '#fffbeb', border: '1px solid #fcd34d', color: '#92400e', borderRadius: 6, padding: '0.75rem', fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.75rem' }}>
+                {courseNotice || t("This student is course's own student, so ask Reception to add this student to the exam")}
+              </div>
+            )}
             {duplicates ? (
               <div className="wrap-text" style={{ background: '#fffbeb', border: '1px solid #fcd34d', color: '#92400e', borderRadius: 6, padding: '0.75rem', fontSize: '0.875rem' }}>
                 <div style={{ fontWeight: 600, marginBottom: '0.35rem' }}>{t('This student already exists in your list:')}</div>
