@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import apiClient from '../../api/apiClient';
 import useStudentEmailPreview from '../../hooks/useStudentEmailPreview';
 import { useLanguage } from '../../i18n/LanguageContext';
+import { nameInputValue } from '../../utils/nameCase';
 
 const PREFIXES = ['010', '050', '051', '055', '070', '077', '099'];
 const CLASSES = Array.from({ length: 11 }, (_, i) => i + 1);
@@ -64,7 +65,8 @@ export default function MyStudentsPage() {
 
   const handleSearch = (e) => { e.preventDefault(); load(search); };
   const handleChange = e => {
-    setForm(f => ({ ...f, [e.target.name]: e.target.value }));
+    const value = nameInputValue(e.target);
+    setForm(f => ({ ...f, [e.target.name]: value }));
     setDuplicates(null);
   };
 

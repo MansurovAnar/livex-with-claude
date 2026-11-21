@@ -17,6 +17,21 @@ function cleanNamePart(value) {
   return typeof value === 'string' ? value.trim().replace(/\s+/g, ' ') : '';
 }
 
+// Azerbaijani upper case of one letter: i -> İ, ı -> I (plain toUpperCase maps i -> I)
+function upperAz(ch) {
+  if (ch === 'i') return 'İ';
+  if (ch === 'ı') return 'I';
+  return ch.toUpperCase();
+}
+
+// First letter of every word (after start, space or hyphen) upper-cased; the rest is kept
+// as typed, because I/ı can't be lower-cased reliably (ALI could be Ali or Alı). LV#64.
+function capitalizeName(value) {
+  return typeof value === 'string'
+    ? value.replace(/(^|[\s-])(\p{Ll})/gu, (m, sep, ch) => sep + upperAz(ch))
+    : value;
+}
+
 // Map Azerbaijani letters before lower-casing ('İ'.toLowerCase() adds a combining dot),
 // then keep only a-z.
 function transliterate(value) {
@@ -27,7 +42,7 @@ function transliterate(value) {
 }
 
 function buildFullName(firstName, lastName, fatherName) {
-  return [firstName, lastName, fatherName].map(cleanNamePart).filter(Boolean).join(' ');
+  return [firstName, lastName, fatherName].map(cleanNamePart).filter(Boolean).map(capitalizeName).join(' ');
 }
 
 function buildEmailBase(firstName, lastName) {
@@ -57,4 +72,4 @@ async function generateStudentEmail(db, firstName, lastName, { lock = false } = 
   return `${base}${maxSuffix + 1}${EMAIL_DOMAIN}`;
 }
 
-module.exports = { EMAIL_DOMAIN, cleanNamePart, transliterate, buildFullName, buildEmailBase, generateStudentEmail };
+module.exports = { EMAIL_DOMAIN, cleanNamePart, capitalizeName, transliterate, buildFullName, buildEmailBase, generateStudentEmail };
