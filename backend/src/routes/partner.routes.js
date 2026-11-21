@@ -49,6 +49,35 @@ router.get('/students/email-preview', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// True when an active course student has this Name + Surname (father name is not compared):
+// the course student's full name ("Name Surname [Father]") equals or starts with "Name Surname ",
+// case-insensitive, extra spaces ignored. LV#65.
+async function isCourseStudentName(db, firstName, lastName) {
+  if (!cleanNamePart(firstName) || !cleanNamePart(lastName)) return false;
+  const name = buildFullName(firstName, lastName);
+  const { rowCount } = await db.query(
+    `SELECT 1 FROM (
+       SELECT lower(regexp_replace(btrim(full_name), '\\s+', ' ', 'g')) AS name
+       FROM students
+       WHERE is_course_student = true AND is_active = true
+     ) s
+     WHERE s.name = lower($1) OR left(s.name, length(lower($1)) + 1) = lower($1) || ' '
+     LIMIT 1`,
+    [name]
+  );
+  return rowCount > 0;
+}
+
+// Live check while the Add Student form is filled: is this Name + Surname a course student?
+router.get('/students/course-match', async (req, res, next) => {
+  try {
+    const { first_name, last_name } = req.query;
+    const tooLong = [first_name, last_name].some(v => cleanNamePart(v).length > 50);
+    const is_course_student = !tooLong && await isCourseStudentName(pool, first_name, last_name);
+    res.json({ success: true, data: { is_course_student } });
+  } catch (err) { next(err); }
+});
+
 // Own active students whose full name contains every typed name part (2+ letters) — shown
 // as information while the partner fills the Add Student form
 router.get('/students/similar', async (req, res, next) => {
@@ -78,7 +107,7 @@ router.get('/students/similar', async (req, res, next) => {
 // If the partner already has an active student with the same Name + Surname + Father name
 // (case-insensitive, extra spaces ignored) the add is refused with DUPLICATE_STUDENT and the
 // matches; the partner resends with confirm_duplicate: true to add the student anyway.
-// A name matching an active course student is always refused with COURSE_STUDENT.
+// A Name + Surname matching an active course student is always refused with COURSE_STUDENT.
 router.post('/students', async (req, res, next) => {
   const { first_name, last_name, father_name, mobile_number, class_level, sector, language, confirm_duplicate } = req.body;
   if (!cleanNamePart(first_name) || !cleanNamePart(last_name)) {
@@ -95,14 +124,7 @@ router.post('/students', async (req, res, next) => {
     // lock the partner row so concurrent adds get sequential numbers
     student_number = await getNextStudentNumber(client, req.user.id, { lock: true });
     // Course students are registered by reception, never by partners — no override
-    const { rowCount: courseMatches } = await client.query(
-      `SELECT 1 FROM students
-       WHERE is_course_student = true AND is_active = true
-         AND lower(regexp_replace(btrim(full_name), '\\s+', ' ', 'g')) = lower($1)
-       LIMIT 1`,
-      [full_name]
-    );
-    if (courseMatches) {
+    if (await isCourseStudentName(client, first_name, last_name)) {
       await client.query('ROLLBACK');
       return res.status(409).json({
         success: false,

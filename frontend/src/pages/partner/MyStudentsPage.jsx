@@ -25,6 +25,8 @@ export default function MyStudentsPage() {
   const [duplicates, setDuplicates] = useState(null);
   // Set when the name matches a course student — partners can't add those
   const [courseNotice, setCourseNotice] = useState('');
+  // Live result of the Name + Surname course-student check while the form is filled
+  const [courseMatch, setCourseMatch] = useState(false);
   const [similar, setSimilar] = useState([]);
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
@@ -64,6 +66,21 @@ export default function MyStudentsPage() {
     }, 300);
     return () => { cancelled = true; clearTimeout(timer); };
   }, [showForm, form.first_name, form.last_name, previewKey]);
+
+  // As soon as Name and Surname are filled, warn if they match a course student (father name
+  // is not compared); the server refuses the add in that case anyway
+  useEffect(() => {
+    const first = form.first_name.trim();
+    const last = form.last_name.trim();
+    if (!showForm || !first || !last) { setCourseMatch(false); return undefined; }
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      apiClient.get('/partner/students/course-match', { params: { first_name: first, last_name: last } })
+        .then(res => { if (!cancelled) setCourseMatch(!!res.data.data.is_course_student); })
+        .catch(() => { if (!cancelled) setCourseMatch(false); });
+    }, 300);
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [showForm, form.first_name, form.last_name]);
 
   const handleSearch = (e) => { e.preventDefault(); load(search); };
   const handleChange = e => {
@@ -218,9 +235,9 @@ export default function MyStudentsPage() {
                 )}
               </div>
             </div>
-            {courseNotice && (
+            {(courseNotice || courseMatch) && (
               <div className="wrap-text" role="alert" style={{ background: '#fffbeb', border: '1px solid #fcd34d', color: '#92400e', borderRadius: 6, padding: '0.75rem', fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.75rem' }}>
-                {courseNotice}
+                {courseNotice || t("This student is course's own student, so ask Reception to add this student to the exam")}
               </div>
             )}
             {duplicates ? (
