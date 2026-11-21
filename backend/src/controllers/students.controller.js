@@ -1,5 +1,5 @@
 const pool = require('../config/database');
-const { buildFullName, generateStudentEmail } = require('../services/studentEmail.service');
+const { buildFullName, capitalizeName, generateStudentEmail } = require('../services/studentEmail.service');
 const { dueAmountSql } = require('../services/coursePrice.service');
 const { attendedSql } = require('../services/attendance.service');
 const { STUDENT_NUMBER_RE, MAX_STUDENT_NUMBER } = require('../services/studentNumber.service');
@@ -137,7 +137,10 @@ exports.update = async (req, res, next) => {
     const values = [];
     let i = 1;
     for (const key of allowed) {
-      if (req.body[key] !== undefined) { fields.push(`${key} = $${i++}`); values.push(req.body[key]); }
+      if (req.body[key] !== undefined) {
+        fields.push(`${key} = $${i++}`);
+        values.push(key === 'full_name' ? capitalizeName(req.body[key]) : req.body[key]);
+      }
     }
     if (!fields.length) return res.status(400).json({ success: false, error: { code: 'NO_FIELDS', message: 'No fields to update' } });
     fields.push('updated_at = NOW()');
@@ -191,6 +194,7 @@ exports.updateCourse = async (req, res, next) => {
   try {
     const body = normalizeDiscount(req.body);
     if (body.discount_note !== undefined) body.discount_note = body.discount_note || null;
+    if (body.full_name !== undefined) body.full_name = capitalizeName(body.full_name);
     const allowed = ['student_number', 'full_name', 'email', 'mobile_number', 'class_level', 'sector', 'language', 'photo_url',
       'discount_amount', 'is_free', 'discount_note'];
     const fields = [];

@@ -5,6 +5,7 @@ import { PageSizeSelect, PaginationBar } from '../../components/shared/Paginatio
 import CourseDiscountBadge from '../../components/shared/CourseDiscountBadge';
 import StudentExamsModal from '../../components/shared/StudentExamsModal';
 import { useLanguage } from '../../i18n/LanguageContext';
+import { nameInputValue } from '../../utils/nameCase';
 
 const CLASSES = Array.from({ length: 11 }, (_, i) => i + 1);
 const SECTORS = ['Azerbaijan', 'Rus'];
@@ -118,7 +119,7 @@ function EditStudentModal({ student, onClose, onSaved }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
-  const handleChange = e => setForm(f => ({ ...f, [e.target.name]: e.target.value }));
+  const handleChange = e => { const value = nameInputValue(e.target); setForm(f => ({ ...f, [e.target.name]: value })); };
 
   const handleSubmit = async e => {
     e.preventDefault();

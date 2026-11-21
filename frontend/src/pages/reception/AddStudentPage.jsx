@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { createStudent, getLastReceptionNumber } from '../../api/students.api';
 import useStudentEmailPreview from '../../hooks/useStudentEmailPreview';
 import { useLanguage } from '../../i18n/LanguageContext';
+import { nameInputValue } from '../../utils/nameCase';
 
 const PREFIXES = ['010', '050', '051', '055', '070', '077', '099'];
 const CLASSES = Array.from({ length: 11 }, (_, i) => i + 1);
@@ -29,7 +30,7 @@ export default function AddStudentPage() {
 
   useEffect(() => { prefillNextNumber(); }, []);
 
-  const handleChange = e => setForm(f => ({ ...f, [e.target.name]: e.target.value }));
+  const handleChange = e => { const value = nameInputValue(e.target); setForm(f => ({ ...f, [e.target.name]: value })); };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
