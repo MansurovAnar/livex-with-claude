@@ -127,6 +127,10 @@ select { max-width: 100%; min-width: 0; text-overflow: ellipsis; }
   .landing-nav  { order: 3; width: 100%; display: grid !important; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px !important; }
   .landing-nav button { min-height: 48px; font-size: 0.95rem !important; padding: 0.5rem 0.4rem !important; white-space: normal !important; line-height: 1.15; overflow-wrap: anywhere; }
   .landing-actions button { min-height: 44px; }
+  /* Brand "LIVEX.HƏDƏF-BALAKƏN." shrinks and may wrap so it shares the top row with Login at 320px */
+  .landing-brand { flex: 1 1 0; min-width: 0; gap: 0.5rem !important; font-size: 1rem !important; letter-spacing: 0 !important; line-height: 1.2; }
+  .landing-brand-text { overflow-wrap: anywhere; }
+  .landing-brand-logo { width: 40px !important; height: 40px !important; border-radius: 10px !important; }
   .landing-hero { min-height: auto !important; padding: 2.5rem 16px 5rem !important; }
   .landing-hero h1 { font-size: 2.3rem !important; }
   /* Landing redesign: hero art below the text, two features per row, schedule and testimonials

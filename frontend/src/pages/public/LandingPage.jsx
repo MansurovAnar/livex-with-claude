@@ -122,12 +122,15 @@ export default function LandingPage() {
       <style>{LANDING_CSS}</style>
 
       <header className="landing-header" style={{ position: 'sticky', top: 0, zIndex: 100, background: 'rgba(23,37,84,0.88)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1.5rem', padding: '1.1rem 2rem', minHeight: 84 }}>
-        <button type="button" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontWeight: 800, fontSize: '1.65rem', color: '#fff', letterSpacing: '0.06em' }}>
-          <span aria-hidden="true" style={{ width: 38, height: 38, borderRadius: 10, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg,#22d3ee,#2563eb)', boxShadow: '0 0 16px rgba(34,211,238,0.55)' }}>
-            <Icon name="check" size={18} color="#fff" />
+        <button type="button" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="landing-brand"
+          aria-label="LIVEX.HƏDƏF-BALAKƏN."
+          style={{ display: 'flex', alignItems: 'center', gap: '0.7rem', background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: FONT, fontWeight: 800, fontSize: '1.45rem', color: '#fff', letterSpacing: '0.03em', textAlign: 'left' }}>
+          {/* Hədəf Kursları Balakən logo (same file as the student ticket) on a white tile so it reads on the dark header;
+              background-size 125% trims the image's outer white margin */}
+          <span aria-hidden="true" className="landing-brand-logo" style={{ width: 52, height: 52, flexShrink: 0, borderRadius: 12, background: '#fff url(/logo.png) center / 125% no-repeat', boxShadow: '0 0 16px rgba(34,211,238,0.45)' }} />
+          <span className="landing-brand-text" style={{ minWidth: 0 }}>
+            LIVEX<span style={{ color: '#22d3ee' }}>.HƏDƏF-BALAKƏN.</span>
           </span>
-          LIVEX
         </button>
         <nav className="landing-nav" style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
           {SECTIONS.map(s => {
