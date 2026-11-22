@@ -69,6 +69,29 @@ function useScrollReveal(rootRef, deps) {
   }, deps); // eslint-disable-line react-hooks/exhaustive-deps
 }
 
+// Id of the section currently under the sticky header, so its menu item can be highlighted.
+function useActiveSection(ids) {
+  const [active, setActive] = useState(ids[0]);
+  useEffect(() => {
+    const onScroll = () => {
+      const header = document.querySelector('.landing-header');
+      const line = (header ? header.getBoundingClientRect().height : 80) + 24;
+      let current = ids[0];
+      ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (el && el.getBoundingClientRect().top <= line) current = id;
+      });
+      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) current = ids[ids.length - 1];
+      setActive(current);
+    };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    return () => { window.removeEventListener('scroll', onScroll); window.removeEventListener('resize', onScroll); };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  return active;
+}
+
 export default function LandingPage() {
   const { user } = useAuth();
   const { t, tError, preferLang } = useLanguage();
@@ -89,6 +112,7 @@ export default function LandingPage() {
   }, []);
 
   useScrollReveal(rootRef, [examsLoading]);
+  const activeSection = useActiveSection(SECTIONS.map(s => s.id));
 
   const goLogin = () => navigate(user && ROLE_HOME[user.role] ? ROLE_HOME[user.role] : '/login');
   const applyFor = id => { setPreset({ id: String(id), at: Date.now() }); scrollTo('register'); };
@@ -97,18 +121,23 @@ export default function LandingPage() {
     <div ref={rootRef} className="landing-root" style={{ minHeight: '100vh', background: '#eef4ff', color: '#0f172a', fontFamily: FONT, fontSize: '1.0625rem' }}>
       <style>{LANDING_CSS}</style>
 
-      <header className="landing-header" style={{ position: 'sticky', top: 0, zIndex: 100, background: 'rgba(23,37,84,0.88)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1.5rem', padding: '0.75rem 2rem' }}>
+      <header className="landing-header" style={{ position: 'sticky', top: 0, zIndex: 100, background: 'rgba(23,37,84,0.88)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1.5rem', padding: '1.1rem 2rem', minHeight: 84 }}>
         <button type="button" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontWeight: 800, fontSize: '1.4rem', color: '#fff', letterSpacing: '0.06em' }}>
-          <span aria-hidden="true" style={{ width: 32, height: 32, borderRadius: 10, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg,#22d3ee,#2563eb)', boxShadow: '0 0 16px rgba(34,211,238,0.55)' }}>
+          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontWeight: 800, fontSize: '1.65rem', color: '#fff', letterSpacing: '0.06em' }}>
+          <span aria-hidden="true" style={{ width: 38, height: 38, borderRadius: 10, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg,#22d3ee,#2563eb)', boxShadow: '0 0 16px rgba(34,211,238,0.55)' }}>
             <Icon name="check" size={18} color="#fff" />
           </span>
           LIVEX
         </button>
-        <nav className="landing-nav" style={{ display: 'flex', gap: '1.75rem', alignItems: 'center' }}>
-          {SECTIONS.map(s => (
-            <button key={s.id} type="button" onClick={() => scrollTo(s.id)} className="lx-nav-link" style={navBtn}>{t(s.label)}</button>
-          ))}
+        <nav className="landing-nav" style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+          {SECTIONS.map(s => {
+            const isActive = activeSection === s.id;
+            return (
+              <button key={s.id} type="button" onClick={() => scrollTo(s.id)}
+                className={`lx-nav-link${isActive ? ' lx-nav-active' : ''}`}
+                aria-current={isActive ? 'true' : undefined} style={navBtn}>{t(s.label)}</button>
+            );
+          })}
         </nav>
         <div className="landing-actions" style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
           <LanguageSwitch tone="dark" />
@@ -117,7 +146,7 @@ export default function LandingPage() {
       </header>
 
       {/* 1. Hədəf Kursları Sınaqları — hero with the Register to Exam button below the description */}
-      <section id="about" className="landing-hero" style={{ position: 'relative', overflow: 'hidden', minHeight: '78vh', padding: '4rem 2rem 8rem', background: 'linear-gradient(135deg, #172554 0%, #1e40af 55%, #2563eb 100%)', color: '#fff', scrollMarginTop: 64 }}>
+      <section id="about" className="landing-hero" style={{ position: 'relative', overflow: 'hidden', minHeight: '78vh', padding: '4rem 2rem 8rem', background: 'linear-gradient(135deg, #172554 0%, #1e40af 55%, #2563eb 100%)', color: '#fff', scrollMarginTop: 84 }}>
         <span aria-hidden="true" className="lx-blob" style={{ ...blob, width: 420, height: 420, top: -140, left: -120, background: 'radial-gradient(circle, rgba(34,211,238,0.45), transparent 65%)' }} />
         <span aria-hidden="true" className="lx-blob" style={{ ...blob, width: 520, height: 520, bottom: -220, right: -160, background: 'radial-gradient(circle, rgba(129,140,248,0.45), transparent 65%)', animationDelay: '-6s' }} />
 
@@ -162,7 +191,7 @@ export default function LandingPage() {
 
       {/* 2. Sınaq Cədvəli (scrollable exam cards) + testimonials */}
       <div className="landing-lower-grid" style={{ maxWidth: 1160, margin: '0 auto', padding: '3rem 2rem', display: 'grid', gridTemplateColumns: 'minmax(0, 1.6fr) minmax(0, 1fr)', gap: '2rem', alignItems: 'start' }}>
-        <section id="schedule" className="lx-reveal landing-schedule"style={{ minWidth: 0, scrollMarginTop: 80 }}>
+        <section id="schedule" className="lx-reveal landing-schedule"style={{ minWidth: 0, scrollMarginTop: 100 }}>
           <h2 style={h2Style}>{t('Exam Schedule')}</h2>
           <p style={subStyle}>{t('Upcoming exams you can register for.')}</p>
           {examsLoading ? (
@@ -185,7 +214,7 @@ export default function LandingPage() {
       </div>
 
       {/* 3. Qeydiyyat */}
-      <section id="register" className="landing-section" style={{ position: 'relative', padding: '3rem 2rem 4rem', scrollMarginTop: 64 }}>
+      <section id="register" className="landing-section" style={{ position: 'relative', padding: '3rem 2rem 4rem', scrollMarginTop: 84 }}>
         <div className="lx-reveal" style={{ maxWidth: 720, margin: '0 auto' }}>
           <h2 style={{ ...h2Style, textAlign: 'center' }}>{t('Registration')}</h2>
           <RegistrationForm exams={exams} preset={preset} />
@@ -467,8 +496,10 @@ const LANDING_CSS = `
 .lx-cta:hover { transform: translateY(-2px); filter: brightness(1.08); }
 .lx-login { transition: background .2s ease, color .2s ease; }
 .lx-login:hover { background: #fff !important; color: #1e3a8a !important; }
-.lx-nav-link { transition: color .2s ease; }
-.lx-nav-link:hover { color: #fff !important; }
+.lx-nav-link { transition: background .2s ease, border-color .2s ease, color .2s ease, transform .2s ease, box-shadow .2s ease; }
+.lx-nav-link:hover { background: rgba(255,255,255,0.2) !important; border-color: rgba(255,255,255,0.45) !important; transform: translateY(-1px); }
+.lx-nav-link:focus-visible { outline: 3px solid #22d3ee; outline-offset: 2px; }
+.lx-nav-link.lx-nav-active { background: linear-gradient(135deg,#22d3ee,#2563eb) !important; border-color: transparent !important; box-shadow: 0 0 18px rgba(34,211,238,0.45); }
 .lx-card { transition: transform .3s ease, box-shadow .3s ease; }
 .lx-card:hover { transform: translateY(-6px); box-shadow: 0 22px 40px rgba(30,64,175,.2) !important; }
 .lx-apply, .lx-submit { transition: transform .2s ease, filter .2s ease; }
@@ -483,14 +514,15 @@ const LANDING_CSS = `
 @media (prefers-reduced-motion: reduce) {
   .lx-float, .lx-spin, .lx-glow, .lx-blob, .lx-live-dot, .lx-cta, .lx-fade { animation: none !important; }
   .lx-reveal { opacity: 1; transform: none; transition: none; }
-  .lx-card, .lx-cta, .lx-apply, .lx-submit { transition: none; }
+  .lx-card, .lx-cta, .lx-apply, .lx-submit, .lx-nav-link { transition: none; }
+  .lx-nav-link:hover { transform: none; }
   .lx-card:hover { transform: none; }
 }
 `;
 
 const blob = { position: 'absolute', borderRadius: '50%', filter: 'blur(10px)', pointerEvents: 'none' };
-const navBtn = { background: 'none', border: 'none', padding: '0.25rem 0', cursor: 'pointer', fontSize: '1.05rem', color: 'rgba(255,255,255,0.78)', fontWeight: 500 };
-const loginBtn = { background: 'transparent', color: '#fff', border: '1.5px solid rgba(255,255,255,0.7)', borderRadius: 999, padding: '0.5rem 1.4rem', fontSize: '1rem', fontWeight: 700, cursor: 'pointer' };
+const navBtn = { background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.22)', borderRadius: 999, padding: '0.7rem 1.4rem', minHeight: 48, cursor: 'pointer', fontSize: '1.2rem', color: '#fff', fontWeight: 600, fontFamily: 'inherit', whiteSpace: 'nowrap' };
+const loginBtn = { background: 'transparent', color: '#fff', border: '1.5px solid rgba(255,255,255,0.7)', borderRadius: 999, padding: '0.7rem 1.6rem', minHeight: 48, fontSize: '1.15rem', fontWeight: 700, cursor: 'pointer' };
 const h2Style = { margin: '0 0 0.4rem', fontSize: '2.2rem', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.01em' };
 const subStyle = { margin: '0 0 1.5rem', color: '#64748b', fontSize: '1.1rem' };
 const metaRow = { display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.95rem', color: '#475569' };
