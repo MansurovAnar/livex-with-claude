@@ -94,12 +94,12 @@ export default function LandingPage() {
   const applyFor = id => { setPreset({ id: String(id), at: Date.now() }); scrollTo('register'); };
 
   return (
-    <div ref={rootRef} className="landing-root" style={{ minHeight: '100vh', background: '#eef4ff', color: '#0f172a' }}>
+    <div ref={rootRef} className="landing-root" style={{ minHeight: '100vh', background: '#eef4ff', color: '#0f172a', fontFamily: FONT, fontSize: '1.0625rem' }}>
       <style>{LANDING_CSS}</style>
 
       <header className="landing-header" style={{ position: 'sticky', top: 0, zIndex: 100, background: 'rgba(23,37,84,0.88)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1.5rem', padding: '0.75rem 2rem' }}>
         <button type="button" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontWeight: 800, fontSize: '1.25rem', color: '#fff', letterSpacing: '0.06em' }}>
+          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontWeight: 800, fontSize: '1.4rem', color: '#fff', letterSpacing: '0.06em' }}>
           <span aria-hidden="true" style={{ width: 32, height: 32, borderRadius: 10, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg,#22d3ee,#2563eb)', boxShadow: '0 0 16px rgba(34,211,238,0.55)' }}>
             <Icon name="check" size={18} color="#fff" />
           </span>
@@ -124,25 +124,25 @@ export default function LandingPage() {
         <div className="landing-hero-grid" style={{ position: 'relative', maxWidth: 1160, margin: '0 auto', display: 'grid', gridTemplateColumns: '1.05fr 0.95fr', gap: '3rem', alignItems: 'center' }}>
           <div className="lx-reveal">
             {exams.length > 0 && (
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.35rem 0.9rem', borderRadius: 999, background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)', fontSize: '0.85rem', fontWeight: 600, marginBottom: '1.25rem' }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.35rem 0.9rem', borderRadius: 999, background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)', fontSize: '0.95rem', fontWeight: 600, marginBottom: '1.25rem' }}>
                 <span className="lx-live-dot" style={{ width: 8, height: 8, borderRadius: '50%', background: '#22d3ee' }} />
                 {t('{n} upcoming exams', { n: exams.length })}
               </span>
             )}
-            <h1 style={{ margin: '0 0 1.25rem', fontSize: '3.25rem', lineHeight: 1.1, fontWeight: 800, letterSpacing: '-0.02em' }}>
+            <h1 style={{ margin: '0 0 1.25rem', fontSize: '3.6rem', lineHeight: 1.1, fontWeight: 800, letterSpacing: '-0.02em' }}>
               {t('Hədəf Kursları Exams')}
             </h1>
-            <p style={{ margin: '0 0 2rem', maxWidth: 520, fontSize: '1.15rem', color: 'rgba(255,255,255,0.82)', lineHeight: 1.65 }}>
+            <p style={{ margin: '0 0 2rem', maxWidth: 560, fontSize: '1.3rem', color: 'rgba(255,255,255,0.82)', lineHeight: 1.65 }}>
               {t('Hədəf Kursları exams let students test their knowledge in real exam conditions. Check the schedule and register in a few minutes.')}
             </p>
             <button type="button" onClick={() => scrollTo('register')} className="landing-cta lx-cta"
-              style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.6rem', background: 'linear-gradient(135deg,#22d3ee,#06b6d4)', color: '#082f49', border: 'none', borderRadius: 999, padding: '1rem 2.25rem', fontSize: '1.1rem', fontWeight: 700, cursor: 'pointer' }}>
+              style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.6rem', background: 'linear-gradient(135deg,#22d3ee,#06b6d4)', color: '#082f49', border: 'none', borderRadius: 999, padding: '1rem 2.25rem', fontSize: '1.2rem', fontWeight: 700, cursor: 'pointer' }}>
               {t('Register to Exam')}
               <span aria-hidden="true" style={{ fontSize: '1.2rem', lineHeight: 1 }}>→</span>
             </button>
-            <ul className="landing-features" style={{ listStyle: 'none', padding: 0, margin: '2.5rem 0 0', display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: '1rem', maxWidth: 600 }}>
+            <ul className="landing-features" style={{ listStyle: 'none', padding: 0, margin: '2.5rem 0 0', display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: '1rem', maxWidth: 680 }}>
               {FEATURES.map(f => (
-                <li key={f.label} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.88rem', fontWeight: 500, color: 'rgba(255,255,255,0.9)', lineHeight: 1.3 }}>
+                <li key={f.label} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1rem', fontWeight: 500, color: 'rgba(255,255,255,0.9)', lineHeight: 1.3 }}>
                   <span aria-hidden="true" style={{ flex: 'none', width: 30, height: 30, borderRadius: 8, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.12)' }}>
                     <Icon name={f.icon} size={16} color="#67e8f9" />
                   </span>
@@ -188,12 +188,11 @@ export default function LandingPage() {
       <section id="register" className="landing-section" style={{ position: 'relative', padding: '3rem 2rem 4rem', scrollMarginTop: 64 }}>
         <div className="lx-reveal" style={{ maxWidth: 720, margin: '0 auto' }}>
           <h2 style={{ ...h2Style, textAlign: 'center' }}>{t('Registration')}</h2>
-          <p style={{ ...subStyle, textAlign: 'center' }}>{t('Fill in the form and we will contact you on WhatsApp.')}</p>
           <RegistrationForm exams={exams} preset={preset} />
         </div>
       </section>
 
-      <footer style={{ background: '#172554', color: 'rgba(255,255,255,0.7)', textAlign: 'center', padding: '1.5rem 1rem', fontSize: '0.85rem' }}>
+      <footer style={{ background: '#172554', color: 'rgba(255,255,255,0.7)', textAlign: 'center', padding: '1.5rem 1rem', fontSize: '0.95rem' }}>
         {t('© {year} LIVEX. All rights reserved.', { year: new Date().getFullYear() })}
       </footer>
     </div>
@@ -231,23 +230,23 @@ function ExamCard({ exam, onApply }) {
   const d = new Date(exam.scheduled_at);
   const month = d.toLocaleDateString(lang === 'az' ? 'az-Latn-AZ' : 'en-GB', { month: 'short' });
   return (
-    <article className="lx-card landing-exam-card" style={{ flex: 'none', width: 250, scrollSnapAlign: 'start', background: '#fff', borderRadius: 20, overflow: 'hidden', boxShadow: '0 10px 30px rgba(30,64,175,0.1)', display: 'flex', flexDirection: 'column' }}>
+    <article className="lx-card landing-exam-card" style={{ flex: 'none', width: 280, scrollSnapAlign: 'start', background: '#fff', borderRadius: 20, overflow: 'hidden', boxShadow: '0 10px 30px rgba(30,64,175,0.1)', display: 'flex', flexDirection: 'column' }}>
       <div style={{ position: 'relative', height: 96, background: 'linear-gradient(135deg,#1e40af,#2563eb 60%,#22d3ee)', padding: '1rem', color: '#fff' }}>
         <span aria-hidden="true" style={{ position: 'absolute', right: -20, top: -20, width: 90, height: 90, borderRadius: '50%', background: 'rgba(255,255,255,0.12)' }} />
         <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', background: '#fff', color: '#1e40af', borderRadius: 12, padding: '0.35rem 0.7rem', lineHeight: 1.1, boxShadow: '0 6px 14px rgba(15,23,42,0.2)' }}>
-          <span style={{ fontSize: '1.35rem', fontWeight: 800 }}>{String(d.getDate()).padStart(2, '0')}</span>
-          <span style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase' }}>{month}</span>
+          <span style={{ fontSize: '1.5rem', fontWeight: 800 }}>{String(d.getDate()).padStart(2, '0')}</span>
+          <span style={{ fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase' }}>{month}</span>
         </div>
       </div>
       <div style={{ padding: '1rem 1.1rem 1.2rem', display: 'flex', flexDirection: 'column', gap: '0.45rem', flex: 1 }}>
-        <h3 className="wrap-text" style={{ margin: 0, fontSize: '1.05rem', lineHeight: 1.3, color: '#0f172a' }}>{exam.title}</h3>
-        {exam.exam_type_name && <span className="wrap-text" style={{ fontSize: '0.8rem', color: '#2563eb', fontWeight: 600 }}>{exam.exam_type_name}</span>}
+        <h3 className="wrap-text" style={{ margin: 0, fontSize: '1.2rem', lineHeight: 1.3, color: '#0f172a' }}>{exam.title}</h3>
+        {exam.exam_type_name && <span className="wrap-text" style={{ fontSize: '0.9rem', color: '#2563eb', fontWeight: 600 }}>{exam.exam_type_name}</span>}
         <span style={metaRow}><Icon name="clock" size={15} color="#64748b" /> {fmtTime(exam.scheduled_at)} · {exam.duration_mins} {t('min')}</span>
         <span className="wrap-text" style={metaRow}><Icon name="pin" size={15} color="#64748b" /> {exam.exam_location === 'General' ? t('General') : exam.exam_location}</span>
         <div style={{ marginTop: 'auto', paddingTop: '0.6rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
-          <strong style={{ fontSize: '1.05rem', color: '#0f172a', whiteSpace: 'nowrap' }}>{Number(exam.exam_cost)} AZN</strong>
+          <strong style={{ fontSize: '1.15rem', color: '#0f172a', whiteSpace: 'nowrap' }}>{Number(exam.exam_cost)} AZN</strong>
           <button type="button" onClick={onApply} className="lx-apply"
-            style={{ background: '#1e40af', color: '#fff', border: 'none', borderRadius: 999, padding: '0.45rem 1rem', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>
+            style={{ background: '#1e40af', color: '#fff', border: 'none', borderRadius: 999, padding: '0.5rem 1.1rem', fontSize: '0.95rem', fontWeight: 600, cursor: 'pointer' }}>
             {t('Apply')}
           </button>
         </div>
@@ -273,14 +272,14 @@ function Testimonials() {
       onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}
       style={{ position: 'relative', overflow: 'hidden', minWidth: 0, background: 'linear-gradient(150deg,#1e3a8a,#1d4ed8)', color: '#fff', borderRadius: 24, padding: '2rem', boxShadow: '0 20px 40px rgba(30,64,175,0.25)' }}>
       <span aria-hidden="true" style={{ position: 'absolute', top: -40, right: -40, width: 160, height: 160, borderRadius: '50%', background: 'radial-gradient(circle, rgba(34,211,238,0.55), transparent 70%)' }} />
-      <h2 style={{ position: 'relative', margin: '0 0 0.25rem', fontSize: '1.5rem' }}>{t('Testimonials')}</h2>
-      <p style={{ position: 'relative', margin: '0 0 1.25rem', color: 'rgba(255,255,255,0.7)', fontSize: '0.95rem' }}>{t('What our students say')}</p>
+      <h2 style={{ position: 'relative', margin: '0 0 0.25rem', fontSize: '1.75rem' }}>{t('Testimonials')}</h2>
+      <p style={{ position: 'relative', margin: '0 0 1.25rem', color: 'rgba(255,255,255,0.7)', fontSize: '1.05rem' }}>{t('What our students say')}</p>
       <figure key={idx} className="lx-fade" style={{ position: 'relative', margin: 0, minHeight: 150 }}>
         <span aria-hidden="true" style={{ display: 'block', fontSize: '3.5rem', lineHeight: 0.8, color: '#67e8f9', fontFamily: 'Georgia, serif' }}>“</span>
-        <blockquote style={{ margin: '0.25rem 0 1rem', fontSize: '1.05rem', lineHeight: 1.6 }}>{t(item.text)}</blockquote>
+        <blockquote style={{ margin: '0.25rem 0 1rem', fontSize: '1.15rem', lineHeight: 1.6 }}>{t(item.text)}</blockquote>
         <figcaption style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <span aria-hidden="true" style={{ width: 40, height: 40, borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg,#22d3ee,#6366f1)', fontWeight: 700 }}>{item.author[0]}</span>
-          <span><strong style={{ display: 'block' }}>{item.author}</strong><span style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)' }}>{t(item.meta)}</span></span>
+          <span><strong style={{ display: 'block' }}>{item.author}</strong><span style={{ fontSize: '0.95rem', color: 'rgba(255,255,255,0.7)' }}>{t(item.meta)}</span></span>
         </figcaption>
       </figure>
       <div style={{ position: 'relative', display: 'flex', gap: '0.25rem', marginTop: '1.25rem' }}>
@@ -393,7 +392,7 @@ function RegistrationForm({ exams, preset }) {
           {SECTORS.map(s => {
             const on = form.sector === s.value;
             return (
-              <label key={s.value} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.95rem', fontWeight: 600, padding: '0.5rem 1.1rem', borderRadius: 999, border: `1.5px solid ${on ? '#2563eb' : '#cbd5e1'}`, background: on ? '#eff6ff' : '#fff', color: on ? '#1e40af' : '#334155', transition: 'all .2s ease' }}>
+              <label key={s.value} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '1.05rem', fontWeight: 600, padding: '0.5rem 1.1rem', borderRadius: 999, border: `1.5px solid ${on ? '#2563eb' : '#cbd5e1'}`, background: on ? '#eff6ff' : '#fff', color: on ? '#1e40af' : '#334155', transition: 'all .2s ease' }}>
                 <input type="radio" name="sector" value={s.value} checked={on} onChange={handleChange} required style={{ width: 16, height: 16, accentColor: '#2563eb' }} />
                 {s.label}
               </label>
@@ -417,7 +416,7 @@ function RegistrationForm({ exams, preset }) {
 
       <div style={{ textAlign: 'center' }}>
         <button type="submit" disabled={saving} className="landing-submit lx-submit"
-          style={{ background: 'linear-gradient(135deg,#1d4ed8,#2563eb 50%,#06b6d4)', color: '#fff', border: 'none', borderRadius: 999, padding: '0.9rem 3rem', fontSize: '1.05rem', fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1, boxShadow: '0 10px 24px rgba(37,99,235,0.35)' }}>
+          style={{ background: 'linear-gradient(135deg,#1d4ed8,#2563eb 50%,#06b6d4)', color: '#fff', border: 'none', borderRadius: 999, padding: '0.9rem 3rem', fontSize: '1.15rem', fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1, boxShadow: '0 10px 24px rgba(37,99,235,0.35)' }}>
           {saving ? t('Registering...') : t('Register now')}
         </button>
       </div>
@@ -425,6 +424,7 @@ function RegistrationForm({ exams, preset }) {
   );
 }
 
+const FONT = "'Montserrat', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif";
 const Req = () => <span style={{ color: '#dc2626' }}> *</span>;
 
 // Stroke icons (24×24 grid).
@@ -450,6 +450,7 @@ function Icon({ name, size = 20, color = 'currentColor' }) {
 
 // Animations for this page only (CSS keyframes can't be inline styles). Mobile rules live in responsive.css.
 const LANDING_CSS = `
+.landing-root button, .landing-root input, .landing-root select, .landing-root textarea { font-family: inherit; }
 @keyframes lx-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
 @keyframes lx-spin { to { transform: rotate(360deg); } }
 @keyframes lx-glow { 0%, 100% { opacity: .75; } 50% { opacity: 1; } }
@@ -488,11 +489,11 @@ const LANDING_CSS = `
 `;
 
 const blob = { position: 'absolute', borderRadius: '50%', filter: 'blur(10px)', pointerEvents: 'none' };
-const navBtn = { background: 'none', border: 'none', padding: '0.25rem 0', cursor: 'pointer', fontSize: '0.95rem', color: 'rgba(255,255,255,0.78)', fontWeight: 500 };
-const loginBtn = { background: 'transparent', color: '#fff', border: '1.5px solid rgba(255,255,255,0.7)', borderRadius: 999, padding: '0.45rem 1.3rem', fontSize: '0.9rem', fontWeight: 700, cursor: 'pointer' };
-const h2Style = { margin: '0 0 0.4rem', fontSize: '1.9rem', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.01em' };
-const subStyle = { margin: '0 0 1.5rem', color: '#64748b' };
-const metaRow = { display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem', color: '#475569' };
+const navBtn = { background: 'none', border: 'none', padding: '0.25rem 0', cursor: 'pointer', fontSize: '1.05rem', color: 'rgba(255,255,255,0.78)', fontWeight: 500 };
+const loginBtn = { background: 'transparent', color: '#fff', border: '1.5px solid rgba(255,255,255,0.7)', borderRadius: 999, padding: '0.5rem 1.4rem', fontSize: '1rem', fontWeight: 700, cursor: 'pointer' };
+const h2Style = { margin: '0 0 0.4rem', fontSize: '2.2rem', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.01em' };
+const subStyle = { margin: '0 0 1.5rem', color: '#64748b', fontSize: '1.1rem' };
+const metaRow = { display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.95rem', color: '#475569' };
 const fieldStyle = { marginBottom: '1rem' };
-const inputStyle = { width: '100%', padding: '0.65rem 0.85rem', border: '1px solid #cbd5e1', borderRadius: 10, fontSize: '1rem', boxSizing: 'border-box', background: '#fff' };
-const labelStyle = { display: 'block', fontWeight: 600, fontSize: '0.875rem', marginBottom: '0.35rem', color: '#334155' };
+const inputStyle = { width: '100%', padding: '0.65rem 0.85rem', border: '1px solid #cbd5e1', borderRadius: 10, fontSize: '1.05rem', boxSizing: 'border-box', background: '#fff' };
+const labelStyle = { display: 'block', fontWeight: 600, fontSize: '1rem', marginBottom: '0.35rem', color: '#334155' };

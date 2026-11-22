@@ -122,28 +122,28 @@ select { max-width: 100%; min-width: 0; text-overflow: ellipsis; }
   /* Reception Students page (LV#10): last-number pill wraps instead of overflowing */
   .last-number-pill { max-width: 100%; overflow-wrap: anywhere; }
   /* Landing page (LV#81): header wraps (brand + Login on top, section links below), sections
-     get reduced padding, the form is full width with 16px inputs and 44px touch targets */
+     get reduced padding, the form is full width with 17px inputs and 44px touch targets */
   .landing-header { flex-wrap: wrap !important; gap: 8px 12px !important; padding: 8px 12px !important; }
   .landing-nav  { order: 3; width: 100%; justify-content: space-between; gap: 8px !important; overflow-x: auto; }
-  .landing-nav button { min-height: 44px; font-size: 0.85rem !important; white-space: nowrap; }
+  .landing-nav button { min-height: 44px; font-size: 0.9rem !important; white-space: nowrap; }
   .landing-actions button { min-height: 44px; }
   .landing-hero { min-height: auto !important; padding: 2.5rem 16px 5rem !important; }
-  .landing-hero h1 { font-size: 2.1rem !important; }
+  .landing-hero h1 { font-size: 2.3rem !important; }
   /* Landing redesign: hero art below the text, two features per row, schedule and testimonials
      stacked, exam cards sized to the screen (they scroll sideways inside their own row) */
   .landing-hero-grid { grid-template-columns: 1fr !important; gap: 2rem !important; }
   .landing-art  { width: min(300px, 100%) !important; height: auto !important; aspect-ratio: 1 / 1; }
   .landing-features { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; margin-top: 2rem !important; }
   .landing-lower-grid { grid-template-columns: 1fr !important; padding: 2rem 12px !important; gap: 1.5rem !important; }
-  .landing-lower-grid h2 { font-size: 1.5rem !important; }
+  .landing-lower-grid h2, .landing-section h2 { font-size: 1.75rem !important; }
   .landing-schedule { scroll-margin-top: 112px !important; }
-  .landing-exam-card { width: min(250px, 78vw) !important; }
+  .landing-exam-card { width: min(270px, 80vw) !important; }
   .landing-exam-card button { min-height: 44px; }
   .landing-testimonials { padding: 1.5rem !important; }
   .landing-testimonials .lx-dot { min-width: 44px; min-height: 44px; }
   .landing-cta, .landing-submit { width: 100%; min-height: 48px; }
   .landing-section { padding: 2rem 12px !important; scroll-margin-top: 112px !important; }
   .landing-form { padding: 1rem !important; }
-  .landing-form input:not([type="radio"]), .landing-form select { font-size: 16px !important; min-height: 44px; }
+  .landing-form input:not([type="radio"]), .landing-form select { font-size: 17px !important; min-height: 44px; }
   .landing-form .radio-row label { min-height: 44px; }
 }

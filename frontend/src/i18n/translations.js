@@ -788,7 +788,6 @@ export const AZ = {
   '© {year} LIVEX. All rights reserved.': '© {year} LIVEX. Bütün hüquqlar qorunur.',
   'No upcoming exams at the moment.': 'Hazırda qarşıdakı sınaq yoxdur.',
   'Failed to load exams': 'Sınaqları yükləmək alınmadı',
-  'Fill in the form and we will contact you on WhatsApp.': 'Formu doldurun, sizinlə WhatsApp vasitəsilə əlaqə saxlayacağıq.',
   'Select Exam': 'Sınaq seçin',
   'Section': 'Bölmə',
   'Foreign Language': 'Xarici dil',
