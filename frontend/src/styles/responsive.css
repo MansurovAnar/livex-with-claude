@@ -121,12 +121,15 @@ select { max-width: 100%; min-width: 0; text-overflow: ellipsis; }
   .duplicate-actions > button { flex: 1 1 120px; }
   /* Reception Students page (LV#10): last-number pill wraps instead of overflowing */
   .last-number-pill { max-width: 100%; overflow-wrap: anywhere; }
-  /* Landing page (LV#81): header wraps (brand + Login on top, section links below), sections
-     get reduced padding, the form is full width with 17px inputs and 44px touch targets */
-  .landing-header { flex-wrap: wrap !important; gap: 10px 12px !important; padding: 10px 12px !important; }
-  .landing-nav  { order: 3; width: 100%; display: grid !important; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px !important; }
-  .landing-nav button { min-height: 48px; font-size: 0.95rem !important; padding: 0.5rem 0.4rem !important; white-space: normal !important; line-height: 1.15; overflow-wrap: anywhere; }
+  /* Landing page (LV#81): one header row (hamburger on the left, brand, language + Login); the
+     section links live in a left slide-over drawer (rendered on mobile only via useIsMobile).
+     Sections get reduced padding, the form is full width with 17px inputs and 44px touch targets */
+  .landing-header { flex-wrap: wrap !important; gap: 8px !important; padding: 10px 12px !important; min-height: 0 !important; }
+  .landing-actions { gap: 6px !important; }
   .landing-actions button { min-height: 44px; }
+  .landing-actions .lx-login { padding: 0.5rem 0.9rem !important; font-size: 1rem !important; }
+  .landing-drawer { animation: lx-drawer-in .22s ease-out; }
+  @keyframes lx-drawer-in { from { transform: translateX(-100%); } to { transform: none; } }
   /* Brand "LIVEX.HƏDƏF-BALAKƏN." shrinks and may wrap so it shares the top row with Login at 320px */
   .landing-brand { flex: 1 1 0; min-width: 0; gap: 0.5rem !important; font-size: 1rem !important; letter-spacing: 0 !important; line-height: 1.2; }
   .landing-brand-text { overflow-wrap: anywhere; }
@@ -140,14 +143,14 @@ select { max-width: 100%; min-width: 0; text-overflow: ellipsis; }
   .landing-features { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; margin-top: 2rem !important; }
   .landing-lower-grid { grid-template-columns: 1fr !important; padding: 2rem 12px !important; gap: 1.5rem !important; }
   .landing-lower-grid h2, .landing-section h2 { font-size: 1.75rem !important; }
-  .landing-schedule { scroll-margin-top: 140px !important; }
-  .landing-hero { scroll-margin-top: 140px !important; }
+  .landing-schedule { scroll-margin-top: 90px !important; }
+  .landing-hero { scroll-margin-top: 90px !important; }
   .landing-exam-card { width: min(270px, 80vw) !important; }
   .landing-exam-card button { min-height: 44px; }
   .landing-testimonials { padding: 1.5rem !important; }
   .landing-testimonials .lx-dot { min-width: 44px; min-height: 44px; }
   .landing-cta, .landing-submit { width: 100%; min-height: 48px; }
-  .landing-section { padding: 2rem 12px !important; scroll-margin-top: 140px !important; }
+  .landing-section { padding: 2rem 12px !important; scroll-margin-top: 90px !important; }
   .landing-form { padding: 1rem !important; }
   .landing-form input:not([type="radio"]), .landing-form select { font-size: 17px !important; min-height: 44px; }
   .landing-form .radio-row label { min-height: 44px; }

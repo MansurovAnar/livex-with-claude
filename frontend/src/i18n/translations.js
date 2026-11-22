@@ -758,14 +758,15 @@ export const AZ = {
   'Last Student # added by reception:': 'Qeydiyyatçının əlavə etdiyi son şagird nömrəsi:',
 
   // ── Landing page and exam applications (LV#81) ──
-  'Hədəf Kursları Exams': 'Hədəf Kursları Sınaqları',
+  'Hədəf Balakən Exams': 'Hədəf Balakən Sınaqları',
+  'Menu': 'Menyu',
   'Exam Schedule': 'Sınaq Cədvəli',
   'Registration': 'Qeydiyyat',
   'Time': 'Vaxt',
   'Login': 'Daxil ol',
   'My panel': 'Panelim',
-  'Hədəf Kursları exams let students test their knowledge in real exam conditions. Check the schedule and register in a few minutes.':
-    'Hədəf Kursları sınaqları şagirdlərə biliklərini real imtahan şəraitində yoxlamaq imkanı verir. Cədvələ baxın və bir neçə dəqiqəyə qeydiyyatdan keçin.',
+  'Hədəf Balakən exams let students test their knowledge in real exam conditions. Check the schedule and register in a few minutes.':
+    'Hədəf Balakən sınaqları şagirdlərə biliklərini real imtahan şəraitində yoxlamaq imkanı verir. Cədvələ baxın və bir neçə dəqiqəyə qeydiyyatdan keçin.',
   'Upcoming exams you can register for.': 'Qeydiyyat açıq olan qarşıdakı sınaqlar.',
   '{n} upcoming exams': '{n} qarşıdakı sınaq',
   'Real exam conditions': 'Real imtahan şəraiti',

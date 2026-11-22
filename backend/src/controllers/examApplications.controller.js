@@ -1,8 +1,9 @@
 const pool = require('../config/database');
 const { capitalizeName } = require('../services/studentEmail.service');
 
-// Exams open for public applications: scheduled and not in the past (LV#81)
-const OPEN_EXAM_SQL = `e.is_active = true AND e.status = 'scheduled' AND e.scheduled_at >= date_trunc('day', NOW())`;
+// Exams open for public applications: every active exam the admin has in "scheduled" status (LV#81).
+// No date filter: the admin controls availability through the status.
+const OPEN_EXAM_SQL = `e.is_active = true AND e.status = 'scheduled'`;
 
 const NOT_FOUND = { success: false, error: { code: 'NOT_FOUND', message: 'Application not found or already moved' } };
 

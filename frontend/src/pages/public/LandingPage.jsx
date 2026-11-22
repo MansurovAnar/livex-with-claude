@@ -5,6 +5,7 @@ import { useLanguage } from '../../i18n/LanguageContext';
 import LanguageSwitch from '../../components/shared/LanguageSwitch';
 import { listPublicExams, submitExamApplication } from '../../api/public.api';
 import { nameInputValue } from '../../utils/nameCase';
+import useIsMobile from '../../hooks/useIsMobile';
 
 // Public landing page at "/" (LV#81): blue hero with an animated illustration, the exam schedule
 // (scrollable cards) next to testimonials, and the registration form.
@@ -17,7 +18,7 @@ const ROLE_HOME = { admin: '/admin', security: '/security', reception: '/recepti
 const emptyForm = { exam_id: '', first_name: '', last_name: '', father_name: '', class_level: '', sector: '', language: '', mobile_prefix: '050', mobile_number: '' };
 
 const SECTIONS = [
-  { id: 'about', label: 'Hədəf Kursları Exams' },
+  { id: 'about', label: 'Hədəf Balakən Exams' },
   { id: 'schedule', label: 'Exam Schedule' },
   { id: 'register', label: 'Registration' },
 ];
@@ -101,6 +102,17 @@ export default function LandingPage() {
   const [examsLoading, setExamsLoading] = useState(true);
   const [examsError, setExamsError] = useState('');
   const [preset, setPreset] = useState(null);
+  const isMobile = useIsMobile();
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  // Mobile drawer: closes on Escape and when the viewport grows back to desktop
+  useEffect(() => { if (!isMobile) setMenuOpen(false); }, [isMobile]);
+  useEffect(() => {
+    if (!menuOpen) return undefined;
+    const onKey = e => { if (e.key === 'Escape') setMenuOpen(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [menuOpen]);
 
   useEffect(() => { preferLang('az'); }, [preferLang]);
 
@@ -122,6 +134,11 @@ export default function LandingPage() {
       <style>{LANDING_CSS}</style>
 
       <header className="landing-header" style={{ position: 'sticky', top: 0, zIndex: 100, background: 'rgba(23,37,84,0.88)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1.5rem', padding: '1.1rem 2rem', minHeight: 84 }}>
+        {isMobile && (
+          <button type="button" className="landing-menu-toggle" onClick={() => setMenuOpen(o => !o)}
+            aria-label={menuOpen ? t('Close menu') : t('Open menu')} aria-expanded={menuOpen} aria-controls="landing-drawer"
+            style={menuToggleBtn}>{menuOpen ? '✕' : '☰'}</button>
+        )}
         <button type="button" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="landing-brand"
           aria-label="LIVEX.HƏDƏF-BALAKƏN."
           style={{ display: 'flex', alignItems: 'center', gap: '0.7rem', background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: FONT, fontWeight: 800, fontSize: '1.45rem', color: '#fff', letterSpacing: '0.03em', textAlign: 'left' }}>
@@ -132,21 +149,45 @@ export default function LandingPage() {
             LIVEX<span style={{ color: '#22d3ee' }}>.HƏDƏF-BALAKƏN.</span>
           </span>
         </button>
-        <nav className="landing-nav" style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-          {SECTIONS.map(s => {
-            const isActive = activeSection === s.id;
-            return (
-              <button key={s.id} type="button" onClick={() => scrollTo(s.id)}
-                className={`lx-nav-link${isActive ? ' lx-nav-active' : ''}`}
-                aria-current={isActive ? 'true' : undefined} style={navBtn}>{t(s.label)}</button>
-            );
-          })}
-        </nav>
+        {!isMobile && (
+          <nav className="landing-nav" style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+            {SECTIONS.map(s => {
+              const isActive = activeSection === s.id;
+              return (
+                <button key={s.id} type="button" onClick={() => scrollTo(s.id)}
+                  className={`lx-nav-link${isActive ? ' lx-nav-active' : ''}`}
+                  aria-current={isActive ? 'true' : undefined} style={navBtn}>{t(s.label)}</button>
+              );
+            })}
+          </nav>
+        )}
         <div className="landing-actions" style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
           <LanguageSwitch tone="dark" />
           <button type="button" onClick={goLogin} className="lx-login" style={loginBtn}>{user ? t('My panel') : t('Login')}</button>
         </div>
       </header>
+
+      {/* Mobile only: section links in a drawer that slides in from the left (opened by the hamburger) */}
+      {isMobile && menuOpen && (
+        <>
+          <div className="landing-drawer-backdrop" onClick={() => setMenuOpen(false)} aria-hidden="true"
+            style={{ position: 'fixed', inset: 0, zIndex: 110, background: 'rgba(2,6,23,0.55)' }} />
+          <nav id="landing-drawer" className="landing-drawer" aria-label={t('Menu')}
+            style={{ position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 120, width: 'min(300px, 85vw)', overflowY: 'auto', background: '#172554', boxShadow: '8px 0 32px rgba(2,6,23,0.45)', padding: '16px 14px', display: 'flex', flexDirection: 'column', gap: 10, fontFamily: FONT }}>
+            <button type="button" onClick={() => setMenuOpen(false)} aria-label={t('Close menu')}
+              style={{ ...menuToggleBtn, alignSelf: 'flex-start', marginBottom: 6 }}>✕</button>
+            {SECTIONS.map(s => {
+              const isActive = activeSection === s.id;
+              return (
+                <button key={s.id} type="button" onClick={() => { setMenuOpen(false); scrollTo(s.id); }}
+                  className={`lx-nav-link${isActive ? ' lx-nav-active' : ''}`}
+                  aria-current={isActive ? 'true' : undefined}
+                  style={{ ...navBtn, width: '100%', textAlign: 'left', whiteSpace: 'normal', overflowWrap: 'anywhere', borderRadius: 14, fontSize: '1.05rem', minHeight: 52 }}>{t(s.label)}</button>
+              );
+            })}
+          </nav>
+        </>
+      )}
 
       {/* 1. Hədəf Kursları Sınaqları — hero with the Register to Exam button below the description */}
       <section id="about" className="landing-hero" style={{ position: 'relative', overflow: 'hidden', minHeight: '78vh', padding: '4rem 2rem 8rem', background: 'linear-gradient(135deg, #172554 0%, #1e40af 55%, #2563eb 100%)', color: '#fff', scrollMarginTop: 84 }}>
@@ -162,10 +203,10 @@ export default function LandingPage() {
               </span>
             )}
             <h1 style={{ margin: '0 0 1.25rem', fontSize: '3.6rem', lineHeight: 1.1, fontWeight: 800, letterSpacing: '-0.02em' }}>
-              {t('Hədəf Kursları Exams')}
+              {t('Hədəf Balakən Exams')}
             </h1>
             <p style={{ margin: '0 0 2rem', maxWidth: 560, fontSize: '1.3rem', color: 'rgba(255,255,255,0.82)', lineHeight: 1.65 }}>
-              {t('Hədəf Kursları exams let students test their knowledge in real exam conditions. Check the schedule and register in a few minutes.')}
+              {t('Hədəf Balakən exams let students test their knowledge in real exam conditions. Check the schedule and register in a few minutes.')}
             </p>
             <button type="button" onClick={() => scrollTo('register')} className="landing-cta lx-cta"
               style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.6rem', background: 'linear-gradient(135deg,#22d3ee,#06b6d4)', color: '#082f49', border: 'none', borderRadius: 999, padding: '1rem 2.25rem', fontSize: '1.2rem', fontWeight: 700, cursor: 'pointer' }}>
@@ -515,7 +556,7 @@ const LANDING_CSS = `
 .lx-scroll::-webkit-scrollbar { height: 8px; }
 .lx-scroll::-webkit-scrollbar-thumb { background: #93c5fd; border-radius: 999px; }
 @media (prefers-reduced-motion: reduce) {
-  .lx-float, .lx-spin, .lx-glow, .lx-blob, .lx-live-dot, .lx-cta, .lx-fade { animation: none !important; }
+  .lx-float, .lx-spin, .lx-glow, .lx-blob, .lx-live-dot, .lx-cta, .lx-fade, .landing-drawer { animation: none !important; }
   .lx-reveal { opacity: 1; transform: none; transition: none; }
   .lx-card, .lx-cta, .lx-apply, .lx-submit, .lx-nav-link { transition: none; }
   .lx-nav-link:hover { transform: none; }
@@ -525,6 +566,7 @@ const LANDING_CSS = `
 
 const blob = { position: 'absolute', borderRadius: '50%', filter: 'blur(10px)', pointerEvents: 'none' };
 const navBtn = { background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.22)', borderRadius: 999, padding: '0.7rem 1.4rem', minHeight: 48, cursor: 'pointer', fontSize: '1.2rem', color: '#fff', fontWeight: 600, fontFamily: 'inherit', whiteSpace: 'nowrap' };
+const menuToggleBtn = { background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.35)', color: '#fff', borderRadius: 10, width: 44, height: 44, flexShrink: 0, fontSize: '1.35rem', lineHeight: 1, cursor: 'pointer', fontFamily: 'inherit' };
 const loginBtn = { background: 'transparent', color: '#fff', border: '1.5px solid rgba(255,255,255,0.7)', borderRadius: 999, padding: '0.7rem 1.6rem', minHeight: 48, fontSize: '1.15rem', fontWeight: 700, cursor: 'pointer' };
 const h2Style = { margin: '0 0 0.4rem', fontSize: '2.2rem', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.01em' };
 const subStyle = { margin: '0 0 1.5rem', color: '#64748b', fontSize: '1.1rem' };
