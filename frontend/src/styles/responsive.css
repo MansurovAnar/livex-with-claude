@@ -129,6 +129,7 @@ select { max-width: 100%; min-width: 0; text-overflow: ellipsis; }
   .landing-actions button { min-height: 44px; }
   .landing-actions .lx-login { padding: 0.5rem 0.9rem !important; font-size: 1rem !important; }
   .landing-drawer { animation: lx-drawer-in .22s ease-out; }
+  .landing-drawer-lang .lang-switch button { min-height: 48px; font-size: 1rem !important; }
   @keyframes lx-drawer-in { from { transform: translateX(-100%); } to { transform: none; } }
   /* Brand "LIVEX.HƏDƏF-BALAKƏN." shrinks and may wrap so it shares the top row with Login at 320px */
   .landing-brand { flex: 1 1 0; min-width: 0; gap: 0.5rem !important; font-size: 1rem !important; letter-spacing: 0 !important; line-height: 1.2; }

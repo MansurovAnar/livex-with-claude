@@ -140,13 +140,14 @@ export default function LandingPage() {
             style={menuToggleBtn}>{menuOpen ? '✕' : '☰'}</button>
         )}
         <button type="button" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="landing-brand"
-          aria-label="LIVEX.HƏDƏF-BALAKƏN."
+          aria-label={isMobile ? 'LIVEX-H.B.' : 'LIVEX.HƏDƏF-BALAKƏN.'}
           style={{ display: 'flex', alignItems: 'center', gap: '0.7rem', background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: FONT, fontWeight: 800, fontSize: '1.45rem', color: '#fff', letterSpacing: '0.03em', textAlign: 'left' }}>
           {/* Hədəf Kursları Balakən logo (same file as the student ticket) on a white tile so it reads on the dark header;
               background-size 125% trims the image's outer white margin */}
           <span aria-hidden="true" className="landing-brand-logo" style={{ width: 52, height: 52, flexShrink: 0, borderRadius: 12, background: '#fff url(/logo.png) center / 125% no-repeat', boxShadow: '0 0 16px rgba(34,211,238,0.45)' }} />
           <span className="landing-brand-text" style={{ minWidth: 0 }}>
-            LIVEX<span style={{ color: '#22d3ee' }}>.HƏDƏF-BALAKƏN.</span>
+            {/* Mobile shows the short brand so it fits on one line next to the menu button */}
+            LIVEX<span style={{ color: '#22d3ee' }}>{isMobile ? '-H.B.' : '.HƏDƏF-BALAKƏN.'}</span>
           </span>
         </button>
         {!isMobile && (
@@ -162,7 +163,7 @@ export default function LandingPage() {
           </nav>
         )}
         <div className="landing-actions" style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-          <LanguageSwitch tone="dark" />
+          {!isMobile && <LanguageSwitch tone="dark" />}
           <button type="button" onClick={goLogin} className="lx-login" style={loginBtn}>{user ? t('My panel') : t('Login')}</button>
         </div>
       </header>
@@ -185,6 +186,11 @@ export default function LandingPage() {
                   style={{ ...navBtn, width: '100%', textAlign: 'left', whiteSpace: 'normal', overflowWrap: 'anywhere', borderRadius: 14, fontSize: '1.05rem', minHeight: 52 }}>{t(s.label)}</button>
               );
             })}
+            {/* Mobile: the EN | AZ switch lives in the drawer instead of the header */}
+            <div className="landing-drawer-lang" style={{ marginTop: 10, paddingTop: 14, borderTop: '1px solid rgba(255,255,255,0.12)' }}>
+              <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem', fontWeight: 600, marginBottom: 8 }}>{t('Language')}</div>
+              <LanguageSwitch tone="dark" fullWidth style={{ borderRadius: 12 }} />
+            </div>
           </nav>
         </>
       )}
