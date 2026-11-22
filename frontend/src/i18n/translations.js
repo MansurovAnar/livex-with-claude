@@ -773,7 +773,6 @@ export const AZ = {
   'Classes 1–11': '1–11-ci siniflər',
   'Az and Rus sections': 'Az və Rus bölmələri',
   'Online registration': 'Onlayn qeydiyyat',
-  'Apply': 'Müraciət et',
   'Testimonials': 'Rəylər',
   'What our students say': 'Şagirdlərimiz nə deyir',
   'Show testimonial {n}': 'Rəy {n}',

@@ -326,7 +326,8 @@ function ExamCard({ exam, onApply }) {
           <strong style={{ fontSize: '1.15rem', color: '#0f172a', whiteSpace: 'nowrap' }}>{Number(exam.exam_cost)} AZN</strong>
           <button type="button" onClick={onApply} className="lx-apply"
             style={{ background: '#1e40af', color: '#fff', border: 'none', borderRadius: 999, padding: '0.5rem 1.1rem', fontSize: '0.95rem', fontWeight: 600, cursor: 'pointer' }}>
-            {t('Apply')}
+            {/* 'Register' already means 'Qeydiyyatdan keçir' elsewhere, so AZ reuses 'Register now' → 'Qeydiyyatdan keç' */}
+            {lang === 'az' ? t('Register now') : 'Register'}
           </button>
         </div>
       </div>
@@ -380,7 +381,7 @@ function RegistrationForm({ exams, preset }) {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
-  // "Apply" on an exam card preselects that exam.
+  // "Register" on an exam card preselects that exam.
   useEffect(() => {
     if (preset) setForm(f => ({ ...f, exam_id: preset.id }));
   }, [preset]);
