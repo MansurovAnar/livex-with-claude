@@ -767,6 +767,25 @@ export const AZ = {
   'Hədəf Kursları exams let students test their knowledge in real exam conditions. Check the schedule and register in a few minutes.':
     'Hədəf Kursları sınaqları şagirdlərə biliklərini real imtahan şəraitində yoxlamaq imkanı verir. Cədvələ baxın və bir neçə dəqiqəyə qeydiyyatdan keçin.',
   'Upcoming exams you can register for.': 'Qeydiyyat açıq olan qarşıdakı sınaqlar.',
+  '{n} upcoming exams': '{n} qarşıdakı sınaq',
+  'Real exam conditions': 'Real imtahan şəraiti',
+  'Classes 1–11': '1–11-ci siniflər',
+  'Az and Rus sections': 'Az və Rus bölmələri',
+  'Online registration': 'Onlayn qeydiyyat',
+  'Apply': 'Müraciət et',
+  'Testimonials': 'Rəylər',
+  'What our students say': 'Şagirdlərimiz nə deyir',
+  'Show testimonial {n}': 'Rəy {n}',
+  'The exam felt just like the real one. I knew exactly what to expect on the big day.':
+    'Sınaq əsl imtahan kimi idi. Əsas gündə nə ilə qarşılaşacağımı dəqiq bilirdim.',
+  'Registration took two minutes and they confirmed my place on WhatsApp the same day.':
+    'Qeydiyyat iki dəqiqə çəkdi, yerimi elə həmin gün WhatsApp-da təsdiqlədilər.',
+  'Seeing my results after each exam showed me which topics I still had to work on.':
+    'Hər sınaqdan sonra nəticələrim hansı mövzular üzərində işləməli olduğumu göstərdi.',
+  'Class 7': '7-ci sinif',
+  'Class 9': '9-cu sinif',
+  'Class 11': '11-ci sinif',
+  '© {year} LIVEX. All rights reserved.': '© {year} LIVEX. Bütün hüquqlar qorunur.',
   'No upcoming exams at the moment.': 'Hazırda qarşıdakı sınaq yoxdur.',
   'Failed to load exams': 'Sınaqları yükləmək alınmadı',
   'Fill in the form and we will contact you on WhatsApp.': 'Formu doldurun, sizinlə WhatsApp vasitəsilə əlaqə saxlayacağıq.',
