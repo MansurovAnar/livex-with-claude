@@ -677,6 +677,9 @@ export const AZ = {
   'Failed to load callbacks': 'Geri zəngləri yükləmək alınmadı',
   'Call back time is invalid': 'Geri zəng vaxtı yanlışdır',
   'Call back time must be later than the call': 'Geri zəng vaxtı zəng vaxtından sonra olmalıdır',
+  'Overdue calls': 'Gecikmiş zənglər',
+  '{n} overdue calls': '{n} gecikmiş zəng',
+  'Minimize': 'Kiçilt',
 
   // ── Admin telesales reporting ──
   'Reporting': 'Hesabatlar',
