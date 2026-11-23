@@ -5,6 +5,7 @@ import useIsMobile from '../../hooks/useIsMobile';
 import useDueCallbacks from '../../hooks/useDueCallbacks';
 import { useLanguage } from '../../i18n/LanguageContext';
 import LanguageSwitch from '../shared/LanguageSwitch';
+import OverdueCallsPanel from '../telesales/OverdueCallsPanel';
 
 export default function TelesalesLayout() {
   const { user, logout } = useAuth();
@@ -52,6 +53,7 @@ export default function TelesalesLayout() {
       <main className="app-main" style={{ flex: 1, minWidth: 0, padding: '2rem', background: '#fff7ed' }}>
         <Outlet />
       </main>
+      <OverdueCallsPanel refreshKey={location.pathname} />
     </div>
   );
 }
