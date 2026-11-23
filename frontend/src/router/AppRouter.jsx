@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../i18n/LanguageContext';
 
 import LoginPage from '../pages/auth/LoginPage';
+import LandingPage from '../pages/public/LandingPage';
 
 import AdminLayout from '../components/layout/AdminLayout';
 import DashboardPage from '../pages/admin/DashboardPage';
@@ -26,6 +27,7 @@ import AddStudentPage from '../pages/reception/AddStudentPage';
 import StudentSearchPage from '../pages/reception/StudentSearchPage';
 import RegisterToExamPage from '../pages/reception/RegisterToExamPage';
 import ReceptionExamsPage from '../pages/reception/ReceptionExamsPage';
+import ExamApplicationsPage from '../pages/reception/ExamApplicationsPage';
 
 import ExamStudentsPage from '../pages/shared/ExamStudentsPage';
 import PartnersPage from '../pages/shared/PartnersPage';
@@ -63,7 +65,7 @@ function RequireAuth({ roles, children }) {
   const { t } = useLanguage();
   if (loading) return <div>{t('Loading...')}</div>;
   if (!user) return <Navigate to="/login" replace />;
-  if (roles && !roles.includes(user.role)) return <Navigate to="/" replace />;
+  if (roles && !roles.includes(user.role)) return <RoleRedirect />;
   return children;
 }
 
@@ -72,7 +74,7 @@ export default function AppRouter() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/" element={<RoleRedirect />} />
+        <Route path="/" element={<LandingPage />} />
 
         <Route path="/admin" element={<RequireAuth roles={['admin']}><AdminLayout /></RequireAuth>}>
           <Route index element={<DashboardPage />} />
@@ -107,6 +109,7 @@ export default function AppRouter() {
           <Route path="add" element={<AddStudentPage />} />
           <Route path="course-students" element={<CourseStudentsPage />} />
           <Route path="register" element={<RegisterToExamPage />} />
+          <Route path="applications" element={<ExamApplicationsPage />} />
           <Route path="exams" element={<ReceptionExamsPage />} />
           <Route path="exams/ongoing" element={<OngoingExamsPage />} />
           <Route path="exams/:id/students" element={<ExamStudentsPage />} />
