@@ -3,6 +3,7 @@ import { listCallbacks } from '../../api/telesalesLeads.api';
 import { useAuth } from '../../contexts/AuthContext';
 import { endOfToday } from '../../hooks/useDueCallbacks';
 import { useLanguage } from '../../i18n/LanguageContext';
+import { formatDateTime, formatTime } from '../../utils/formatDate';
 import { LogCallModal } from './LeadCalls';
 import { LeadDetailsModal } from './LeadsPage';
 
@@ -21,7 +22,7 @@ const GROUPS = [
  */
 export default function CallbacksPage() {
   const { user } = useAuth();
-  const { t, tError } = useLanguage();
+  const { t, tError, lang } = useLanguage();
   const formBase = user?.role === 'admin' ? '/admin/telesales/leads' : '/telesales/leads';
 
   const [callbacks, setCallbacks] = useState([]);
@@ -99,8 +100,7 @@ export default function CallbacksPage() {
                     {groups[g.key].map(cb => (
                       <tr key={cb.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
                         <td style={{ ...td, whiteSpace: 'nowrap', fontWeight: 600, color: g.color }}>
-                          {g.key === 'upcoming' ? new Date(cb.due_at).toLocaleString() : new Date(cb.due_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          {g.key === 'overdue' && <div style={{ fontSize: '0.75rem', fontWeight: 400 }}>{new Date(cb.due_at).toLocaleDateString()}</div>}
+                          {g.key === 'today' ? formatTime(cb.due_at) : formatDateTime(cb.due_at, lang)}
                         </td>
                         <td style={td} className="wrap-text">
                           <button type="button" onClick={() => setDetailsId(cb.lead_id)} className="lead-name-btn" style={nameBtn}>
