@@ -1,5 +1,6 @@
 const pool = require('../config/database');
 const parsePagination = require('../utils/pagination');
+const { findInvalidExtraInfo } = require('./telesalesExtraInfo.controller');
 
 const notFound = (res) =>
   res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Lead not found' } });
@@ -54,6 +55,17 @@ async function rejectDuplicatePhone(client, res, phones, leadId) {
       message: `Phone number ${typed} already belongs to ${rows[0].first_name} ${rows[0].last_name}`,
       details: { lead_id: rows[0].id },
     },
+  });
+  return true;
+}
+
+// Returns a 400 response if extra_info holds a key that is not an active option (or already on the lead)
+async function rejectUnknownExtraInfo(client, res, keys, leadId) {
+  const unknown = await findInvalidExtraInfo(client, keys, leadId);
+  if (!unknown.length) return false;
+  res.status(400).json({
+    success: false,
+    error: { code: 'VALIDATION_ERROR', message: 'Unknown extra info option', details: { extra_info: unknown } },
   });
   return true;
 }
@@ -210,7 +222,8 @@ exports.create = async (req, res, next) => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-    if (await rejectDuplicatePhone(client, res, lead.phones, null)) {
+    if (await rejectUnknownExtraInfo(client, res, lead.extra_info, null)
+      || await rejectDuplicatePhone(client, res, lead.phones, null)) {
       await client.query('ROLLBACK');
       return;
     }
@@ -240,6 +253,11 @@ exports.update = async (req, res, next) => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
+    // Before the UPDATE: options the lead already has are allowed even if deactivated since
+    if (await rejectUnknownExtraInfo(client, res, lead.extra_info, req.params.id)) {
+      await client.query('ROLLBACK');
+      return;
+    }
     const sets = LEAD_COLUMNS.map((c, i) => `${c} = $${i + 1}`);
     const { rows } = await client.query(
       `UPDATE telesales_leads

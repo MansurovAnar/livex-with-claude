@@ -2,6 +2,7 @@ const router = require('express').Router();
 const ctrl = require('../controllers/telesalesLeads.controller');
 const calls = require('../controllers/telesalesCalls.controller');
 const reports = require('../controllers/telesalesReports.controller');
+const extraInfo = require('../controllers/telesalesExtraInfo.controller');
 const authenticate = require('../middleware/authenticate');
 const authorize = require('../middleware/authorize');
 const { leadSchema } = require('../validators/telesalesLead.validator');
@@ -37,6 +38,13 @@ router.patch('/leads/:id/phone-invalid', ctrl.setPhoneInvalid);
 router.get('/answer-options', calls.listAnswerOptions);
 router.get('/leads/:id/calls', calls.listCalls);
 router.post('/leads/:id/calls', validateBody(callSchema), calls.createCall);
+
+// Extra-info checkbox options of the lead form: everyone reads, admins manage (LV#72)
+router.get('/extra-info-options', extraInfo.list);
+router.post('/extra-info-options', authorize('admin'), extraInfo.create);
+router.put('/extra-info-options/:id', authorize('admin'), extraInfo.update);
+router.patch('/extra-info-options/:id/status', authorize('admin'), extraInfo.setActive);
+router.patch('/extra-info-options/:id/move', authorize('admin'), extraInfo.move);
 
 // Callbacks scheduled while logging calls: visible to every telesales user
 router.get('/callbacks', calls.listCallbacks);

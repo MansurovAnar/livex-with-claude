@@ -16,6 +16,7 @@ import StudentsPage from '../pages/admin/StudentsPage';
 import UsersPage from '../pages/admin/UsersPage';
 import SchoolsPage from '../pages/admin/SchoolsPage';
 import VillagesPage from '../pages/admin/VillagesPage';
+import ExtraInfoOptionsPage from '../pages/admin/ExtraInfoOptionsPage';
 import TelesalesReportsPage from '../pages/admin/TelesalesReportsPage';
 
 import SecurityLayout from '../components/layout/SecurityLayout';
@@ -92,6 +93,7 @@ export default function AppRouter() {
           <Route path="partners/:partnerId/exams/:examId/students" element={<PartnerExamStudentsPage />} />
           <Route path="schools" element={<SchoolsPage />} />
           <Route path="telesales/villages" element={<VillagesPage />} />
+          <Route path="telesales/extra-info-options" element={<ExtraInfoOptionsPage />} />
           <Route path="telesales/leads" element={<LeadsPage />} />
           <Route path="telesales/leads/new" element={<LeadFormPage />} />
           <Route path="telesales/leads/:id/edit" element={<LeadFormPage />} />

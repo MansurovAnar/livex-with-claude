@@ -5,7 +5,8 @@ import { PageSizeSelect, PaginationBar } from '../../components/shared/Paginatio
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { CallHistory, CallHistoryPanel, CallLogForm, LogCallModal, useLeadCalls } from './LeadCalls';
-import { CLASSES, EXTRA_INFO, LANGUAGES, SECTORS } from './leadOptions';
+import useExtraInfoOptions from '../../hooks/useExtraInfoOptions';
+import { ANOTHER_STUDENT_KEY, CLASSES, LANGUAGES, SECTORS, extraInfoLabel } from './leadOptions';
 
 const emptyFilters = { class_level: '', sector: '', language: '' };
 const dash = <span style={{ color: '#cbd5e1' }}>—</span>;
@@ -220,7 +221,8 @@ export default function LeadsPage() {
 
 // Also used by the Callbacks page
 export function LeadDetailsModal({ id, editPath, onClose, onCallLogged, onStatusChange }) {
-  const { t, tError } = useLanguage();
+  const { lang, t, tError } = useLanguage();
+  const { options: extraOptions } = useExtraInfoOptions();
   const [lead, setLead] = useState(null);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
@@ -252,7 +254,8 @@ export function LeadDetailsModal({ id, editPath, onClose, onCallLogged, onStatus
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
 
-  const extras = lead ? EXTRA_INFO.filter(o => (lead.extra_info || []).includes(o.value)) : [];
+  // The lead's extra-info options in admin order (deactivated ones are still listed)
+  const extras = lead ? extraOptions.filter(o => (lead.extra_info || []).includes(o.key)) : [];
   const parent = lead && [lead.parent_name, lead.parent_relation && `(${t(lead.parent_relation)})`].filter(Boolean).join(' ');
 
   return (
@@ -311,9 +314,10 @@ export function LeadDetailsModal({ id, editPath, onClose, onCallLogged, onStatus
             {extras.length ? (
               <ul style={{ margin: '0 0 0.75rem', paddingLeft: '1.25rem', fontSize: '0.9rem', color: '#1e293b' }}>
                 {extras.map(o => (
-                  <li key={o.value}>
-                    {t(o.label)}
-                    {o.value === 'another_student_at_home' && lead.another_student_class && ` — ${t('Class')} ${lead.another_student_class}`}
+                  <li key={o.key} className="wrap-text">
+                    {extraInfoLabel(o, lang)}
+                    {!o.is_active && <span style={{ color: '#94a3b8' }}> ({t('inactive')})</span>}
+                    {o.key === ANOTHER_STUDENT_KEY && lead.another_student_class && ` — ${t('Class')} ${lead.another_student_class}`}
                   </li>
                 ))}
               </ul>
