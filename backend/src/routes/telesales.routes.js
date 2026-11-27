@@ -29,6 +29,7 @@ const validateBody = (schema) => (req, res, next) => {
 router.use(authenticate, authorize('admin', 'telesales'));
 
 router.get('/leads', ctrl.list);
+router.get('/leads/filter-options', ctrl.filterOptions); // before /leads/:id (LV#80)
 router.get('/leads/:id', ctrl.get);
 router.post('/leads', validateBody(leadSchema), ctrl.create);
 router.put('/leads/:id', validateBody(leadSchema), ctrl.update);

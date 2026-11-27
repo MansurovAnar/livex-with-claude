@@ -645,6 +645,25 @@ export const AZ = {
   'Added {date} by {name}': '{date} tarixində {name} əlavə edib',
   'Last updated {date} by {name}': 'Son dəyişiklik: {date}, {name}',
 
+  // ── Telesales lead list: More Filters (LV#80) ──
+  'More Filters': 'Əlavə filtrlər',
+  'More Filters ({n})': 'Əlavə filtrlər ({n})',
+  'Failed to load filter options': 'Filtr seçimlərini yükləmək alınmadı',
+  'Any': 'Hamısı',
+  'Last call response': 'Son zəngin cavabı',
+  'Called from': 'Zəng tarixi (başlanğıc)',
+  'Called to': 'Zəng tarixi (son)',
+  'Never called': 'Heç zəng edilməyib',
+  'Call note': 'Zəng qeydi',
+  'Call note contains': 'Zəng qeydində olan mətn',
+  'Contains...': 'Tərkibində...',
+  'Has all checked options': 'Seçilmiş bütün variantlar olsun',
+  'Other information contains': 'Digər məlumatda olan mətn',
+  'Reset': 'Sıfırla',
+  'Apply filters': 'Filtrləri tətbiq et',
+  'No options': 'Seçim yoxdur',
+  '{n} selected': '{n} seçilib',
+
   // ── Telesales call log ──
   'Log call': 'Zəngi qeyd et',
   'Calls': 'Zənglər',
