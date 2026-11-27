@@ -18,3 +18,4 @@ export const createExtraInfoOption = (data) => apiClient.post('/telesales/extra-
 export const updateExtraInfoOption = (id, data) => apiClient.put(`/telesales/extra-info-options/${id}`, data);
 export const setExtraInfoOptionActive = (id, is_active) => apiClient.patch(`/telesales/extra-info-options/${id}/status`, { is_active });
 export const moveExtraInfoOption = (id, direction) => apiClient.patch(`/telesales/extra-info-options/${id}/move`, { direction });
+export const listIncomeSources = () => apiClient.get('/telesales/income-sources');

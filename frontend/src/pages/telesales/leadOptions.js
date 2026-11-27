@@ -9,3 +9,6 @@ export const ANOTHER_STUDENT_KEY = 'another_student_at_home';
 
 // Label of an extra-info option in the selected UI language (AZ falls back to English)
 export const extraInfoLabel = (option, lang) => (lang === 'az' && option.label_az) || option.label;
+
+// Mobile operator prefixes of the phone dropdown (LV#50); the number itself is 7 digits
+export const PHONE_PREFIXES = ['010', '050', '051', '055', '060', '070', '077', '099'];

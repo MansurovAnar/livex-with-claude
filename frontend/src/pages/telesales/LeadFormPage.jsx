@@ -1,22 +1,38 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { createLead, getLead, updateLead } from '../../api/telesalesLeads.api';
+import { createLead, getLead, listIncomeSources, updateLead } from '../../api/telesalesLeads.api';
+import SearchableSelect from '../../components/shared/SearchableSelect';
 import { SchoolSelect, VillageSelect } from '../../components/shared/SchoolVillageSelects';
 import { useAuth } from '../../contexts/AuthContext';
 import useIsMobile from '../../hooks/useIsMobile';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { nameInputValue } from '../../utils/nameCase';
 import useExtraInfoOptions from '../../hooks/useExtraInfoOptions';
-import { ANOTHER_STUDENT_KEY, CLASSES, LANGUAGES, SECTORS, extraInfoLabel } from './leadOptions';
+import { ANOTHER_STUDENT_KEY, CLASSES, LANGUAGES, PHONE_PREFIXES, SECTORS, extraInfoLabel } from './leadOptions';
 
 const PHONE_OWNERS = ['Self', 'Father', 'Mother', 'Grandmother', 'Grandfather', 'Brother', 'Sister', 'Relative'];
-const PARENT_RELATIONS = ['Mother', 'Grandmother', 'Grandfather', 'Aunt', 'Uncle', 'Brother', 'Sister'];
 
-const emptyPhone = () => ({ phone_number: '', owner_label: '' });
+// A phone row is a prefix + 7 digits. `legacy` holds a saved number that doesn't fit
+// that format; it is shown as a hint until the row is re-entered.
+const emptyPhone = () => ({ prefix: '', digits: '', owner_label: '', legacy: '' });
+
+// "050 123 45 67" / "+994 50 1234567" → { prefix: '050', digits: '1234567' }; null if it doesn't fit
+const splitPhone = (phone) => {
+  let d = String(phone || '').replace(/\D/g, '');
+  if (d.length === 12 && d.startsWith('994')) d = `0${d.slice(3)}`;
+  return d.length === 10 && PHONE_PREFIXES.includes(d.slice(0, 3)) ? { prefix: d.slice(0, 3), digits: d.slice(3) } : null;
+};
+
+const toPhoneRow = (p) => {
+  const split = splitPhone(p.phone_number);
+  return { ...emptyPhone(), ...split, owner_label: p.owner_label || '', legacy: split ? '' : p.phone_number };
+};
+
 const emptyForm = () => ({
   first_name: '', last_name: '', father_name: '', parent_name: '', parent_relation: '',
   school_id: '', village_id: '', class_level: '', sector: '', language: '', income_source: '',
   extra_info: [], another_student_class: '', extra_info_other: '',
+  birthday_date: '', birthday_whose: '', marriage_date: '', marriage_whose: '', death_date: '',
   knows_hedef_student: false, hedef_student_name: '',
   phones: [emptyPhone()],
 });
@@ -37,10 +53,15 @@ const toForm = (lead) => ({
   extra_info: lead.extra_info || [],
   another_student_class: lead.another_student_class ? String(lead.another_student_class) : '',
   extra_info_other: lead.extra_info_other || '',
+  birthday_date: lead.birthday_date || '',
+  birthday_whose: lead.birthday_whose || '',
+  marriage_date: lead.marriage_date || '',
+  marriage_whose: lead.marriage_whose || '',
+  death_date: lead.death_date || '',
   knows_hedef_student: !!lead.knows_hedef_student,
   hedef_student_name: lead.hedef_student_name || '',
   phones: lead.phones?.length
-    ? lead.phones.map(p => ({ phone_number: p.phone_number, owner_label: p.owner_label || '' }))
+    ? lead.phones.map(toPhoneRow)
     : [emptyPhone()],
 });
 
@@ -52,7 +73,9 @@ const toPayload = (form) => ({
   another_student_class: form.extra_info.includes(ANOTHER_STUDENT_KEY) && form.another_student_class
     ? Number(form.another_student_class) : null,
   hedef_student_name: form.knows_hedef_student ? form.hedef_student_name : null,
-  phones: form.phones.filter((p, i) => i === 0 || p.phone_number.trim()),
+  phones: form.phones
+    .filter((p, i) => i === 0 || p.prefix || p.digits || p.legacy)
+    .map(p => ({ phone_number: `${p.prefix} ${p.digits}`.trim(), owner_label: p.owner_label })),
 });
 
 /**
@@ -75,6 +98,13 @@ export default function LeadFormPage() {
   const [loading, setLoading] = useState(isEdit);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [incomeSources, setIncomeSources] = useState([]);
+
+  useEffect(() => {
+    listIncomeSources()
+      .then(res => setIncomeSources(res.data.data || []))
+      .catch(() => setIncomeSources([]));
+  }, []);
 
   useEffect(() => {
     if (!isEdit) { setForm(emptyForm()); setCurrent(null); setLoading(false); return; }
@@ -96,6 +126,17 @@ export default function LeadFormPage() {
   const setPhone = (index, field, value) => setForm(f => ({
     ...f, phones: f.phones.map((p, i) => (i === index ? { ...p, [field]: value } : p)),
   }));
+  // Keeps digits only (max 7); a pasted full number with a known prefix fills the prefix too
+  const setPhoneDigits = (index, value) => {
+    const split = splitPhone(value);
+    setForm(f => ({
+      ...f,
+      phones: f.phones.map((p, i) => {
+        if (i !== index) return p;
+        return split ? { ...p, ...split, legacy: '' } : { ...p, digits: value.replace(/\D/g, '').slice(0, 7), legacy: '' };
+      }),
+    }));
+  };
   const addPhone = () => setForm(f => ({ ...f, phones: [...f.phones, emptyPhone()] }));
   const removePhone = (index) => setForm(f => ({ ...f, phones: f.phones.filter((_, i) => i !== index) }));
 
@@ -131,6 +172,10 @@ export default function LeadFormPage() {
   const req = <span style={{ color: '#dc2626' }}> *</span>;
   // Active options, plus deactivated ones this lead already had when it was loaded
   const visibleExtras = extraOptions.filter(o => o.is_active || current?.extra_info?.includes(o.key));
+  // Saved / newly added value stays selectable even before the list is reloaded
+  const incomeValues = form.income_source && !incomeSources.some(v => v.toLowerCase() === form.income_source.toLowerCase())
+    ? [form.income_source, ...incomeSources] : incomeSources;
+  const incomeOptions = incomeValues.map(v => ({ value: v, label: t(v) }));
 
   return (
     <div style={{ maxWidth: 760 }}>
@@ -192,20 +237,35 @@ export default function LeadFormPage() {
         {/* ── Phones ── */}
         <h3 style={sectionTitle}>{t('Phone numbers')}</h3>
         {form.phones.map((p, i) => (
-          <div key={i} className="lead-phone-row" style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end', marginBottom: '0.75rem' }}>
-            <div style={{ flex: 2, minWidth: 0 }}>
-              <label style={labelStyle}>{i === 0 ? <>{t('Main phone')}{req}</> : t('Phone {n}', { n: i + 1 })}</label>
-              <input type="tel" value={p.phone_number} onChange={e => setPhone(i, 'phone_number', e.target.value)}
-                required={i === 0} maxLength={20} placeholder="050 123 45 67" style={inputStyle} />
+          <div key={i} style={{ marginBottom: '0.75rem' }}>
+            <div className="lead-phone-row" style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end' }}>
+              <div style={{ flex: 2, minWidth: 0 }}>
+                <label style={labelStyle}>{i === 0 ? <>{t('Main phone')}{req}</> : t('Phone {n}', { n: i + 1 })}</label>
+                <div className="mobile-row" style={{ display: 'flex', gap: '0.4rem' }}>
+                  <select value={p.prefix} onChange={e => setPhone(i, 'prefix', e.target.value)} aria-label={t('Prefix')} className="mobile-prefix"
+                    required={i === 0 || !!p.digits || !!p.legacy} style={{ ...inputStyle, width: 'auto', flex: 'none' }}>
+                    <option value="">0XX</option>
+                    {PHONE_PREFIXES.map(x => <option key={x} value={x}>{x}</option>)}
+                  </select>
+                  <input type="tel" inputMode="numeric" value={p.digits} onChange={e => setPhoneDigits(i, e.target.value)}
+                    required={i === 0 || !!p.prefix || !!p.legacy} pattern="\d{7}" title={t('Enter 7 digits')}
+                    placeholder="1234567" aria-label={t('Phone number')} style={{ ...inputStyle, flex: 1, minWidth: 0 }} />
+                </div>
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <label style={labelStyle}>{t('Whose number')}</label>
+                <input list="lead-phone-owners" value={p.owner_label} onChange={e => setPhone(i, 'owner_label', e.target.value)}
+                  maxLength={50} placeholder={t('e.g. Father')} style={inputStyle} />
+              </div>
+              {i > 0 && (
+                <button type="button" onClick={() => removePhone(i)} aria-label={t('Remove phone')} title={t('Remove phone')}
+                  style={{ ...secondaryBtn, color: '#dc2626', borderColor: '#fecaca', flex: 'none' }}>✕{isMobile && <> {t('Remove phone')}</>}</button>
+              )}
             </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <label style={labelStyle}>{t('Whose number')}</label>
-              <input list="lead-phone-owners" value={p.owner_label} onChange={e => setPhone(i, 'owner_label', e.target.value)}
-                maxLength={50} placeholder={t('e.g. Father')} style={inputStyle} />
-            </div>
-            {i > 0 && (
-              <button type="button" onClick={() => removePhone(i)} aria-label={t('Remove phone')} title={t('Remove phone')}
-                style={{ ...secondaryBtn, color: '#dc2626', borderColor: '#fecaca', flex: 'none' }}>✕{isMobile && <> {t('Remove phone')}</>}</button>
+            {p.legacy && (
+              <div style={{ fontSize: '0.8rem', color: '#b45309', marginTop: '0.25rem' }} className="wrap-text">
+                {t('Saved number "{phone}" is in an old format — choose the prefix and enter 7 digits.', { phone: p.legacy })}
+              </div>
             )}
           </div>
         ))}
@@ -225,15 +285,14 @@ export default function LeadFormPage() {
           <Field label={t('Mother / parent in charge')}>
             <input name="parent_name" value={form.parent_name} onChange={handleChange} maxLength={150} style={inputStyle} />
           </Field>
-          <Field label={t('Relation')}>
-            <input name="parent_relation" list="lead-parent-relations" value={form.parent_relation} onChange={handleChange}
-              maxLength={50} placeholder={t('e.g. Mother')} style={inputStyle} />
-            <datalist id="lead-parent-relations">
-              {PARENT_RELATIONS.map(r => <option key={r} value={t(r)} />)}
-            </datalist>
-          </Field>
           <Field label={t('How they earn money')}>
-            <input name="income_source" value={form.income_source} onChange={handleChange} maxLength={2000} style={inputStyle} />
+            <SearchableSelect value={form.income_source} options={incomeOptions} placeholder={t('Search or add...')}
+              onChange={v => set('income_source', v)}
+              onCreate={text => {
+                const v = text.trim().slice(0, 2000);
+                setIncomeSources(list => (list.some(x => x.toLowerCase() === v.toLowerCase()) ? list : [...list, v]));
+                set('income_source', v);
+              }} />
           </Field>
         </div>
 
@@ -269,6 +328,38 @@ export default function LeadFormPage() {
           ))}
         </div>
         {extraOptionsError && <p style={{ color: '#dc2626', fontSize: '0.875rem', margin: '0 0 0.75rem' }}>{tError(extraOptionsError, 'Failed to load extra information options')}</p>}
+        {form.extra_info.includes('birthday') && (
+          <div className="form-grid" style={grid}>
+            <Field label={t('Birthday date')}>
+              <input type="date" name="birthday_date" value={form.birthday_date} onChange={handleChange} style={inputStyle} />
+            </Field>
+            <Field label={t('Whose birthday?')}>
+              <input name="birthday_whose" list="lead-family-members" value={form.birthday_whose} onChange={handleChange}
+                maxLength={100} placeholder={t('e.g. Mother')} style={inputStyle} />
+            </Field>
+          </div>
+        )}
+        {form.extra_info.includes('marriage_ceremony') && (
+          <div className="form-grid" style={grid}>
+            <Field label={t('Marriage ceremony date')}>
+              <input type="date" name="marriage_date" value={form.marriage_date} onChange={handleChange} style={inputStyle} />
+            </Field>
+            <Field label={t('Whose marriage?')}>
+              <input name="marriage_whose" list="lead-family-members" value={form.marriage_whose} onChange={handleChange}
+                maxLength={100} placeholder={t('e.g. Brother')} style={inputStyle} />
+            </Field>
+          </div>
+        )}
+        {form.extra_info.includes('someone_died_recently') && (
+          <div className="form-grid" style={grid}>
+            <Field label={t('Date of death')}>
+              <input type="date" name="death_date" value={form.death_date} onChange={handleChange} style={inputStyle} />
+            </Field>
+          </div>
+        )}
+        <datalist id="lead-family-members">
+          {PHONE_OWNERS.map(o => <option key={o} value={t(o)} />)}
+        </datalist>
         {form.extra_info.includes(ANOTHER_STUDENT_KEY) && (
           <Field label={t('Class of the other student')}>
             <select name="another_student_class" value={form.another_student_class} onChange={handleChange} style={inputStyle}>
