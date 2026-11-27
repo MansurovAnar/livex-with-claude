@@ -9,6 +9,10 @@ const digitsOf = (phone) => phone.replace(/\D/g, '');
 // Full lead with school / village names, author names and phones (primary first, then in entry order)
 const LEAD_DETAIL_SQL = `
   SELECT l.*,
+         -- DATE columns as plain 'YYYY-MM-DD' (overrides l.*; avoids a time-zone shift in JSON)
+         to_char(l.birthday_date, 'YYYY-MM-DD') AS birthday_date,
+         to_char(l.marriage_date, 'YYYY-MM-DD') AS marriage_date,
+         to_char(l.death_date, 'YYYY-MM-DD') AS death_date,
          s.name AS school_name,
          v.name AS village_name,
          cu.full_name AS created_by_name,
@@ -31,6 +35,7 @@ const LEAD_COLUMNS = [
   'first_name', 'last_name', 'father_name', 'parent_name', 'parent_relation',
   'school_id', 'village_id', 'class_level', 'sector', 'language', 'income_source',
   'extra_info', 'another_student_class', 'extra_info_other',
+  'birthday_date', 'birthday_whose', 'marriage_date', 'marriage_whose', 'death_date',
   'knows_hedef_student', 'hedef_student_name',
 ];
 
@@ -146,6 +151,26 @@ exports.list = async (req, res, next) => {
       data: rows,
       meta: { page, limit, total: parseInt(countRows[0].count, 10), invalid_total: parseInt(invalidRows[0].count, 10) },
     });
+  } catch (err) { next(err); }
+};
+
+// Starter options for "How they earn money"; values typed on leads are added to the list
+const INCOME_SOURCE_STARTERS = ['Farming', 'Trade', 'Government job', 'Works abroad', 'Driver', 'Construction'];
+
+// GET /api/telesales/income-sources — starter options + every distinct value saved on leads
+exports.listIncomeSources = async (req, res, next) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT DISTINCT ON (LOWER(v)) v AS value
+       FROM (
+         SELECT TRIM(income_source) AS v FROM telesales_leads WHERE NULLIF(TRIM(income_source), '') IS NOT NULL
+         UNION ALL
+         SELECT unnest($1::text[])
+       ) s
+       ORDER BY LOWER(v), v`,
+      [INCOME_SOURCE_STARTERS]
+    );
+    res.json({ success: true, data: rows.map(r => r.value) });
   } catch (err) { next(err); }
 };
 

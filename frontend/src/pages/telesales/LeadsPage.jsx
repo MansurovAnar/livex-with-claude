@@ -4,6 +4,7 @@ import { getLead, listLeads, setLeadPhoneInvalid } from '../../api/telesalesLead
 import { PageSizeSelect, PaginationBar } from '../../components/shared/Pagination';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../i18n/LanguageContext';
+import { formatDate } from '../../utils/formatDate';
 import { CallHistory, CallHistoryPanel, CallLogForm, LogCallModal, useLeadCalls } from './LeadCalls';
 import { CLASSES, EXTRA_INFO, LANGUAGES, SECTORS } from './leadOptions';
 
@@ -220,7 +221,7 @@ export default function LeadsPage() {
 
 // Also used by the Callbacks page
 export function LeadDetailsModal({ id, editPath, onClose, onCallLogged, onStatusChange }) {
-  const { t, tError } = useLanguage();
+  const { t, tError, lang } = useLanguage();
   const [lead, setLead] = useState(null);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
@@ -253,6 +254,14 @@ export function LeadDetailsModal({ id, editPath, onClose, onCallLogged, onStatus
   }, [onClose]);
 
   const extras = lead ? EXTRA_INFO.filter(o => (lead.extra_info || []).includes(o.value)) : [];
+  // Date / whose details of Birthday, Marriage ceremony and Someone died recently (LV#50)
+  const extraDetail = (flag) => {
+    const [date, whose] = flag === 'birthday' ? [lead.birthday_date, lead.birthday_whose]
+      : flag === 'marriage_ceremony' ? [lead.marriage_date, lead.marriage_whose]
+      : flag === 'someone_died_recently' ? [lead.death_date, null] : [null, null];
+    const text = [whose && t(whose), date && formatDate(date, lang)].filter(Boolean).join(', ');
+    return text ? ` — ${text}` : null;
+  };
   const parent = lead && [lead.parent_name, lead.parent_relation && `(${t(lead.parent_relation)})`].filter(Boolean).join(' ');
 
   return (
@@ -314,6 +323,7 @@ export function LeadDetailsModal({ id, editPath, onClose, onCallLogged, onStatus
                   <li key={o.value}>
                     {t(o.label)}
                     {o.value === 'another_student_at_home' && lead.another_student_class && ` — ${t('Class')} ${lead.another_student_class}`}
+                    {extraDetail(o.value)}
                   </li>
                 ))}
               </ul>

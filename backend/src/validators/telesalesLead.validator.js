@@ -28,15 +28,33 @@ const classLevel = (label) => z.coerce.number({ invalid_type_error: `${label} is
   .min(1, `${label} must be between 1 and 11`)
   .max(11, `${label} must be between 1 and 11`);
 
+// Mobile operator prefixes offered in the lead form (LV#50)
+exports.PHONE_PREFIXES = ['010', '050', '051', '055', '060', '070', '077', '099'];
+
+// Any spacing is accepted; the number must be a known prefix + exactly 7 digits
+// and is stored as "0XX XXX XX XX"
+const phoneNumber = z.string({ required_error: 'Phone number is required', invalid_type_error: 'Phone number is required' })
+  .trim()
+  .min(1, 'Phone number is required')
+  .transform(v => v.replace(/\D/g, ''))
+  .refine(d => d.length === 10 && exports.PHONE_PREFIXES.includes(d.slice(0, 3)),
+    'Phone number must be a valid prefix followed by 7 digits')
+  .transform(d => `${d.slice(0, 3)} ${d.slice(3, 6)} ${d.slice(6, 8)} ${d.slice(8)}`);
+
 const phoneSchema = z.object({
-  phone_number: z.string({ required_error: 'Phone number is required' })
-    .trim()
-    .min(1, 'Phone number is required')
-    .max(20, 'Phone number must be at most 20 characters')
-    .refine(v => /^[\d\s()+-]+$/.test(v), 'Phone number may contain only digits, spaces, +, - and brackets')
-    .refine(v => { const n = v.replace(/\D/g, '').length; return n >= 7 && n <= 15; }, 'Phone number must have 7 to 15 digits'),
+  phone_number: phoneNumber,
   owner_label: optionalText(50, 'Phone owner'),
 });
+
+// Optional calendar date 'YYYY-MM-DD'; '' / null / undefined → null
+const optionalDate = (label) => z.preprocess(
+  v => (typeof v === 'string' ? (v.trim() || null) : v ?? null),
+  z.string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, `${label} is not a valid date`)
+    .refine(v => !Number.isNaN(Date.parse(`${v}T00:00:00Z`)) && new Date(`${v}T00:00:00Z`).toISOString().startsWith(v),
+      `${label} is not a valid date`)
+    .nullable()
+);
 
 // Same shape for create and update: the form always sends the whole lead
 exports.leadSchema = z.object({
@@ -56,6 +74,11 @@ exports.leadSchema = z.object({
     .transform(list => [...new Set(list)]),
   another_student_class: z.preprocess(v => (v === '' ? null : v ?? null), classLevel('Other student\'s class').nullable()),
   extra_info_other: optionalText(2000, 'Other information'),
+  birthday_date: optionalDate('Birthday date'),
+  birthday_whose: optionalText(100, 'Whose birthday'),
+  marriage_date: optionalDate('Marriage ceremony date'),
+  marriage_whose: optionalText(100, 'Whose marriage'),
+  death_date: optionalDate('Date of death'),
   knows_hedef_student: z.boolean().default(false),
   hedef_student_name: optionalText(150, 'HƏDƏF student name'),
   phones: z.array(phoneSchema, { required_error: 'At least one phone number is required' })
@@ -75,5 +98,10 @@ exports.leadSchema = z.object({
     father_name: capitalizeName(d.father_name),
     // Dependent fields are only kept when their switch is on
     another_student_class: d.extra_info.includes('another_student_at_home') ? d.another_student_class : null,
+    birthday_date: d.extra_info.includes('birthday') ? d.birthday_date : null,
+    birthday_whose: d.extra_info.includes('birthday') ? d.birthday_whose : null,
+    marriage_date: d.extra_info.includes('marriage_ceremony') ? d.marriage_date : null,
+    marriage_whose: d.extra_info.includes('marriage_ceremony') ? d.marriage_whose : null,
+    death_date: d.extra_info.includes('someone_died_recently') ? d.death_date : null,
     hedef_student_name: d.knows_hedef_student ? d.hedef_student_name : null,
   }));

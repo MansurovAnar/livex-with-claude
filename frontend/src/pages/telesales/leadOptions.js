@@ -12,3 +12,5 @@ export const EXTRA_INFO = [
   { value: 'mother_died', label: 'Mother died' },
   { value: 'father_died', label: 'Father died' },
 ];
+// Mobile operator prefixes of the phone dropdown (LV#50); the number itself is 7 digits
+export const PHONE_PREFIXES = ['010', '050', '051', '055', '060', '070', '077', '099'];
