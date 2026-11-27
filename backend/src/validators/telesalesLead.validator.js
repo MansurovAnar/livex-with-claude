@@ -1,17 +1,6 @@
 const { z } = require('zod');
 const { capitalizeName } = require('../services/studentEmail.service');
 
-exports.EXTRA_INFO_FLAGS = [
-  'birthday',
-  'marriage_ceremony',
-  'another_student_at_home',
-  'someone_died_recently',
-  'someone_in_hospital',
-  'father_in_russia',
-  'mother_died',
-  'father_died',
-];
-
 // Optional text: trimmed, '' / null / undefined → null
 const optionalText = (max, label) => z.preprocess(
   v => (typeof v === 'string' ? (v.trim() || null) : v ?? null),
@@ -69,7 +58,9 @@ exports.leadSchema = z.object({
   sector: requiredText(20, 'Sector'),
   language: requiredText(30, 'Language'),
   income_source: optionalText(2000, 'Income source'),
-  extra_info: z.array(z.enum(exports.EXTRA_INFO_FLAGS, { errorMap: () => ({ message: 'Unknown extra info option' }) }))
+  // Option keys from lead_extra_info_options (admin-managed, LV#72); the controller checks they exist
+  extra_info: z.array(z.string({ invalid_type_error: 'Unknown extra info option' }).trim().min(1, 'Unknown extra info option').max(60, 'Unknown extra info option'))
+    .max(100, 'Too many extra info options')
     .default([])
     .transform(list => [...new Set(list)]),
   another_student_class: z.preprocess(v => (v === '' ? null : v ?? null), classLevel('Other student\'s class').nullable()),

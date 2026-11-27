@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { getLead, listLeads, setLeadPhoneInvalid } from '../../api/telesalesLeads.api';
+import { PAGE_SIZES } from '../../api/students.api';
 import { PageSizeSelect, PaginationBar } from '../../components/shared/Pagination';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { formatDate } from '../../utils/formatDate';
 import { CallHistory, CallHistoryPanel, CallLogForm, LogCallModal, useLeadCalls } from './LeadCalls';
-import { CLASSES, EXTRA_INFO, LANGUAGES, SECTORS } from './leadOptions';
+import useExtraInfoOptions from '../../hooks/useExtraInfoOptions';
+import { ANOTHER_STUDENT_KEY, CLASSES, LANGUAGES, SECTORS, extraInfoLabel } from './leadOptions';
+import { EMPTY_MORE_FILTERS, MoreFiltersModal, countMoreFilters, moreFiltersFromParams, moreFiltersToParams } from './LeadMoreFilters';
 
 const emptyFilters = { class_level: '', sector: '', language: '' };
 const dash = <span style={{ color: '#cbd5e1' }}>—</span>;
@@ -15,17 +18,30 @@ const dash = <span style={{ color: '#cbd5e1' }}>—</span>;
  * Telesales lead list. Mounted at /telesales (telesales) and /admin/telesales/leads (admin);
  * both roles see every lead and can edit it. Clicking a name opens the details modal.
  * Leads marked "phone number is not valid" live in a separate section and can be restored from there.
+ * Search, filters ("More Filters" too, LV#80), page and tab are kept in the URL.
  */
 export default function LeadsPage() {
   const { user } = useAuth();
   const { t, tError } = useLanguage();
   const formBase = user?.role === 'admin' ? '/admin/telesales/leads' : '/telesales/leads';
+  const [searchParams, setSearchParams] = useSearchParams();
+  // Read once on mount: the URL is the starting state, afterwards load() writes it back
+  const [initial] = useState(() => ({
+    search: searchParams.get('q') || '',
+    filters: Object.fromEntries(Object.keys(emptyFilters).map(k => [k, searchParams.get(k) || ''])),
+    page: Math.max(1, parseInt(searchParams.get('page'), 10) || 1),
+    limit: PAGE_SIZES.includes(Number(searchParams.get('limit'))) ? Number(searchParams.get('limit')) : 10,
+    invalid: searchParams.get('invalid') === 'true',
+    more: moreFiltersFromParams(searchParams),
+  }));
 
   const [leads, setLeads] = useState([]);
-  const [search, setSearch] = useState('');
-  const [filters, setFilters] = useState(emptyFilters);
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
+  const [search, setSearch] = useState(initial.search);
+  const [filters, setFilters] = useState(initial.filters);
+  const [moreFilters, setMoreFilters] = useState(initial.more);
+  const [showMore, setShowMore] = useState(false);
+  const [page, setPage] = useState(initial.page);
+  const [limit, setLimit] = useState(initial.limit);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -33,18 +49,24 @@ export default function LeadsPage() {
   const [logCallLead, setLogCallLead] = useState(null);
   const [expanded, setExpanded] = useState([]);   // lead ids whose call history is open
   const [callsVersion, setCallsVersion] = useState(0);
-  const [invalidView, setInvalidView] = useState(false);
+  const [invalidView, setInvalidView] = useState(initial.invalid);
   const [invalidTotal, setInvalidTotal] = useState(0);
   const [notice, setNotice] = useState('');
   const [restoringId, setRestoringId] = useState(null);
 
   // quiet = refresh the rows in place (after logging a call) without the loading state
-  const load = (q = search, f = filters, p = 1, l = limit, inv = invalidView, quiet = false) => {
+  const load = (q = search, f = filters, p = 1, l = limit, inv = invalidView, quiet = false, m = moreFilters) => {
     if (!quiet) setLoading(true);
     const params = { page: p, limit: l };
     if (inv) params.invalid = 'true';
     if (q.trim()) params.q = q.trim();
     Object.entries(f).forEach(([k, v]) => { if (v) params[k] = v; });
+    Object.assign(params, moreFiltersToParams(m));
+    // Same params in the URL, without the defaults
+    const url = { ...params };
+    if (p === 1) delete url.page;
+    if (l === 10) delete url.limit;
+    setSearchParams(url, { replace: true });
     return listLeads(params)
       .then(res => {
         const { data, meta } = res.data;
@@ -53,7 +75,7 @@ export default function LeadsPage() {
       .catch(err => setError(tError(err, 'Failed to load leads')))
       .finally(() => setLoading(false));
   };
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(search, filters, initial.page); }, []);
 
   const onCallLogged = () => {
     setCallsVersion(v => v + 1);
@@ -67,11 +89,16 @@ export default function LeadsPage() {
     load(search, next, 1);
   };
   const clearAll = () => {
-    setSearch(''); setFilters(emptyFilters);
-    load('', emptyFilters, 1);
+    setSearch(''); setFilters(emptyFilters); setMoreFilters(EMPTY_MORE_FILTERS);
+    load('', emptyFilters, 1, limit, invalidView, false, EMPTY_MORE_FILTERS);
   };
+  const applyMoreFilters = (m) => {
+    setMoreFilters(m); setShowMore(false);
+    load(search, filters, 1, limit, invalidView, false, m);
+  };
+  const moreCount = countMoreFilters(moreFilters);
   const handleLimitChange = (l) => { setLimit(l); load(search, filters, 1, l); };
-  const hasFilter = search.trim() || Object.values(filters).some(Boolean);
+  const hasFilter = search.trim() || Object.values(filters).some(Boolean) || moreCount > 0;
 
   const switchView = (inv) => {
     if (inv === invalidView) return;
@@ -133,6 +160,9 @@ export default function LeadsPage() {
           <option value="">{t('All languages')}</option>
           {LANGUAGES.map(l => <option key={l} value={l}>{t(l)}</option>)}
         </select>
+        <button type="button" onClick={() => setShowMore(true)} aria-haspopup="dialog" style={moreBtn(moreCount > 0)}>
+          {moreCount > 0 ? t('More Filters ({n})', { n: moreCount }) : t('More Filters')}
+        </button>
         <button onClick={() => load(search, filters, 1)} style={{ padding: '0.5rem 1rem', background: '#c2410c', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer' }}>{t('Search')}</button>
         {hasFilter && (
           <button onClick={clearAll} style={{ padding: '0.5rem 1rem', background: '#fff', color: '#334155', border: '1px solid #cbd5e1', borderRadius: 4, cursor: 'pointer' }}>{t('Clear')}</button>
@@ -215,13 +245,15 @@ export default function LeadsPage() {
 
       {detailsId && <LeadDetailsModal id={detailsId} editPath={`${formBase}/${detailsId}/edit`} onClose={() => setDetailsId(null)} onCallLogged={onCallLogged} onStatusChange={afterStatusChange} />}
       {logCallLead && <LogCallModal lead={logCallLead} onClose={() => setLogCallLead(null)} onSaved={onCallLogged} />}
+      {showMore && <MoreFiltersModal value={moreFilters} onApply={applyMoreFilters} onClose={() => setShowMore(false)} />}
     </div>
   );
 }
 
 // Also used by the Callbacks page
 export function LeadDetailsModal({ id, editPath, onClose, onCallLogged, onStatusChange }) {
-  const { t, tError, lang } = useLanguage();
+  const { lang, t, tError } = useLanguage();
+  const { options: extraOptions } = useExtraInfoOptions();
   const [lead, setLead] = useState(null);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
@@ -253,7 +285,8 @@ export function LeadDetailsModal({ id, editPath, onClose, onCallLogged, onStatus
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
 
-  const extras = lead ? EXTRA_INFO.filter(o => (lead.extra_info || []).includes(o.value)) : [];
+  // The lead's extra-info options in admin order (deactivated ones are still listed)
+  const extras = lead ? extraOptions.filter(o => (lead.extra_info || []).includes(o.key)) : [];
   // Date / whose details of Birthday, Marriage ceremony and Someone died recently (LV#50)
   const extraDetail = (flag) => {
     const [date, whose] = flag === 'birthday' ? [lead.birthday_date, lead.birthday_whose]
@@ -320,10 +353,11 @@ export function LeadDetailsModal({ id, editPath, onClose, onCallLogged, onStatus
             {extras.length ? (
               <ul style={{ margin: '0 0 0.75rem', paddingLeft: '1.25rem', fontSize: '0.9rem', color: '#1e293b' }}>
                 {extras.map(o => (
-                  <li key={o.value}>
-                    {t(o.label)}
-                    {o.value === 'another_student_at_home' && lead.another_student_class && ` — ${t('Class')} ${lead.another_student_class}`}
-                    {extraDetail(o.value)}
+                  <li key={o.key} className="wrap-text">
+                    {extraInfoLabel(o, lang)}
+                    {!o.is_active && <span style={{ color: '#94a3b8' }}> ({t('inactive')})</span>}
+                    {o.key === ANOTHER_STUDENT_KEY && lead.another_student_class && ` — ${t('Class')} ${lead.another_student_class}`}
+                    {extraDetail(o.key)}
                   </li>
                 ))}
               </ul>
@@ -387,6 +421,10 @@ const restoreModalBtn = { ...invalidModalBtn, background: '#15803d', color: '#ff
 const tabBtn = (active) => ({
   padding: '0.45rem 0.9rem', borderRadius: 6, cursor: 'pointer', fontSize: '0.875rem', fontWeight: 600,
   border: `1px solid ${active ? '#c2410c' : '#cbd5e1'}`, background: active ? '#c2410c' : '#fff', color: active ? '#fff' : '#334155',
+});
+const moreBtn = (active) => ({
+  padding: '0.5rem 1rem', borderRadius: 4, cursor: 'pointer', fontSize: '0.9rem',
+  border: `1px solid ${active ? '#c2410c' : '#cbd5e1'}`, background: active ? '#fff7ed' : '#fff', color: active ? '#c2410c' : '#334155', fontWeight: active ? 600 : 400,
 });
 const filterSelect = { padding: '0.5rem 0.5rem', border: '1px solid #cbd5e1', borderRadius: 4, fontSize: '0.9rem', background: '#fff' };
 const sectionTitle = { fontSize: '0.95rem', color: '#7c2d12', margin: '0.25rem 0 0.75rem', paddingBottom: '0.35rem', borderBottom: '1px solid #fed7aa' };

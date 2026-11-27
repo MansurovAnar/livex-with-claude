@@ -1,5 +1,6 @@
 const pool = require('../config/database');
 const parsePagination = require('../utils/pagination');
+const { findInvalidExtraInfo } = require('./telesalesExtraInfo.controller');
 
 const notFound = (res) =>
   res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Lead not found' } });
@@ -63,6 +64,17 @@ async function rejectDuplicatePhone(client, res, phones, leadId) {
   return true;
 }
 
+// Returns a 400 response if extra_info holds a key that is not an active option (or already on the lead)
+async function rejectUnknownExtraInfo(client, res, keys, leadId) {
+  const unknown = await findInvalidExtraInfo(client, keys, leadId);
+  if (!unknown.length) return false;
+  res.status(400).json({
+    success: false,
+    error: { code: 'VALIDATION_ERROR', message: 'Unknown extra info option', details: { extra_info: unknown } },
+  });
+  return true;
+}
+
 async function insertPhones(client, leadId, phones) {
   for (let i = 0; i < phones.length; i++) {
     // clock_timestamp() keeps the entry order (NOW() is the same for the whole transaction)
@@ -84,7 +96,105 @@ function handleWriteError(err, res, next) {
   return next(err);
 }
 
-// GET /api/telesales/leads — paginated list with the latest call; ?q= searches name, phone or school; ?class_level, ?sector, ?language filter.
+// Call dates are cut on Baku time, like the telesales report
+const TZ = 'Asia/Baku';
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const isRealDate = (s) => {
+  if (!DATE_RE.test(s)) return false;
+  const d = new Date(`${s}T00:00:00Z`);
+  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === s;
+};
+
+const textParam = (query, name) => (typeof query[name] === 'string' ? query[name].trim() : '');
+// Comma-separated list param ("a,b,c"); invalid items are dropped
+const listParam = (query, name, valid = () => true) =>
+  textParam(query, name).split(',').map(v => v.trim()).filter(v => v && valid(v));
+// Escapes LIKE wildcards so a typed % or _ matches literally
+const containsPattern = (v) => `%${v.replace(/[\\%_]/g, '\\$&')}%`;
+
+// "More Filters" of the leads list (LV#80). Adds SQL conditions on telesales_leads l to `conditions`/`values`.
+function addMoreFilters(query, conditions, values) {
+  const param = (v) => { values.push(v); return `$${values.length}`; };
+
+  // Answer of the lead's latest call (the "Last answer" column)
+  const answers = listParam(query, 'last_answer', v => UUID_RE.test(v));
+  if (answers.length) {
+    conditions.push(`(SELECT c.answer_id FROM lead_calls c WHERE c.lead_id = l.id
+                      ORDER BY c.called_at DESC, c.created_at DESC LIMIT 1) = ANY(${param(answers)}::uuid[])`);
+  }
+
+  // Any call in the date range (inclusive Baku-time days); never_called = no call at all
+  if (query.never_called === 'true') {
+    conditions.push('NOT EXISTS (SELECT 1 FROM lead_calls c WHERE c.lead_id = l.id)');
+  } else {
+    const range = [];
+    const from = textParam(query, 'called_from');
+    const to = textParam(query, 'called_to');
+    if (isRealDate(from)) range.push(`c.called_at >= (${param(from)}::date)::timestamp AT TIME ZONE '${TZ}'`);
+    if (isRealDate(to)) range.push(`c.called_at < (${param(to)}::date + 1)::timestamp AT TIME ZONE '${TZ}'`);
+    if (range.length) conditions.push(`EXISTS (SELECT 1 FROM lead_calls c WHERE c.lead_id = l.id AND ${range.join(' AND ')})`);
+  }
+
+  // Lead has ALL checked extra-info options
+  const extras = listParam(query, 'extra_info');
+  if (extras.length) conditions.push(`l.extra_info @> ${param(extras)}::text[]`);
+
+  // Call notes: a saved note picked from the dropdown (case-insensitive) and/or "contains text"
+  const note = textParam(query, 'call_note');
+  if (note) conditions.push(`EXISTS (SELECT 1 FROM lead_calls c WHERE c.lead_id = l.id AND LOWER(TRIM(c.note)) = LOWER(${param(note)}))`);
+  const noteText = textParam(query, 'call_note_contains');
+  if (noteText) conditions.push(`EXISTS (SELECT 1 FROM lead_calls c WHERE c.lead_id = l.id AND c.note ILIKE ${param(containsPattern(noteText))})`);
+
+  const schools = listParam(query, 'school_ids', v => UUID_RE.test(v));
+  if (schools.length) conditions.push(`l.school_id = ANY(${param(schools)}::uuid[])`);
+  const villages = listParam(query, 'village_ids', v => UUID_RE.test(v));
+  if (villages.length) conditions.push(`l.village_id = ANY(${param(villages)}::uuid[])`);
+
+  // Family
+  for (const field of ['father_name', 'parent_name']) {
+    const v = textParam(query, field);
+    if (v) conditions.push(`l.${field} ILIKE ${param(containsPattern(v))}`);
+  }
+  const income = textParam(query, 'income_source');
+  if (income) conditions.push(`LOWER(TRIM(l.income_source)) = LOWER(${param(income)})`);
+  if (query.knows_hedef === 'yes') conditions.push('l.knows_hedef_student = TRUE');
+  if (query.knows_hedef === 'no') conditions.push('l.knows_hedef_student = FALSE');
+
+  // Other information: a saved value picked from the dropdown and/or "contains text"
+  const other = textParam(query, 'other_info');
+  if (other) conditions.push(`LOWER(TRIM(l.extra_info_other)) = LOWER(${param(other)})`);
+  const otherText = textParam(query, 'other_info_contains');
+  if (otherText) conditions.push(`l.extra_info_other ILIKE ${param(containsPattern(otherText))}`);
+}
+
+// Distinct trimmed values of a text column, case-insensitive, most used first (top 200)
+const distinctValuesSql = (column, from) => `
+  SELECT MIN(TRIM(${column})) AS value, COUNT(*)::int AS count
+  FROM ${from}
+  WHERE NULLIF(TRIM(${column}), '') IS NOT NULL
+  GROUP BY LOWER(TRIM(${column}))
+  ORDER BY count DESC, value
+  LIMIT 200`;
+
+// GET /api/telesales/leads/filter-options — dropdown values of "More Filters": saved call notes,
+// income sources and other-information texts
+exports.filterOptions = async (req, res, next) => {
+  try {
+    const [notes, incomes, others] = await Promise.all([
+      pool.query(distinctValuesSql('note', 'lead_calls')),
+      pool.query(distinctValuesSql('income_source', 'telesales_leads')),
+      pool.query(distinctValuesSql('extra_info_other', 'telesales_leads')),
+    ]);
+    res.json({
+      success: true,
+      data: { call_notes: notes.rows, income_sources: incomes.rows, other_info: others.rows },
+    });
+  } catch (err) { next(err); }
+};
+
+// GET /api/telesales/leads — paginated list with the latest call; ?q= searches name, phone or school; ?class_level, ?sector, ?language filter,
+// plus the "More Filters" params of addMoreFilters().
 // Leads marked "phone number is not valid" are left out of the main list; ?invalid=true lists only those.
 exports.list = async (req, res, next) => {
   try {
@@ -116,6 +226,7 @@ exports.list = async (req, res, next) => {
         conditions.push(`l.${field} = $${values.length}`);
       }
     }
+    addMoreFilters(req.query, conditions, values);
     const where = `WHERE ${conditions.join(' AND ')}`;
 
     const { rows: countRows } = await pool.query(
@@ -235,7 +346,8 @@ exports.create = async (req, res, next) => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-    if (await rejectDuplicatePhone(client, res, lead.phones, null)) {
+    if (await rejectUnknownExtraInfo(client, res, lead.extra_info, null)
+      || await rejectDuplicatePhone(client, res, lead.phones, null)) {
       await client.query('ROLLBACK');
       return;
     }
@@ -265,6 +377,11 @@ exports.update = async (req, res, next) => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
+    // Before the UPDATE: options the lead already has are allowed even if deactivated since
+    if (await rejectUnknownExtraInfo(client, res, lead.extra_info, req.params.id)) {
+      await client.query('ROLLBACK');
+      return;
+    }
     const sets = LEAD_COLUMNS.map((c, i) => `${c} = $${i + 1}`);
     const { rows } = await client.query(
       `UPDATE telesales_leads

@@ -7,7 +7,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import useIsMobile from '../../hooks/useIsMobile';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { nameInputValue } from '../../utils/nameCase';
-import { CLASSES, EXTRA_INFO, LANGUAGES, PHONE_PREFIXES, SECTORS } from './leadOptions';
+import useExtraInfoOptions from '../../hooks/useExtraInfoOptions';
+import { ANOTHER_STUDENT_KEY, CLASSES, LANGUAGES, PHONE_PREFIXES, SECTORS, extraInfoLabel } from './leadOptions';
 
 const PHONE_OWNERS = ['Self', 'Father', 'Mother', 'Grandmother', 'Grandfather', 'Brother', 'Sister', 'Relative'];
 
@@ -69,7 +70,7 @@ const toPayload = (form) => ({
   ...form,
   village_id: form.village_id || null,
   class_level: Number(form.class_level),
-  another_student_class: form.extra_info.includes('another_student_at_home') && form.another_student_class
+  another_student_class: form.extra_info.includes(ANOTHER_STUDENT_KEY) && form.another_student_class
     ? Number(form.another_student_class) : null,
   hedef_student_name: form.knows_hedef_student ? form.hedef_student_name : null,
   phones: form.phones
@@ -85,8 +86,9 @@ export default function LeadFormPage() {
   const { id } = useParams();
   const isEdit = !!id;
   const { user } = useAuth();
-  const { t, tError } = useLanguage();
+  const { lang, t, tError } = useLanguage();
   const isMobile = useIsMobile();
+  const { options: extraOptions, error: extraOptionsError } = useExtraInfoOptions();
   const listPath = user?.role === 'admin' ? '/admin/telesales/leads' : '/telesales';
   const formBase = user?.role === 'admin' ? '/admin/telesales/leads' : '/telesales/leads';
 
@@ -168,6 +170,8 @@ export default function LeadFormPage() {
   }
 
   const req = <span style={{ color: '#dc2626' }}> *</span>;
+  // Active options, plus deactivated ones this lead already had when it was loaded
+  const visibleExtras = extraOptions.filter(o => o.is_active || current?.extra_info?.includes(o.key));
   // Saved / newly added value stays selectable even before the list is reloaded
   const incomeValues = form.income_source && !incomeSources.some(v => v.toLowerCase() === form.income_source.toLowerCase())
     ? [form.income_source, ...incomeSources] : incomeSources;
@@ -313,13 +317,17 @@ export default function LeadFormPage() {
         {/* ── Extra information ── */}
         <h3 style={sectionTitle}>{t('Extra information')}</h3>
         <div className="form-grid" style={{ ...grid, gap: '0.25rem 1rem', marginBottom: '0.75rem' }}>
-          {EXTRA_INFO.map(o => (
-            <label key={o.value} className="lead-check" style={checkLabel}>
-              <input type="checkbox" checked={form.extra_info.includes(o.value)} onChange={() => toggleExtra(o.value)} style={{ width: 16, height: 16, flex: 'none' }} />
-              {t(o.label)}
+          {visibleExtras.map(o => (
+            <label key={o.key} className="lead-check" style={checkLabel}>
+              <input type="checkbox" checked={form.extra_info.includes(o.key)} onChange={() => toggleExtra(o.key)} style={{ width: 16, height: 16, flex: 'none' }} />
+              <span className="wrap-text">
+                {extraInfoLabel(o, lang)}
+                {!o.is_active && <span style={{ color: '#94a3b8' }}> ({t('inactive')})</span>}
+              </span>
             </label>
           ))}
         </div>
+        {extraOptionsError && <p style={{ color: '#dc2626', fontSize: '0.875rem', margin: '0 0 0.75rem' }}>{tError(extraOptionsError, 'Failed to load extra information options')}</p>}
         {form.extra_info.includes('birthday') && (
           <div className="form-grid" style={grid}>
             <Field label={t('Birthday date')}>
@@ -352,7 +360,7 @@ export default function LeadFormPage() {
         <datalist id="lead-family-members">
           {PHONE_OWNERS.map(o => <option key={o} value={t(o)} />)}
         </datalist>
-        {form.extra_info.includes('another_student_at_home') && (
+        {form.extra_info.includes(ANOTHER_STUDENT_KEY) && (
           <Field label={t('Class of the other student')}>
             <select name="another_student_class" value={form.another_student_class} onChange={handleChange} style={inputStyle}>
               <option value="">{t('Select class...')}</option>

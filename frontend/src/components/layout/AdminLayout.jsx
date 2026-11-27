@@ -46,6 +46,7 @@ export default function AdminLayout() {
         </NavLink>
         <NavLink to="/admin/telesales/reporting" style={subNavStyle}>{t('Reporting')}</NavLink>
         <NavLink to="/admin/telesales/villages" style={subNavStyle}>{t('Villages')}</NavLink>
+        <NavLink to="/admin/telesales/extra-info-options" style={subNavStyle}>{t('Extra Info Options')}</NavLink>
         <div style={{ marginTop: 'auto', fontSize: '0.85rem', color: '#94a3b8' }}>{user?.full_name}</div>
         <LanguageSwitch fullWidth />
         <button onClick={handleLogout} style={{ background: 'none', border: '1px solid #475569', color: '#fff', padding: '0.4rem', cursor: 'pointer', borderRadius: 4 }}>
